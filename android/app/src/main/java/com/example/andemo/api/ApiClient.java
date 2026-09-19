@@ -6,9 +6,8 @@ import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
 public class ApiClient {
-    // Emulator: 10.0.2.2
-    // Máy thật: đổi thành IP máy tính (vd: 192.168.1.100)
-    private static final String BASE_URL = "http://10.0.2.2:8080/";
+    // Backend deployed on Render
+    private static final String BASE_URL = "https://andemo.onrender.com/";
 
     private static Retrofit retrofit = null;
 
