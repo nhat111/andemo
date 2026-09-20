@@ -11,27 +11,29 @@
         android:layout_height="wrap_content"
         android:textSize="20sp"
         android:textStyle="bold"
-        android:layout_marginBottom="24dp" />
+        android:layout_marginBottom="16dp" />
 
     <Button
-        android:id="@+id/btnAdminOnly"
+        android:id="@+id/btnLoadItems"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Menu Admin (chỉ ADMIN thấy)"
-        android:layout_marginBottom="12dp"
-        android:visibility="gone" />
-
-    <Button
-        android:id="@+id/btnUserMenu"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Menu User (ai cũng thấy)"
+        android:text="Tải danh sách Items"
         android:layout_marginBottom="12dp" />
+
+    <TextView
+        android:id="@+id/tvItems"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:textSize="15sp"
+        android:padding="8dp"
+        android:background="#F5F5F5"
+        android:text="Bấm nút ở trên để tải danh sách..." />
 
     <Button
         android:id="@+id/btnLogout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="Logout"
-        android:layout_marginTop="32dp" />
+        android:layout_marginTop="16dp" />
 </LinearLayout>

@@ -52,7 +52,8 @@ public class LoginActivity extends AppCompatActivity {
             return;
         }
 
-        AuthService service = ApiClient.getClient().create(AuthService.class);
+        // Dùng getClient(this) để interceptor có context
+        AuthService service = ApiClient.getClient(this).create(AuthService.class);
         Call<LoginResponse> call = service.login(new LoginRequest(username, password));
 
         call.enqueue(new Callback<LoginResponse>() {

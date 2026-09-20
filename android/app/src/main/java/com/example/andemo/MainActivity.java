@@ -2,18 +2,27 @@ package com.example.andemo;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.example.andemo.api.ApiClient;
+import com.example.andemo.api.ItemService;
+import com.example.andemo.model.ItemDto;
 import com.example.andemo.util.PreferenceManager;
+
+import java.util.List;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class MainActivity extends AppCompatActivity {
 
     private PreferenceManager pref;
+    private TextView tvItems;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -28,36 +37,70 @@ public class MainActivity extends AppCompatActivity {
         }
 
         TextView tvWelcome = findViewById(R.id.tvWelcome);
-        Button btnAdminOnly = findViewById(R.id.btnAdminOnly);
-        Button btnUserMenu = findViewById(R.id.btnUserMenu);
+        Button btnLoadItems = findViewById(R.id.btnLoadItems);
         Button btnLogout = findViewById(R.id.btnLogout);
+        tvItems = findViewById(R.id.tvItems);
 
         String role = pref.getRole();
         String username = pref.getUsername();
 
         tvWelcome.setText("Xin chào " + username + " (" + role + ")");
 
-        // Ẩn/hiện menu theo role
-        if ("ADMIN".equals(role)) {
-            btnAdminOnly.setVisibility(View.VISIBLE);
-            btnUserMenu.setVisibility(View.VISIBLE);
-        } else {
-            btnAdminOnly.setVisibility(View.GONE);   // USER không thấy
-            btnUserMenu.setVisibility(View.VISIBLE);
-        }
-
-        btnAdminOnly.setOnClickListener(v ->
-                Toast.makeText(this, "Đây là chức năng chỉ ADMIN mới dùng được", Toast.LENGTH_SHORT).show()
-        );
-
-        btnUserMenu.setOnClickListener(v ->
-                Toast.makeText(this, "Menu chung cho mọi role", Toast.LENGTH_SHORT).show()
-        );
+        btnLoadItems.setOnClickListener(v -> loadItems());
 
         btnLogout.setOnClickListener(v -> {
             pref.clear();
+            // Reset retrofit để lần sau tạo mới (không giữ token cũ)
             Toast.makeText(this, "Đã logout", Toast.LENGTH_SHORT).show();
             goToLogin();
+        });
+
+        // Tự động load luôn khi vào màn hình
+        loadItems();
+    }
+
+    private void loadItems() {
+        tvItems.setText("Đang tải...");
+
+        ItemService service = ApiClient.getClient(this).create(ItemService.class);
+        Call<List<ItemDto>> call = service.getItems();
+
+        call.enqueue(new Callback<List<ItemDto>>() {
+            @Override
+            public void onResponse(Call<List<ItemDto>> call, Response<List<ItemDto>> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    List<ItemDto> items = response.body();
+                    StringBuilder sb = new StringBuilder();
+
+                    String role = pref.getRole();
+                    sb.append("Role hiện tại: ").append(role).append("\n");
+                    sb.append("Số item nhận được: ").append(items.size()).append("\n\n");
+
+                    for (ItemDto item : items) {
+                        sb.append("• ").append(item.getName()).append("\n");
+                        sb.append("  ").append(item.getDescription()).append("\n");
+                        if (item.isAdminOnly()) {
+                            sb.append("  [ADMIN ONLY]\n");
+                        }
+                        sb.append("\n");
+                    }
+
+                    if ("ADMIN".equals(role)) {
+                        sb.append("———\nBạn là ADMIN nên thấy cả item ẩn.");
+                    } else {
+                        sb.append("———\nBạn là USER nên chỉ thấy item công khai.");
+                    }
+
+                    tvItems.setText(sb.toString());
+                } else {
+                    tvItems.setText("Lỗi: " + response.code() + " - Có thể token hết hạn hoặc server lỗi");
+                }
+            }
+
+            @Override
+            public void onFailure(Call<List<ItemDto>> call, Throwable t) {
+                tvItems.setText("Lỗi kết nối: " + t.getMessage());
+            }
         });
     }
 
