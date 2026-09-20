@@ -38,6 +38,7 @@ public class MainActivity extends AppCompatActivity {
 
         TextView tvWelcome = findViewById(R.id.tvWelcome);
         Button btnLoadItems = findViewById(R.id.btnLoadItems);
+        Button btnQrScan = findViewById(R.id.btnQrScan);
         Button btnLogout = findViewById(R.id.btnLogout);
         tvItems = findViewById(R.id.tvItems);
 
@@ -47,10 +48,12 @@ public class MainActivity extends AppCompatActivity {
         tvWelcome.setText("Xin chào " + username + " (" + role + ")");
 
         btnLoadItems.setOnClickListener(v -> loadItems());
+        btnQrScan.setOnClickListener(v ->
+                startActivity(new Intent(this, QrScanActivity.class))
+        );
 
         btnLogout.setOnClickListener(v -> {
             pref.clear();
-            // Reset retrofit để lần sau tạo mới (không giữ token cũ)
             Toast.makeText(this, "Đã logout", Toast.LENGTH_SHORT).show();
             goToLogin();
         });
