@@ -6,6 +6,8 @@
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"
         android:maxSdkVersion="32" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
 
     <uses-feature android:name="android.hardware.camera" android:required="false" />
 
@@ -38,6 +40,10 @@
             android:stateNotNeeded="true"
             android:theme="@style/Theme.Andemo"
             android:windowSoftInputMode="stateAlwaysHidden" />
+
+        <activity
+            android:name=".NearbyActivity"
+            android:exported="false" />
 
         <!-- ZXing capture activity -->
         <activity

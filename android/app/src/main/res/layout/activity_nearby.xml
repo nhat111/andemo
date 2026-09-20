@@ -6,48 +6,41 @@
     android:padding="24dp">
 
     <TextView
-        android:id="@+id/tvWelcome"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textSize="20sp"
+        android:text="Tìm bạn quanh đây"
+        android:textSize="22sp"
         android:textStyle="bold"
         android:layout_marginBottom="16dp" />
 
-    <Button
-        android:id="@+id/btnLoadItems"
+    <TextView
+        android:id="@+id/tvMyLocation"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Tải danh sách Items"
-        android:layout_marginBottom="8dp" />
+        android:text="Vị trí của bạn: đang lấy..."
+        android:layout_marginBottom="12dp" />
 
     <Button
-        android:id="@+id/btnQrScan"
+        android:id="@+id/btnRefreshNearby"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Quét QR Code"
-        android:layout_marginBottom="8dp" />
-
-    <Button
-        android:id="@+id/btnNearby"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Tìm bạn quanh đây"
+        android:text="Cập nhật vị trí + Tìm bạn"
         android:layout_marginBottom="12dp" />
 
     <TextView
-        android:id="@+id/tvItems"
+        android:id="@+id/tvNearbyList"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        android:textSize="15sp"
-        android:padding="8dp"
+        android:padding="12dp"
         android:background="#F5F5F5"
-        android:text="Bấm nút ở trên để tải danh sách..." />
+        android:textSize="15sp"
+        android:text="Bấm nút để tìm..." />
 
     <Button
-        android:id="@+id/btnLogout"
+        android:id="@+id/btnBack"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Logout"
+        android:text="Quay lại"
         android:layout_marginTop="16dp" />
 </LinearLayout>

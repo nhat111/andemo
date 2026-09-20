@@ -39,6 +39,7 @@ public class MainActivity extends AppCompatActivity {
         TextView tvWelcome = findViewById(R.id.tvWelcome);
         Button btnLoadItems = findViewById(R.id.btnLoadItems);
         Button btnQrScan = findViewById(R.id.btnQrScan);
+        Button btnNearby = findViewById(R.id.btnNearby);
         Button btnLogout = findViewById(R.id.btnLogout);
         tvItems = findViewById(R.id.tvItems);
 
@@ -51,6 +52,9 @@ public class MainActivity extends AppCompatActivity {
         btnQrScan.setOnClickListener(v ->
                 startActivity(new Intent(this, QrScanActivity.class))
         );
+        btnNearby.setOnClickListener(v ->
+                startActivity(new Intent(this, NearbyActivity.class))
+        );
 
         btnLogout.setOnClickListener(v -> {
             pref.clear();
@@ -58,7 +62,6 @@ public class MainActivity extends AppCompatActivity {
             goToLogin();
         });
 
-        // Tự động load luôn khi vào màn hình
         loadItems();
     }
 

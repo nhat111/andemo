@@ -23,4 +23,8 @@ public class User {
 
     @Column(nullable = false)
     private String role; // ADMIN or USER
+
+    // Vị trí hiện tại (nullable = chưa cập nhật location)
+    private Double latitude;
+    private Double longitude;
 }
