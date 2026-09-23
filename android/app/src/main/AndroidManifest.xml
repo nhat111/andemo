@@ -42,10 +42,6 @@
             android:name=".MainActivity"
             android:exported="false" />
 
-        <!--
-            launchMode="singleTop" để onNewIntent() được gọi
-            khi activity đang mở mà nhận Intent mới từ hardware scanner
-        -->
         <activity
             android:name=".QrScanActivity"
             android:exported="false"
@@ -56,10 +52,14 @@
             android:windowSoftInputMode="stateAlwaysHidden" />
 
         <activity
+            android:name=".ProductDetailActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
+
+        <activity
             android:name=".NearbyActivity"
             android:exported="false" />
 
-        <!-- Full-screen Alert Activity -->
         <activity
             android:name=".alert.AlertActivity"
             android:exported="false"
@@ -68,7 +68,6 @@
             android:excludeFromRecents="true"
             android:theme="@style/Theme.Andemo" />
 
-        <!-- ZXing capture activity -->
         <activity
             android:name="com.journeyapps.barcodescanner.CaptureActivity"
             android:screenOrientation="fullSensor"
@@ -76,7 +75,6 @@
             android:theme="@style/zxing_CaptureTheme"
             android:windowSoftInputMode="stateAlwaysHidden" />
 
-        <!-- FCM Service -->
         <service
             android:name=".fcm.MyFirebaseMessagingService"
             android:exported="false">
@@ -85,7 +83,6 @@
             </intent-filter>
         </service>
 
-        <!-- PDA Alert Foreground Service -->
         <service
             android:name=".alert.PdaAlertService"
             android:foregroundServiceType="specialUse"

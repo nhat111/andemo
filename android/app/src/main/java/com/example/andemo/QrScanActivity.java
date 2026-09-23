@@ -35,6 +35,8 @@ import java.io.InputStream;
  * 1. Camera (ZXing)
  * 2. Chọn ảnh từ gallery
  * 3. Hardware scanner của PDA (nhận Intent từ DataWedge / các hãng khác)
+ *
+ * Sau khi quét thành công → mở ProductDetailActivity (US-05).
  */
 public class QrScanActivity extends AppCompatActivity {
 
@@ -46,7 +48,7 @@ public class QrScanActivity extends AppCompatActivity {
     private final ActivityResultLauncher<ScanOptions> barcodeLauncher =
             registerForActivityResult(new ScanContract(), result -> {
                 if (result.getContents() != null) {
-                    showResult(result.getContents());
+                    onBarcodeScanned(result.getContents());
                 } else {
                     Toast.makeText(this, "Đã hủy quét", Toast.LENGTH_SHORT).show();
                 }
@@ -98,10 +100,6 @@ public class QrScanActivity extends AppCompatActivity {
         handleScannerIntent(getIntent());
     }
 
-    /**
-     * Khi activity đang mở mà nhận Intent mới từ scanner cứng.
-     * Cần android:launchMode="singleTop" trong Manifest.
-     */
     @Override
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
@@ -109,53 +107,52 @@ public class QrScanActivity extends AppCompatActivity {
         handleScannerIntent(intent);
     }
 
-    /**
-     * Xử lý Intent từ hardware scanner của PDA.
-     * Hỗ trợ nhiều key phổ biến (Zebra DataWedge + các hãng khác).
-     */
     private void handleScannerIntent(Intent intent) {
         if (intent == null) return;
 
         String barcode = extractBarcodeFromIntent(intent);
         if (barcode != null && !barcode.isEmpty()) {
             Log.d(TAG, "Received barcode from hardware scanner: " + barcode);
-            showResult(barcode);
+            onBarcodeScanned(barcode);
         }
     }
 
-    /**
-     * Lấy chuỗi barcode từ các extra phổ biến của PDA.
-     * Không cần import SDK hãng.
-     */
     private String extractBarcodeFromIntent(Intent intent) {
-        // Zebra DataWedge (phổ biến nhất)
         if (intent.hasExtra("com.symbol.data.scannerdata")) {
             return intent.getStringExtra("com.symbol.data.scannerdata");
         }
-        // Zebra DataWedge - một số profile dùng key này
         if (intent.hasExtra("com.motorolasolutions.emdk.datawedge.data_string")) {
             return intent.getStringExtra("com.motorolasolutions.emdk.datawedge.data_string");
         }
-        // Honeywell / nhiều máy khác
         if (intent.hasExtra("data")) {
             return intent.getStringExtra("data");
         }
         if (intent.hasExtra("barcode")) {
             return intent.getStringExtra("barcode");
         }
-        // Một số máy dùng key này
         if (intent.hasExtra("SCAN_BARCODE1")) {
             return intent.getStringExtra("SCAN_BARCODE1");
         }
         if (intent.hasExtra("barcode_string")) {
             return intent.getStringExtra("barcode_string");
         }
-        // Urovo / một số model
         if (intent.hasExtra("scan_data")) {
             return intent.getStringExtra("scan_data");
         }
-
         return null;
+    }
+
+    /**
+     * Sau khi có barcode (từ camera / gallery / hardware) → hiện kết quả + mở Product Detail.
+     */
+    private void onBarcodeScanned(String barcode) {
+        tvQrResult.setText(barcode);
+        Toast.makeText(this, "Quét thành công! Đang tìm sản phẩm...", Toast.LENGTH_SHORT).show();
+        Log.d(TAG, "Barcode result: " + barcode);
+
+        Intent intent = new Intent(this, ProductDetailActivity.class);
+        intent.putExtra(ProductDetailActivity.EXTRA_BARCODE, barcode);
+        startActivity(intent);
     }
 
     private void checkCameraPermissionAndScan() {
@@ -169,7 +166,6 @@ public class QrScanActivity extends AppCompatActivity {
 
     private void startCameraScan() {
         ScanOptions options = new ScanOptions();
-        // Hỗ trợ nhiều loại barcode (không chỉ QR) – phù hợp PDA kho
         options.setDesiredBarcodeFormats(ScanOptions.ALL_CODE_TYPES);
         options.setPrompt("Đưa mã vào khung hình");
         options.setCameraId(0);
@@ -181,7 +177,6 @@ public class QrScanActivity extends AppCompatActivity {
 
     private void checkStoragePermissionAndPick() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            // Android 13+
             if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_MEDIA_IMAGES)
                     == PackageManager.PERMISSION_GRANTED) {
                 openGallery();
@@ -189,7 +184,6 @@ public class QrScanActivity extends AppCompatActivity {
                 storagePermissionLauncher.launch(Manifest.permission.READ_MEDIA_IMAGES);
             }
         } else {
-            // Android 12 trở xuống
             if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE)
                     == PackageManager.PERMISSION_GRANTED) {
                 openGallery();
@@ -219,7 +213,6 @@ public class QrScanActivity extends AppCompatActivity {
                 return;
             }
 
-            // Convert bitmap → pixel array
             int width = bitmap.getWidth();
             int height = bitmap.getHeight();
             int[] pixels = new int[width * height];
@@ -229,7 +222,7 @@ public class QrScanActivity extends AppCompatActivity {
             BinaryBitmap binaryBitmap = new BinaryBitmap(new HybridBinarizer(source));
 
             Result result = new MultiFormatReader().decode(binaryBitmap);
-            showResult(result.getText());
+            onBarcodeScanned(result.getText());
 
         } catch (com.google.zxing.NotFoundException e) {
             Toast.makeText(this, "Không tìm thấy mã trong ảnh", Toast.LENGTH_LONG).show();
@@ -238,11 +231,5 @@ public class QrScanActivity extends AppCompatActivity {
             Toast.makeText(this, "Lỗi: " + e.getMessage(), Toast.LENGTH_LONG).show();
             tvQrResult.setText("Lỗi đọc ảnh: " + e.getMessage());
         }
-    }
-
-    private void showResult(String content) {
-        tvQrResult.setText(content);
-        Toast.makeText(this, "Quét thành công!", Toast.LENGTH_SHORT).show();
-        Log.d(TAG, "Barcode result: " + content);
     }
 }
