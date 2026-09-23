@@ -8,13 +8,13 @@ import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.util.Log;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 
@@ -28,7 +28,17 @@ import com.journeyapps.barcodescanner.ScanOptions;
 
 import java.io.InputStream;
 
+/**
+ * Màn hình quét barcode/QR.
+ *
+ * Hỗ trợ 3 cách:
+ * 1. Camera (ZXing)
+ * 2. Chọn ảnh từ gallery
+ * 3. Hardware scanner của PDA (nhận Intent từ DataWedge / các hãng khác)
+ */
 public class QrScanActivity extends AppCompatActivity {
+
+    private static final String TAG = "QrScanActivity";
 
     private TextView tvQrResult;
 
@@ -83,6 +93,69 @@ public class QrScanActivity extends AppCompatActivity {
         btnOpenCamera.setOnClickListener(v -> checkCameraPermissionAndScan());
         btnPickGallery.setOnClickListener(v -> checkStoragePermissionAndPick());
         btnBack.setOnClickListener(v -> finish());
+
+        // Nhận barcode từ hardware scanner (nếu activity được mở bởi Intent)
+        handleScannerIntent(getIntent());
+    }
+
+    /**
+     * Khi activity đang mở mà nhận Intent mới từ scanner cứng.
+     * Cần android:launchMode="singleTop" trong Manifest.
+     */
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent);
+        handleScannerIntent(intent);
+    }
+
+    /**
+     * Xử lý Intent từ hardware scanner của PDA.
+     * Hỗ trợ nhiều key phổ biến (Zebra DataWedge + các hãng khác).
+     */
+    private void handleScannerIntent(Intent intent) {
+        if (intent == null) return;
+
+        String barcode = extractBarcodeFromIntent(intent);
+        if (barcode != null && !barcode.isEmpty()) {
+            Log.d(TAG, "Received barcode from hardware scanner: " + barcode);
+            showResult(barcode);
+        }
+    }
+
+    /**
+     * Lấy chuỗi barcode từ các extra phổ biến của PDA.
+     * Không cần import SDK hãng.
+     */
+    private String extractBarcodeFromIntent(Intent intent) {
+        // Zebra DataWedge (phổ biến nhất)
+        if (intent.hasExtra("com.symbol.data.scannerdata")) {
+            return intent.getStringExtra("com.symbol.data.scannerdata");
+        }
+        // Zebra DataWedge - một số profile dùng key này
+        if (intent.hasExtra("com.motorolasolutions.emdk.datawedge.data_string")) {
+            return intent.getStringExtra("com.motorolasolutions.emdk.datawedge.data_string");
+        }
+        // Honeywell / nhiều máy khác
+        if (intent.hasExtra("data")) {
+            return intent.getStringExtra("data");
+        }
+        if (intent.hasExtra("barcode")) {
+            return intent.getStringExtra("barcode");
+        }
+        // Một số máy dùng key này
+        if (intent.hasExtra("SCAN_BARCODE1")) {
+            return intent.getStringExtra("SCAN_BARCODE1");
+        }
+        if (intent.hasExtra("barcode_string")) {
+            return intent.getStringExtra("barcode_string");
+        }
+        // Urovo / một số model
+        if (intent.hasExtra("scan_data")) {
+            return intent.getStringExtra("scan_data");
+        }
+
+        return null;
     }
 
     private void checkCameraPermissionAndScan() {
@@ -96,8 +169,9 @@ public class QrScanActivity extends AppCompatActivity {
 
     private void startCameraScan() {
         ScanOptions options = new ScanOptions();
-        options.setDesiredBarcodeFormats(ScanOptions.QR_CODE);
-        options.setPrompt("Đưa mã QR vào khung hình");
+        // Hỗ trợ nhiều loại barcode (không chỉ QR) – phù hợp PDA kho
+        options.setDesiredBarcodeFormats(ScanOptions.ALL_CODE_TYPES);
+        options.setPrompt("Đưa mã vào khung hình");
         options.setCameraId(0);
         options.setBeepEnabled(true);
         options.setBarcodeImageEnabled(true);
@@ -158,8 +232,8 @@ public class QrScanActivity extends AppCompatActivity {
             showResult(result.getText());
 
         } catch (com.google.zxing.NotFoundException e) {
-            Toast.makeText(this, "Không tìm thấy mã QR trong ảnh", Toast.LENGTH_LONG).show();
-            tvQrResult.setText("Không detect được QR trong ảnh này.");
+            Toast.makeText(this, "Không tìm thấy mã trong ảnh", Toast.LENGTH_LONG).show();
+            tvQrResult.setText("Không detect được mã trong ảnh này.");
         } catch (Exception e) {
             Toast.makeText(this, "Lỗi: " + e.getMessage(), Toast.LENGTH_LONG).show();
             tvQrResult.setText("Lỗi đọc ảnh: " + e.getMessage());
@@ -169,5 +243,6 @@ public class QrScanActivity extends AppCompatActivity {
     private void showResult(String content) {
         tvQrResult.setText(content);
         Toast.makeText(this, "Quét thành công!", Toast.LENGTH_SHORT).show();
+        Log.d(TAG, "Barcode result: " + content);
     }
 }

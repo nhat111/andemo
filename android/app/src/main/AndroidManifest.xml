@@ -42,9 +42,14 @@
             android:name=".MainActivity"
             android:exported="false" />
 
+        <!--
+            launchMode="singleTop" để onNewIntent() được gọi
+            khi activity đang mở mà nhận Intent mới từ hardware scanner
+        -->
         <activity
             android:name=".QrScanActivity"
             android:exported="false"
+            android:launchMode="singleTop"
             android:screenOrientation="portrait"
             android:stateNotNeeded="true"
             android:theme="@style/Theme.Andemo"
