@@ -7,6 +7,7 @@ Pet project: Login with JWT, ẩn/hiện menu theo role (ADMIN / USER).
 ```
 backend/          # Spring Boot 3 + JWT
 android/          # Android Java app
+docs/             # Tài liệu requirement & design
 ```
 
 ## Tài khoản mẫu
@@ -37,3 +38,18 @@ API: `http://localhost:8080/api/auth/login`
 - Lưu token local (SharedPreferences)
 - ADMIN thấy menu Admin, USER chỉ thấy menu User
 - Logout xóa token
+- **PDA Finder Alert (FCM)** – nhận lệnh tìm PDA từ xa, phát alert max volume
+
+## PDA Finder Alert (FCM)
+
+Chi tiết requirement và cách implement xem tại:
+
+📄 [docs/PDA_FINDER_ALERT_REQUIREMENTS.md](docs/PDA_FINDER_ALERT_REQUIREMENTS.md)
+
+### Setup nhanh FCM
+
+1. Tạo project Firebase → thêm Android app (`com.example.andemo`)
+2. Tải `google-services.json` → bỏ vào `android/app/`
+3. Sync Gradle
+4. Chạy app, lấy token từ Logcat (`MyFirebaseMsgService`)
+5. Gửi **Data message** từ Firebase Console để test
