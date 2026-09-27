@@ -1,6 +1,14 @@
 plugins {
     id 'com.android.application'
-    id 'com.google.gms.google-services'
+}
+
+// google-services.json chứa config Firebase của từng project nên không commit.
+// Chỉ apply plugin khi có file, để app vẫn build được khi chưa setup Firebase
+// (lúc đó FCM không hoạt động, các màn hình khác vẫn chạy bình thường).
+if (file('google-services.json').exists()) {
+    apply plugin: 'com.google.gms.google-services'
+} else {
+    logger.warn("app/google-services.json not found: building without Firebase (FCM disabled)")
 }
 
 android {

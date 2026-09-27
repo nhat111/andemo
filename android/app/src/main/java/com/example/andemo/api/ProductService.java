@@ -9,5 +9,5 @@ import retrofit2.http.Path;
 public interface ProductService {
 
     @GET("api/products/barcode/{barcode}")
-    Call<ProductDto> getByBarcode(@PathVariable("barcode") String barcode);
+    Call<ProductDto> getByBarcode(@Path("barcode") String barcode);
 }

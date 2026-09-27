@@ -28,9 +28,13 @@ API: `http://localhost:8080/api/auth/login`
 
 ## Chạy Android
 
-- Mở folder `android` bằng Android Studio
-- Emulator: dùng `http://10.0.2.2:8080`
-- Máy thật: đổi IP máy tính trong `ApiClient.java`
+- Mở folder `android` bằng Android Studio (cần JDK 17+ và Android SDK 34)
+- Hoặc build bằng command line: `cd android && ./gradlew assembleDebug`
+  (APK nằm ở `android/app/build/outputs/apk/debug/app-debug.apk`)
+- Không có `android/app/google-services.json` app vẫn build được, chỉ là FCM không hoạt động.
+  File này là config riêng của từng Firebase project nên không commit (đã có trong `.gitignore`).
+- Backend URL cấu hình trong `ApiClient.java` (`BASE_URL`).
+  Muốn chạy backend local: emulator dùng `http://10.0.2.2:8080/`, máy thật dùng IP máy tính.
 
 ## Tính năng
 
