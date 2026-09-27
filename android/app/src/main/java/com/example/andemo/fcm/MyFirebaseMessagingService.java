@@ -73,8 +73,16 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
             intent.putExtra(PdaAlertService.EXTRA_STORE_CODE, storeCode);
         }
 
-        ContextCompat.startForegroundService(this, intent);
-        Log.d(TAG, "Started PdaAlertService for requestId=" + requestId);
+        try {
+            ContextCompat.startForegroundService(this, intent);
+            Log.d(TAG, "Started PdaAlertService for requestId=" + requestId);
+        } catch (IllegalStateException e) {
+            // Android 12+ ném ForegroundServiceStartNotAllowedException (lớp con của
+            // IllegalStateException) nếu message không phải high priority hoặc bị FCM hạ ưu tiên.
+            // Không bắt thì app crash và mất luôn alert → chuyển sang chỉ hiện notification.
+            Log.w(TAG, "Cannot start PdaAlertService, showing fallback notification", e);
+            PdaAlertService.showFallbackNotification(this, requestId, message);
+        }
     }
 
     // private void sendTokenToServer(String token) {
