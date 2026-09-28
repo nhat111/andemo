@@ -321,6 +321,24 @@ Nhờ đó có thể bật nhiều kênh cùng lúc, hoặc đổi kênh sau nà
 - Cấp quyền notification và full-screen intent (Android 13/14+).
 - Cấu hình để app không bị force-stop khi user dọn recents (tùy hãng).
 
+### 4.5 Notification thường trực (phương án B2, C, D)
+
+Các phương án cần foreground service chạy suốt (polling, WebSocket, MQTT) **bắt buộc có một notification thường trực**. Từ Android 8, mọi foreground service phải gắn với một notification để người dùng biết app nào đang chạy ngầm. App không tự ẩn nó được. FCM không cần notification này, vì kết nối nằm trong Google Play services.
+
+| Phiên bản Android | Hành vi |
+|---|---|
+| 8–12 | Luôn hiện trong thanh thông báo, người dùng không vuốt tắt được |
+| 13+ | Người dùng vuốt tắt được, service vẫn chạy. Chưa cấp quyền notification thì không hiện, service vẫn chạy |
+| 13+ | App xuất hiện trong mục **"Active apps"** ở cuối thanh thông báo, kèm nút **Stop** |
+| 14+ | Hầu hết notification của foreground service đều vuốt tắt được |
+
+**Rủi ro chính không nằm ở việc notification hiển thị, mà ở nút Stop trong "Active apps" (Android 13+).** Nhân viên bấm Stop thì cả app dừng, và PDA không nhận lệnh tìm nữa cho tới khi có người mở lại app. Không ai biết chuyện này đã xảy ra, trừ khi server theo dõi `last_seen_at`.
+
+**Giảm thiểu:**
+- App được MDM cài ở chế độ **device owner**: Android không hiện nút Stop cho app đó.
+- Dùng kênh notification `IMPORTANCE_MIN`: không hiện icon trên thanh trạng thái, chỉ nằm thu gọn khi kéo thanh thông báo xuống. Ít gây chú ý hơn, nhưng **không** bỏ được nút Stop.
+- Server cảnh báo khi một PDA lâu không liên lạc (dựa trên `last_seen_at`).
+
 ---
 
 ## 5. Bảng so sánh theo tình huống
@@ -363,7 +381,8 @@ Các con số ngày công ở trên là **ước lượng thô để so sánh t�
 | 2 | Mạng cửa hàng có đi ra được máy chủ Google (`mtalk.google.com`, cổng 5228–5230) không? Có chặn cổng 1883/8883 không? | Loại A, hoặc buộc D chạy qua cổng 443 |
 | 3 | Có đang dùng MDM không? MDM đó có tính năng tìm/phát âm thanh từ xa không? | Có thể chọn E, không cần phát triển. Ảnh hưởng cách whitelist pin và lấy `device_id` |
 | 4 | Độ trễ chấp nhận được: vài giây hay vài phút? | Vài phút thì polling đơn giản có thể đủ |
-| 5 | Có chấp nhận notification thường trực trên PDA không? | Không chấp nhận thì loại B2, C, D |
+| 5a | Có chấp nhận một notification luôn nằm trên PDA không? (mục 4.5) | Không chấp nhận thì loại B2, C, D |
+| 5b | Trên Android 13+, nhân viên có thể bấm Stop app trong "Active apps", làm PDA ngừng nhận lệnh. Khách chấp nhận rủi ro này, hay có MDM (device owner) để chặn? (mục 4.5) | Không chấp nhận và không có MDM thì B2, C, D đều rủi ro |
 | 6 | Có chấp nhận lệnh đi qua hạ tầng Google (Firebase) không? | Chính sách dữ liệu có thể loại A |
 | 7 | Quy mô: bao nhiêu PDA, bao nhiêu cửa hàng? Hạ tầng server hiện có (cloud nào, có Redis/broker chưa)? | Chi phí và độ phức tạp của C/D |
 | 8 | Có cần biết PDA đang online/offline trên màn hình quản lý không? | Có thì D (hoặc C) có lợi thế |
