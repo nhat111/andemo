@@ -116,6 +116,27 @@ Mỗi lần poll giữ partial wake lock tối đa 20 giây, để CPU không ng
    - Trên Android 12+, khi app ở background, poll nhận được lệnh nhưng **không start được `PdaAlertService`**. App tự chuyển sang notification fallback (có chuông lặp, nhưng không tăng volume).
 2. **Cấp quyền notification** (Android 13+, bug A3 trong tracker). Thiếu quyền thì notification thường trực, popup alert và fallback đều không hiện.
 3. Người dùng **không force-stop app**. Sau force-stop, không có gì chạy lại cho tới khi user mở app.
+4. Người dùng **không bấm Stop app trong "Active apps"** (Android 13+). Xem mục 5.1.
+
+### 5.1 Notification thường trực và nút Stop trong "Active apps"
+
+Polling chạy trong foreground service, nên **bắt buộc có notification**. Từ Android 8, mọi foreground service phải gắn với một notification, app không tự ẩn được. Chi tiết theo từng phiên bản Android: xem [mục 4.5 tài liệu phân tích](PDA_FINDER_MECHANISM_OPTIONS.md#45-notification-thường-trực-phương-án-b2-c-d).
+
+POC dùng kênh **`IMPORTANCE_MIN`**:
+- Không kêu.
+- Không có icon trên thanh trạng thái.
+- Chỉ nằm thu gọn ở cuối danh sách khi kéo thanh thông báo xuống.
+
+Đây là mức ít gây chú ý nhất mà Android cho phép với foreground service.
+
+**Rủi ro chính:** từ Android 13, app có foreground service xuất hiện trong mục **"Active apps"** ở cuối thanh thông báo, kèm nút **Stop**. Nhân viên bấm Stop thì cả app dừng, polling ngừng, và PDA không nhận lệnh tìm nữa cho tới khi có người mở lại app. `IMPORTANCE_MIN` **không** bỏ được nút này.
+
+**Giảm thiểu:**
+- MDM cài app ở chế độ **device owner**: Android không hiện nút Stop cho app đó.
+- Server theo dõi thời điểm poll cuối của từng PDA (`last_seen_at`) và cảnh báo khi một máy lâu không poll.
+- Hướng dẫn nhân viên không dừng app (biện pháp yếu nhất).
+
+Khách cần trả lời câu 5a/5b trong tài liệu phân tích.
 
 ---
 
@@ -156,6 +177,8 @@ Máy thật và máy tính phải cùng mạng wifi, và firewall của máy tí
 | Máy vào Doze | Tắt màn hình, `adb shell dumpsys deviceidle force-idle`, tạo lệnh | Đo độ trễ thực tế |
 | Khởi động lại máy | Reboot, không mở app, tạo lệnh | Vẫn kêu (nhờ `BootReceiver`) |
 | Logout | Logout | Notification thường trực biến mất, mock server hết thấy request |
+| Notification ít gây chú ý | Kéo thanh thông báo xuống | Không có icon trên thanh trạng thái; notification "Đang chờ lệnh tìm PDA" nằm thu gọn ở cuối |
+| Stop trong "Active apps" (Android 13+) | Kéo thanh thông báo, bấm "Active apps" → Stop cạnh Andemo | Mock server hết thấy request poll; tạo lệnh thì PDA không kêu cho tới khi mở lại app |
 | Chưa tắt tối ưu pin (Android 12+) | Để app ở background, tạo lệnh | Kiểm tra logcat `AlertDispatcher`: nếu thấy `showing fallback notification` thì service bị chặn và app đã chuyển sang notification fallback |
 
 ---

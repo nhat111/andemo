@@ -46,7 +46,9 @@ public class PdaPollingService extends Service {
     private static final long POLL_WAKE_LOCK_TIMEOUT_MS = 20_000L;
 
     private static final String ACTION_POLL_NOW = "com.example.andemo.polling.POLL_NOW";
-    private static final String CHANNEL_ID = "pda_polling_channel";
+    // Importance của channel không đổi được sau khi tạo, nên đổi importance = đổi sang ID mới
+    private static final String CHANNEL_ID = "pda_polling_min_channel";
+    private static final String OLD_CHANNEL_ID = "pda_polling_channel";
     private static final int NOTIFICATION_ID = 2001;
 
     private HandlerThread pollThread;
@@ -170,17 +172,25 @@ public class PdaPollingService extends Service {
 
     private void createNotificationChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            // IMPORTANCE_LOW: không kêu, không hiện heads-up; chỉ là notification thường trực
+            NotificationManager manager = getSystemService(NotificationManager.class);
+            if (manager == null) {
+                return;
+            }
+            // Xóa channel IMPORTANCE_LOW của bản POC trước (nếu máy đã cài)
+            manager.deleteNotificationChannel(OLD_CHANNEL_ID);
+
+            // IMPORTANCE_MIN: không kêu, không có icon trên thanh trạng thái, chỉ nằm thu gọn
+            // ở cuối danh sách khi kéo thanh thông báo xuống. Foreground service bắt buộc phải có
+            // notification; đây là mức ít gây chú ý nhất. Không bỏ được nút Stop trong
+            // "Active apps" (Android 13+), xem docs/PDA_POLLING_DESIGN.md mục 5.
             NotificationChannel channel = new NotificationChannel(
                     CHANNEL_ID,
                     "Chờ lệnh tìm PDA",
-                    NotificationManager.IMPORTANCE_LOW
+                    NotificationManager.IMPORTANCE_MIN
             );
             channel.setDescription("Hiển thị khi app đang chờ lệnh tìm PDA từ server");
-            NotificationManager manager = getSystemService(NotificationManager.class);
-            if (manager != null) {
-                manager.createNotificationChannel(channel);
-            }
+            channel.setShowBadge(false);
+            manager.createNotificationChannel(channel);
         }
     }
 
@@ -189,7 +199,7 @@ public class PdaPollingService extends Service {
                 .setContentTitle("Andemo")
                 .setContentText("Đang chờ lệnh tìm PDA")
                 .setSmallIcon(android.R.drawable.ic_popup_sync)
-                .setPriority(NotificationCompat.PRIORITY_LOW)
+                .setPriority(NotificationCompat.PRIORITY_MIN) // cho Android 7.x (chưa có channel)
                 .setOngoing(true)
                 .setShowWhen(false)
                 .build();
