@@ -95,6 +95,8 @@ Server  →  FCM (Data Message)  →  MyFirebaseMessagingService
 | 5 | Khi app bị force-stop / battery optimization thì behavior mong muốn? | Open |
 | 6 | Có cần log lịch sử alert (ai tìm, lúc nào, kết quả)? | Open |
 
+> Phân tích các phương án nhận lệnh (FCM / Polling / WebSocket / MQTT / MDM) để chốt câu hỏi 1, 3, 5: xem [PDA_FINDER_MECHANISM_OPTIONS.md](PDA_FINDER_MECHANISM_OPTIONS.md).
+
 ---
 
 ## 5. Cấu trúc code đã thêm vào repo
