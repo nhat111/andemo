@@ -7,6 +7,14 @@ plugins {
 // (lúc đó FCM không hoạt động, các màn hình khác vẫn chạy bình thường).
 if (file('google-services.json').exists()) {
     apply plugin: 'com.google.gms.google-services'
+    // google-services.json chỉ đăng ký package com.example.andemo (flavor fcm).
+    // 2 flavor còn lại không dùng Firebase: bỏ bước xử lý file này, nếu không build báo
+    // "No matching client found for package name com.example.andemo.polling".
+    tasks.configureEach { task ->
+        if (task.name ==~ /process(Polling|Websocket).*GoogleServices/) {
+            task.enabled = false
+        }
+    }
 } else {
     logger.warn("app/google-services.json not found: building without Firebase (FCM disabled)")
 }
@@ -26,11 +34,36 @@ android {
         //   ./gradlew assembleDebug -PapiBaseUrl=http://10.0.2.2:8081/
         buildConfigField "String", "API_BASE_URL",
                 "\"${project.findProperty('apiBaseUrl') ?: 'https://andemo.onrender.com/'}\""
+    }
 
-        // Kênh nhận lệnh tìm PDA: websocket (mặc định), polling, hoặc fcm (cần app/google-services.json)
-        //   ./gradlew assembleDebug -PpdaChannel=polling
-        buildConfigField "String", "PDA_COMMAND_CHANNEL",
-                "\"${project.findProperty('pdaChannel') ?: 'websocket'}\""
+    // 3 app riêng, cài song song trên cùng 1 máy, mỗi app 1 cách nhận lệnh tìm PDA:
+    //   Andemo Polling (cam)  |  Andemo WebSocket (xanh dương)  |  Andemo FCM (xanh lá)
+    // Android Studio: View → Tool Windows → Build Variants → chọn pollingDebug / websocketDebug / fcmDebug
+    // Dòng lệnh:      ./gradlew installPollingDebug  installWebsocketDebug  installFcmDebug
+    flavorDimensions "channel"
+    productFlavors {
+        polling {
+            dimension "channel"
+            applicationIdSuffix ".polling"
+            resValue "string", "app_name", "Andemo Polling"
+            resValue "color", "launcher_background", "#FFE65100"
+            buildConfigField "String", "PDA_COMMAND_CHANNEL", "\"polling\""
+        }
+        websocket {
+            dimension "channel"
+            applicationIdSuffix ".websocket"
+            resValue "string", "app_name", "Andemo WebSocket"
+            resValue "color", "launcher_background", "#FF1565C0"
+            buildConfigField "String", "PDA_COMMAND_CHANNEL", "\"websocket\""
+        }
+        fcm {
+            dimension "channel"
+            // Giữ package gốc com.example.andemo: google-services.json được đăng ký với package này
+            resValue "string", "app_name", "Andemo FCM"
+            resValue "color", "launcher_background", "#FF2E7D32"
+            // Cần app/google-services.json; thiếu thì app tự chạy polling (xem CommandChannel)
+            buildConfigField "String", "PDA_COMMAND_CHANNEL", "\"fcm\""
+        }
     }
 
     buildFeatures {

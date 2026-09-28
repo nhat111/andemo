@@ -80,6 +80,14 @@ cd android
 ./gradlew installDebug -PapiBaseUrl=https://<service>.onrender.com/ -PpdaChannel=polling  # polling
 ```
 
+Trên nhánh `claude/pda-finder-fcm`, app chia thành 3 app riêng (không dùng `pdaChannel` nữa):
+```bash
+./gradlew installPollingDebug   -PapiBaseUrl=https://<service>.onrender.com/   # Andemo Polling
+./gradlew installWebsocketDebug -PapiBaseUrl=https://<service>.onrender.com/   # Andemo WebSocket
+./gradlew installFcmDebug       -PapiBaseUrl=https://<service>.onrender.com/   # Andemo FCM (cần google-services.json)
+```
+APK để gửi khách: `android/app/build/outputs/apk/<polling|websocket|fcm>/debug/app-<...>-debug.apk`.
+
 Mặc định app trỏ tới `https://andemo.onrender.com/` (`app/build.gradle`). Nếu URL service khác, truyền `-PapiBaseUrl` hoặc sửa giá trị mặc định đó. Lưu ý Blueprint đặt tên service là `andemo-backend`.
 
 Trên PDA: login bằng `user` (mật khẩu `APP_SEED_PASSWORD`). Trên web: PDA hiện trong bảng "Chọn PDA cần tìm" sau vài giây.

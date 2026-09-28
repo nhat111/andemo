@@ -13,7 +13,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 /**
- * Chọn kênh nhận lệnh tìm PDA lúc build: -PpdaChannel=websocket (mặc định), polling, hoặc fcm.
+ * Kênh nhận lệnh tìm PDA theo flavor lúc build (app/build.gradle): polling, websocket, fcm.
  *
  * - websocket / polling: foreground service chạy suốt (có notification thường trực).
  * - fcm: không có service chạy nền; Google Play services đánh thức app khi có lệnh.
@@ -63,7 +63,7 @@ public final class CommandChannel {
     private static String effectiveChannel(Context context) {
         String channel = BuildConfig.PDA_COMMAND_CHANNEL;
         if ("fcm".equals(channel) && !FcmTokenRegistrar.isFirebaseConfigured(context)) {
-            Log.w(TAG, "pdaChannel=fcm but app/google-services.json is missing: falling back to polling");
+            Log.w(TAG, "FCM flavor but app/google-services.json is missing: falling back to polling");
             return "polling";
         }
         return channel;

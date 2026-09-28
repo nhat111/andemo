@@ -144,6 +144,8 @@ Bảng `pda_device` được cập nhật mỗi lần PDA liên lạc: poll pend
 ./gradlew installDebug -PapiBaseUrl=http://10.0.2.2:8080/ -PpdaChannel=polling # polling
 ```
 
+Nhánh `claude/pda-finder-fcm` thay `pdaChannel` bằng 3 app riêng (product flavors): `installPollingDebug`, `installWebsocketDebug`, `installFcmDebug`. Xem `FCM_SETUP.md` mục 1.
+
 FCM, nếu có `google-services.json`, luôn chạy song song với kênh được chọn.
 
 ---

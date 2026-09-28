@@ -26,7 +26,7 @@ public final class CommandNotification {
     public static Notification build(Context context) {
         createChannel(context);
         return new NotificationCompat.Builder(context, CHANNEL_ID)
-                .setContentTitle("Andemo")
+                .setContentTitle(context.getString(com.example.andemo.R.string.app_name))
                 .setContentText("Đang chờ lệnh tìm PDA")
                 .setSmallIcon(android.R.drawable.ic_popup_sync)
                 .setPriority(NotificationCompat.PRIORITY_MIN) // cho Android 7.x (chưa có channel)

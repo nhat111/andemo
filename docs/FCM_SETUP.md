@@ -6,15 +6,22 @@
 
 ---
 
-## 1. Ba cách nhận lệnh trên cùng một nhánh
+## 1. Ba cách nhận lệnh = 3 app riêng
 
-Chọn lúc build bằng 1 dòng trong `gradle.properties` (hoặc `-PpdaChannel=...`):
+Nhánh này build ra **3 app khác nhau** (product flavors trong `android/app/build.gradle`), cài song song được trên cùng 1 máy:
 
-```properties
-pdaChannel=polling     # hỏi server mỗi ~30 giây
-pdaChannel=websocket   # giữ kết nối, server đẩy lệnh ngay (mặc định)
-pdaChannel=fcm         # Google đẩy lệnh qua Firebase, app không chạy nền
-```
+| App | Package | Màu icon | Cách nhận lệnh | Build variant | Lệnh cài |
+|---|---|---|---|---|---|
+| **Andemo Polling** | `com.example.andemo.polling` | Cam | Hỏi server mỗi ~30 giây | `pollingDebug` | `./gradlew installPollingDebug` |
+| **Andemo WebSocket** | `com.example.andemo.websocket` | Xanh dương | Giữ kết nối, server đẩy lệnh ngay | `websocketDebug` | `./gradlew installWebsocketDebug` |
+| **Andemo FCM** | `com.example.andemo` | Xanh lá | Google đẩy lệnh qua Firebase, app không chạy nền | `fcmDebug` | `./gradlew installFcmDebug` |
+
+**Android Studio:** **View → Tool Windows → Build Variants** → cột *Active Build Variant* của module `app` → chọn variant → **Run**. Muốn cài cả 3 thì chọn lần lượt từng variant và Run, hoặc dùng 3 lệnh ở trên.
+
+- `apiBaseUrl` trong `gradle.properties` dùng chung cho cả 3 app.
+- Mỗi app gửi lên server `deviceId` và tên máy có hậu tố riêng (ví dụ `realme RMX1851 (polling)`), nên trên web 3 app hiện thành **3 dòng riêng** dù cùng một máy.
+- Mỗi app có đăng nhập, cài đặt, quyền thông báo riêng; cần login và cấp quyền cho **từng app**.
+- App FCM giữ package gốc `com.example.andemo` vì `google-services.json` được đăng ký theo package này (mục 3).
 
 | | Polling | WebSocket | FCM |
 |---|---|---|---|
@@ -65,11 +72,12 @@ Giao diện Firebase Console có thể thay đổi theo thời gian; tên menu d
 6. Trong `gradle.properties`:
    ```properties
    apiBaseUrl=https://<service>.onrender.com/   # hoặc http://10.0.2.2:8080/ nếu chạy backend Spring trên máy
-   pdaChannel=fcm
    ```
-7. **Sync** → **Run**.
+7. **Sync** → Build Variants chọn **`fcmDebug`** → **Run** (hoặc `./gradlew installFcmDebug`).
 
-Chọn `pdaChannel=fcm` mà thiếu `google-services.json`: app tự chuyển sang polling và ghi cảnh báo trong Logcat (`CommandChannel`).
+App **Andemo FCM** mà thiếu `google-services.json` thì tự chạy polling và ghi cảnh báo trong Logcat (`CommandChannel`). Hai app Polling / WebSocket không cần file này.
+
+**Chỉ đăng ký package `com.example.andemo` trong Firebase là đủ.** Build tự bỏ bước Firebase cho 2 app còn lại (log Gradle: `processPollingDebugGoogleServices SKIPPED`).
 
 ---
 
@@ -143,7 +151,7 @@ Không đặt biến nào thì FCM tắt, polling và WebSocket vẫn chạy bì
 | Offline quá thời hạn | Hiệu lực 60 giây → chế độ máy bay → Tìm → 2 phút sau tắt | Không kêu (FCM bỏ message theo TTL); web ❌ hết hạn |
 | Force-stop | Settings → Apps → Andemo → **Force stop** → Tìm | **Không kêu** tới khi mở lại app. Đây là giới hạn của Android, không phải lỗi |
 | Logout | Logout trên app → Tìm | Không kêu; log backend có `FCM token no longer valid, removing it`; web mất nhãn FCM |
-| So sánh 3 cách | 3 lần build với `pdaChannel` khác nhau (hoặc 3 máy) → cùng bấm Tìm | So cột "PDA nhận sau" trong bảng Lịch sử |
+| So sánh 3 cách | Cài cả 3 app lên cùng 1 máy, login từng app → trên web có 3 dòng `(polling)`, `(websocket)`, `(fcm)` → lần lượt bấm Tìm | So cột "PDA nhận sau" trong bảng Lịch sử |
 
 Sau kịch bản Doze: `adb shell dumpsys deviceidle unforce`.
 
@@ -181,9 +189,10 @@ Kèm `android.priority = HIGH` và `ttl` = thời gian còn lại của lệnh.
 |---|---|---|
 | `/api/health` trả `"fcm":false` | Backend chưa có service account | Mục 4; xem dòng `FCM disabled: ...` trong log backend |
 | `FCM disabled: cannot load Firebase service account` | Dán thiếu hoặc thừa nội dung JSON, hoặc sai đường dẫn file | Dán lại **toàn bộ** file, kể cả dấu `{` `}` |
-| Web không có nhãn FCM | App chưa đăng ký token | Kiểm tra: `pdaChannel=fcm`, có `google-services.json`, đã login, máy có Google Play services; xem log `FcmTokenRegistrar` |
+| Web không có nhãn FCM | App chưa đăng ký token | Kiểm tra: đang dùng app **Andemo FCM** (variant `fcmDebug`), có `google-services.json`, đã login, máy có Google Play services; xem log `FcmTokenRegistrar` |
 | Log app: `Cannot get FCM token` | Máy ảo không có Google Play services, hoặc không vào được mạng Google | Dùng image "Google APIs"; kiểm tra mạng |
-| Log app: `pdaChannel=fcm but app/google-services.json is missing` | Thiếu file | Mục 3 bước 4, rồi Sync + Run |
+| Log app: `FCM flavor but app/google-services.json is missing` | Thiếu file | Mục 3 bước 4, rồi Sync + Run |
+| Build báo `No matching client found for package name` | `google-services.json` không có package `com.example.andemo` (đăng ký sai package trong Firebase) | Thêm lại Android app với đúng package `com.example.andemo`, tải file mới |
 | Log backend: `FCM send failed ... SENDER_ID_MISMATCH` hoặc token bị gỡ ngay | App và backend dùng 2 Firebase project khác nhau | Tải lại `google-services.json` và service account **cùng một project** |
 | Log backend: `Error getting access token for service account` | Service account sai, đã bị xóa, hoặc đồng hồ server sai | Tạo khóa mới (mục 4) |
 | Có nhãn FCM nhưng máy không kêu | App bị force-stop; máy không có mạng; thiếu quyền thông báo (Android 13+) | Mở lại app; kiểm tra mạng; mục 5 |

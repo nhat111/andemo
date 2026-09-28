@@ -457,8 +457,9 @@ Muốn xem URL app đang gọi: lọc chữ `okhttp`, sẽ thấy các dòng `--
 | Backend Spring thật chạy trên máy (thay mock) | `git checkout claude/pda-finder-websocket` → `cd backend` → `mvn spring-boot:run` (**cần cài Maven**; hoặc mở thư mục `backend` bằng IntelliJ IDEA và chạy `AndemoApplication`) → cổng **8080**, tài khoản `admin`/`user`, mật khẩu `123456` → `apiBaseUrl=http://10.0.2.2:8080/` | `PDA_WEBSOCKET_DESIGN.md` mục 5 |
 | App dùng WebSocket (kêu gần như ngay lập tức) | Nhánh websocket, build mặc định là WebSocket | `PDA_WEBSOCKET_DESIGN.md` |
 | App nhánh websocket nhưng vẫn chạy polling | Thêm `pdaChannel=polling` vào `gradle.properties` (hoặc `-PpdaChannel=polling`) | |
+| 3 app riêng (Polling / WebSocket / FCM) cài song song | Nhánh `claude/pda-finder-fcm`: Build Variants chọn `pollingDebug` / `websocketDebug` / `fcmDebug` (thay cho `pdaChannel`) | `FCM_SETUP.md` mục 1 |
 | Deploy lên Render | Nhánh websocket | `DEPLOY_RENDER.md` |
-| App nhận lệnh qua FCM (Firebase) | Nhánh `claude/pda-finder-fcm`, `pdaChannel=fcm`, cần Firebase project | `FCM_SETUP.md` |
+| App nhận lệnh qua FCM (Firebase) | Nhánh `claude/pda-finder-fcm`, app **Andemo FCM** (variant `fcmDebug`), cần Firebase project | `FCM_SETUP.md` |
 
 Web quản lý của backend Spring nằm ở `http://localhost:8080/pda-finder.html`.
 

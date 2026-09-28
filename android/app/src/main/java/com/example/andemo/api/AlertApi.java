@@ -35,7 +35,7 @@ public interface AlertApi {
     @POST("api/pda/alerts/{requestId}/ack")
     Call<Void> ack(@Path("requestId") String requestId, @Body AlertAckRequest body);
 
-    /** Đăng ký FCM token của PDA (chế độ pdaChannel=fcm). Token null = hủy đăng ký. */
+    /** Đăng ký FCM token của PDA (app Andemo FCM). Token null = hủy đăng ký. */
     @PUT("api/pda/devices/{deviceId}/fcm-token")
     Call<Void> updateFcmToken(@Path("deviceId") String deviceId, @Body FcmTokenRequest body);
 

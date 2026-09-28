@@ -1,4 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Andemo</string>
+    <!-- app_name khai báo theo từng flavor trong app/build.gradle (resValue) -->
 </resources>

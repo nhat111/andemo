@@ -57,7 +57,7 @@ adb shell am force-stop com.example.andemo
 ### Buổi 1: Project, Gradle, Manifest, Resource
 
 - **Khái niệm:** cấu trúc project, Gradle và Android Gradle Plugin, `AndroidManifest.xml`, resource (`R.layout`, `mipmap`, qualifier như `-v26`), `BuildConfig`.
-- **Đọc code:** `android/app/build.gradle` (cờ `-PapiBaseUrl`, `-PpdaChannel`), `AndroidManifest.xml`, `res/mipmap-anydpi-v26/`.
+- **Đọc code:** `android/app/build.gradle` (cờ `-PapiBaseUrl`, `-PpdaChannel`; trên nhánh fcm là **product flavors** `polling` / `websocket` / `fcm` với `applicationIdSuffix` và `resValue`), `AndroidManifest.xml`, `res/mipmap-anydpi-v26/`.
 - **Bài tập:**
   1. Build và cài app lên máy realme bằng Android Studio, rồi bằng `./gradlew installDebug`.
   2. Mở tab "Merged Manifest" trong Android Studio, tìm chỗ `tools:replace` (bug B5) và giải thích vì sao cần nó.
@@ -153,7 +153,7 @@ adb shell am force-stop com.example.andemo
 - **Khái niệm:** OkHttp WebSocket, ping/keepalive, reconnect với backoff và jitter, `ConnectivityManager.NetworkCallback`; `Authenticator` của OkHttp; refresh token xoay vòng.
 - **Đọc code (nhánh websocket):** `websocket/PdaWebSocketService.java`, `api/TokenRefresher.java`, `api/TokenAuthenticator.java`, `docs/PDA_WEBSOCKET_DESIGN.md`. Phía server: `websocket/PdaSessionRegistry.java`, `service/RefreshTokenService.java`.
 - **Bài tập:**
-  1. So sánh độ trễ polling và WebSocket trên cùng máy (`-PpdaChannel=polling` và `-PpdaChannel=websocket`).
+  1. So sánh độ trễ polling và WebSocket trên cùng máy (`-PpdaChannel=polling` và `-PpdaChannel=websocket`; trên nhánh fcm thì cài cả app Andemo Polling và Andemo WebSocket).
   2. Khi phiên đăng nhập hết (refresh token bị từ chối) mà app đang mở, tự chuyển về màn hình login. Đây là hạn chế đã ghi trong tài liệu WebSocket.
 - **Tự kiểm tra:** Vì sao `TokenRefresher` phải `synchronized`? Vì sao WebSocket vẫn cần poll bắt kịp?
 
