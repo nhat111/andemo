@@ -2,6 +2,7 @@ package com.example.andemo;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -12,6 +13,7 @@ import com.example.andemo.api.ApiClient;
 import com.example.andemo.api.ItemService;
 import com.example.andemo.model.ItemDto;
 import com.example.andemo.polling.PdaPollingService;
+import com.example.andemo.requester.FindPdaActivity;
 import com.example.andemo.util.PreferenceManager;
 
 import java.util.List;
@@ -56,6 +58,15 @@ public class MainActivity extends AppCompatActivity {
         btnNearby.setOnClickListener(v ->
                 startActivity(new Intent(this, NearbyActivity.class))
         );
+
+        // Requester: chỉ quản lý (ADMIN) mới được gửi lệnh tìm PDA; server cũng kiểm tra lại
+        Button btnFindPda = findViewById(R.id.btnFindPda);
+        if ("ADMIN".equals(role)) {
+            btnFindPda.setVisibility(View.VISIBLE);
+            btnFindPda.setOnClickListener(v ->
+                    startActivity(new Intent(this, FindPdaActivity.class))
+            );
+        }
 
         btnLogout.setOnClickListener(v -> {
             PdaPollingService.stop(this);

@@ -66,6 +66,10 @@
             android:exported="false" />
 
         <activity
+            android:name=".requester.FindPdaActivity"
+            android:exported="false" />
+
+        <activity
             android:name=".alert.AlertActivity"
             android:exported="false"
             android:showWhenLocked="true"

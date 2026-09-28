@@ -47,13 +47,46 @@ FCM (nếu có) ──────────► AlertDispatcher.dispatch()   �
 | `AlertDispatcher` | `alert/AlertDispatcher.java` | Điểm vào chung cho FCM và polling; chống trùng; start `PdaAlertService`, fallback sang notification |
 | `ProcessedAlertStore` | `alert/ProcessedAlertStore.java` | Lưu `requestId` đã xử lý trong 24 giờ (SharedPreferences) |
 | `AlertAckReporter` | `alert/AlertAckReporter.java` | Gửi trạng thái lệnh về server |
-| `AlertApi` | `api/AlertApi.java` | Retrofit interface cho 2 endpoint bên dưới |
+| `AlertApi` | `api/AlertApi.java` | Retrofit interface cho các endpoint ở mục 3 |
+| `FindPdaActivity` | `requester/FindPdaActivity.java` | Màn hình requester (chỉ ADMIN): danh sách PDA, gửi lệnh, theo dõi trạng thái |
 
 **Vòng đời:**
 - Service start ở `MainActivity.onResume` (khi đã login) và ở `BootReceiver`.
 - Mỗi lần start đều poll ngay, nên mở app cũng là một lần "bắt kịp".
 - Logout: dừng service. Mỗi lần poll cũng kiểm tra login, nếu đã logout thì tự dừng.
 - Bị hệ thống kill: `START_STICKY` xin khởi động lại.
+
+### 2.1 Luồng đầy đủ: từ nút "Tìm PDA" tới khi tìm thấy máy
+
+Cùng một app, 2 vai trò: **requester** (quản lý, login `admin`) và **PDA** (nhân viên, login user khác). Máy nào đã login đều chạy polling, nên máy của quản lý cũng là một PDA tìm được.
+
+```
+ Requester (ADMIN)                     Server                               PDA
+ ─────────────────                     ──────                               ───
+                                                         ◄── (0) GET /pending?deviceId&deviceName   mỗi ~30s
+                                                              server ghi nhận: máy này vừa liên lạc
+ (1) Bấm "Tìm PDA"
+     GET /api/pda/devices ───────────►  danh sách PDA + online/offline
+ (2) Chọn máy, bấm "Tìm"
+     POST /api/pda/alerts ───────────►  lưu lệnh, status = SENT
+                                        (không đẩy được xuống PDA:
+                                         polling nên phải chờ PDA hỏi)
+ (3) mỗi 3s: GET /alerts/{id} ───────►  "SENT"   ⏳ Đang chờ PDA nhận
+                                                         ◄── (4) GET /pending → trả lệnh
+                                                              AlertDispatcher → PdaAlertService
+                                                              🔔 đổ chuông, max volume, popup
+                                        status = DELIVERED ◄── (5) POST /ack DELIVERED
+ (6) GET /alerts/{id} ───────────────►  "DELIVERED" 🔔 PDA đang đổ chuông
+                                                              người tìm thấy máy, bấm "Dừng Alert"
+                                        status = STOPPED_BY_USER ◄── (7) POST /ack STOPPED_BY_USER
+ (8) GET /alerts/{id} ───────────────►  "STOPPED_BY_USER" ✅ đã tìm thấy
+```
+
+**Thời gian chờ ở bước (4)** chính là điểm yếu của polling: bằng khoảng thời gian tới lần poll kế tiếp của PDA (≤ 30 giây khi máy thức, vài phút khi Doze). Với WebSocket, server đẩy lệnh xuống ngay ở bước (2).
+
+Các kết thúc khác ở bước (8):
+- `TIMED_OUT`: chuông kêu hết 60 giây mà không ai tắt.
+- `SENT` + `expired`: hết hạn lệnh (2 phút) mà PDA không hỏi server lần nào: máy tắt nguồn, mất mạng, hoặc app bị dừng.
 
 ---
 
@@ -80,7 +113,17 @@ Trả các lệnh cho thiết bị này (hoặc cho mọi thiết bị) **đang 
 - **Server không cho trạng thái lùi.** App có thể gửi lại `DELIVERED` sau `STOPPED_BY_USER` (khi lần ack trước thất bại), server phải bỏ qua.
 - Sau khi nhận `DELIVERED`, lệnh không còn nằm trong danh sách pending.
 
-Cả hai endpoint dùng header `Authorization: Bearer <token>` như các API khác.
+### Phía requester (chỉ ADMIN, USER nhận `403`)
+
+| Method | Endpoint | Mô tả |
+|---|---|---|
+| `GET` | `/api/pda/devices` | PDA server biết: `[{"deviceId","deviceName","secondsSinceLastSeen","online"}]`, máy liên lạc gần nhất đứng đầu. `online` = poll trong 90 giây gần nhất. Server tự tính theo giờ của server |
+| `POST` | `/api/pda/alerts` | Body `{"deviceId": "…" \| null, "message": "…", "ttlSeconds": 120}` → `201` + trạng thái lệnh. `deviceId` null = mọi PDA |
+| `GET` | `/api/pda/alerts/{requestId}` | Trạng thái 1 lệnh: `{"requestId","deviceId","message","status","expired"}` |
+
+`GET /pending` nhận thêm `deviceName` (ví dụ `realme RMX1851`). Server dùng các lần poll để biết PDA nào tồn tại và lần cuối liên lạc lúc nào.
+
+Mọi endpoint dùng header `Authorization: Bearer <token>` như các API khác.
 
 ---
 
@@ -153,16 +196,20 @@ cd android
 ./gradlew installDebug -PapiBaseUrl=http://10.0.2.2:8081/          # emulator
 ./gradlew installDebug -PapiBaseUrl=http://192.168.1.10:8081/      # máy thật: IP LAN của máy tính
 
-# 3. Mở app, login với user/pass bất kỳ → thanh thông báo hiện "Đang chờ lệnh tìm PDA".
-#    Log của mock server sẽ thấy GET /api/pda/alerts/pending mỗi ~30 giây.
+# 3. Máy PDA (ví dụ realme): login bằng "user" (mật khẩu bất kỳ).
+#    Thanh thông báo có "Đang chờ lệnh tìm PDA"; log mock server thấy GET /pending mỗi ~30 giây.
 
-# 4. Tạo lệnh tìm PDA
+# 4. Máy requester (ví dụ emulator): login bằng "admin" → màn hình chính có nút "Tìm PDA".
+#    Bấm → chọn "realme RMX1851" → Tìm. Màn hình hiện trạng thái:
+#    ⏳ chờ PDA nhận → 🔔 đang đổ chuông → (bấm "Dừng Alert" trên realme) → ✅ đã tìm thấy
+
+# Hoặc tạo lệnh bằng curl (không gửi token thì mock coi như ADMIN):
 curl -X POST "http://localhost:8081/api/pda/alerts?message=Tim%20may%20kho%20A"
-#    → trong ≤ 30s máy kêu; mock server log ack DELIVERED; bấm Stop → ack STOPPED_BY_USER
-
-# 5. Xem trạng thái các lệnh
+curl http://localhost:8081/api/pda/devices
 curl http://localhost:8081/api/pda/alerts
 ```
+
+**Chỉ có 1 máy?** Login bằng `admin` trên chính máy đó. Máy vừa là requester vừa là PDA: trong danh sách chọn dòng "(máy này)", bấm Tìm, rồi chờ ≤ 30 giây là máy tự kêu. Popup báo động sẽ đè lên màn hình requester; bấm "Dừng Alert" rồi quay lại sẽ thấy ✅.
 
 Máy thật và máy tính phải cùng mạng wifi, và firewall của máy tính phải mở cổng 8081.
 
@@ -170,6 +217,10 @@ Máy thật và máy tính phải cùng mạng wifi, và firewall của máy tí
 
 | Kịch bản | Cách làm | Kết quả mong đợi |
 |---|---|---|
+| Requester tìm thấy máy | Admin bấm "Tìm PDA" → chọn máy → Tìm; trên PDA bấm "Dừng Alert" | Màn hình requester: ⏳ → 🔔 → ✅ |
+| Requester: chuông tự tắt | Như trên nhưng không bấm Dừng trên PDA | Sau ~60 giây: ⏱ hết thời gian |
+| Requester: PDA offline | Tắt wifi trên PDA, đợi 2 phút để thành Offline, gửi lệnh, đợi thêm 2 phút | Danh sách hiện ⚪ Offline, hỏi xác nhận trước khi gửi; cuối cùng ❌ hết hạn |
+| Nút chỉ dành cho ADMIN | Login bằng `user` | Không có nút "Tìm PDA"; gọi API bằng token user bị `403` |
 | Nhận lệnh khi đang mở app | Tạo lệnh | Kêu trong ≤ 30s, ack `DELIVERED` |
 | 2 lệnh liên tiếp | Tạo 2 lệnh cách nhau 10 giây | Chỉ 1 tiếng chuông (lệnh sau thay lệnh trước), cả 2 được ack `DELIVERED` |
 | Lệnh gửi lúc mất mạng | Tắt wifi, tạo lệnh, bật wifi trong vòng 2 phút | Kêu ngay khi có mạng |
