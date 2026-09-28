@@ -36,6 +36,13 @@ API: `http://localhost:8080/api/auth/login`
 - Backend URL cấu hình trong `ApiClient.java` (`BASE_URL`).
   Muốn chạy backend local: emulator dùng `http://10.0.2.2:8080/`, máy thật dùng IP máy tính.
 
+## Tài liệu
+
+- `docs/ANDROID_LEARNING_PLAN.md`: plan học Android dựa trên project này
+- `docs/ANDROID_FIX_TRACKER.md`: danh sách bug Android cần fix
+- `docs/PDA_FINDER_ALERT_REQUIREMENTS.md`: requirement PDA Finder
+- `docs/PDA_FINDER_MECHANISM_OPTIONS.md`: phân tích các phương án nhận lệnh (FCM / Polling / WebSocket / MQTT)
+
 ## Tính năng
 
 - Login → nhận JWT + role
