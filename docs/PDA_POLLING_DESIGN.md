@@ -188,8 +188,9 @@ Khách cần trả lời câu 5a/5b trong tài liệu phân tích.
 Mock server viết bằng Java thuần, không cần thư viện: `tools/MockPdaAlertServer.java`. Nó có thêm endpoint login và items giả để app đăng nhập được.
 
 ```bash
-# 1. Chạy mock server (JDK 17+)
+# 1. Chạy mock server từ thư mục gốc repo (JDK 17+)
 java tools/MockPdaAlertServer.java            # cổng 8081
+#    Web quản lý: mở http://localhost:8081/ trên máy tính, login "admin" (mật khẩu bất kỳ)
 
 # 2. Build app trỏ vào mock server
 cd android
@@ -199,9 +200,10 @@ cd android
 # 3. Máy PDA (ví dụ realme): login bằng "user" (mật khẩu bất kỳ).
 #    Thanh thông báo có "Đang chờ lệnh tìm PDA"; log mock server thấy GET /pending mỗi ~30 giây.
 
-# 4. Máy requester (ví dụ emulator): login bằng "admin" → màn hình chính có nút "Tìm PDA".
-#    Bấm → chọn "realme RMX1851" → Tìm. Màn hình hiện trạng thái:
-#    ⏳ chờ PDA nhận → 🔔 đang đổ chuông → (bấm "Dừng Alert" trên realme) → ✅ đã tìm thấy
+# 4. Requester, chọn 1 trong 2:
+#    a) Web quản lý http://localhost:8081/ → bảng "Chọn PDA cần tìm" → bấm "🔔 Tìm" ở dòng realme
+#    b) App trên máy khác (ví dụ emulator): login "admin" → nút "Tìm PDA" → chọn máy → Tìm
+#    Trạng thái: ⏳ chờ PDA nhận → 🔔 đang đổ chuông → (bấm "Dừng Alert" trên realme) → ✅ đã tìm thấy
 
 # Hoặc tạo lệnh bằng curl (không gửi token thì mock coi như ADMIN):
 curl -X POST "http://localhost:8081/api/pda/alerts?message=Tim%20may%20kho%20A"
@@ -209,7 +211,16 @@ curl http://localhost:8081/api/pda/devices
 curl http://localhost:8081/api/pda/alerts
 ```
 
-**Chỉ có 1 máy?** Login bằng `admin` trên chính máy đó. Máy vừa là requester vừa là PDA: trong danh sách chọn dòng "(máy này)", bấm Tìm, rồi chờ ≤ 30 giây là máy tự kêu. Popup báo động sẽ đè lên màn hình requester; bấm "Dừng Alert" rồi quay lại sẽ thấy ✅.
+### Web quản lý
+
+File `backend/src/main/resources/static/pda-finder.html`: một file HTML, không dùng thư viện ngoài. Mock server phục vụ tại `/`; backend Spring (nhánh websocket) phục vụ tại `/pda-finder.html`. Trang gồm:
+
+1. **Chọn PDA cần tìm:** danh sách PDA (tên máy, deviceId, user đang login, online/offline, lần liên lạc cuối), kèm các ô nội dung, mã cửa hàng, hiệu lực lệnh 60/90/120 giây (requirement §3.1). PDA offline thì hỏi xác nhận trước khi gửi (§3.6).
+2. **Theo dõi lệnh:** các bước Đã gửi → PDA đã nhận, đang đổ chuông → Đã tìm thấy, kèm thời gian PDA nhận lệnh.
+3. **Lịch sử tìm kiếm:** ai tìm, lúc nào, máy nào, kết quả (Open Question #6).
+4. **Đối chiếu requirement:** bảng cho biết requirement nào đã có, còn thiếu gì.
+
+**Chỉ có 1 máy?** Dùng web quản lý trên máy tính làm requester, máy realme làm PDA. Hoặc login bằng `admin` trên chính máy đó. Máy vừa là requester vừa là PDA: trong danh sách chọn dòng "(máy này)", bấm Tìm, rồi chờ ≤ 30 giây là máy tự kêu. Popup báo động sẽ đè lên màn hình requester; bấm "Dừng Alert" rồi quay lại sẽ thấy ✅.
 
 Máy thật và máy tính phải cùng mạng wifi, và firewall của máy tính phải mở cổng 8081.
 

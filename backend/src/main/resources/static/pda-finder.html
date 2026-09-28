@@ -1,0 +1,512 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PDA Finder</title>
+<!--
+  Web quản lý PDA Finder (requester). Một file, không dùng thư viện ngoài
+  (chạy được trong mạng nội bộ cửa hàng không có internet).
+
+  Gọi cùng API với nút "Tìm PDA" trong app:
+    POST /api/auth/login, POST /api/auth/refresh (nếu backend có)
+    GET  /api/pda/devices, POST /api/pda/alerts, GET /api/pda/alerts, GET /api/pda/alerts/{id}
+  Chạy được với mock server (tools/MockPdaAlertServer.java) và backend Spring.
+-->
+<style>
+  :root {
+    --bg: #f4f5f7; --card: #ffffff; --text: #1d2330; --muted: #677084; --line: #e3e6ec;
+    --accent: #2f5bd3; --accent-text: #ffffff; --ok: #1f8a4c; --ok-bg: #e5f5ec;
+    --warn: #a15c00; --warn-bg: #fff2dc; --bad: #b3261e; --bad-bg: #fde8e6;
+    --idle: #677084; --idle-bg: #eef0f4;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #12151b; --card: #1b1f27; --text: #e7e9ee; --muted: #9aa2b1; --line: #2c323d;
+      --accent: #7c9cff; --accent-text: #0f1320; --ok: #6fd39a; --ok-bg: #143324;
+      --warn: #f3b561; --warn-bg: #3a2a12; --bad: #ff8a80; --bad-bg: #3d1a18;
+      --idle: #9aa2b1; --idle-bg: #262b35;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text);
+         font: 15px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  header { display: flex; align-items: center; justify-content: space-between; gap: 12px;
+           padding: 14px 20px; background: var(--card); border-bottom: 1px solid var(--line); }
+  header h1 { margin: 0; font-size: 18px; }
+  header .who { color: var(--muted); font-size: 14px; }
+  main { max-width: 1100px; margin: 0 auto; padding: 20px 16px 40px; display: grid; gap: 16px;
+         grid-template-columns: minmax(0, 1fr); }
+  /* Ô lưới mặc định không co nhỏ hơn nội dung: bảng rộng sẽ làm cả trang tràn ngang trên điện thoại */
+  main > *, .grid2 > * { min-width: 0; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 16px 18px; }
+  .card h2 { margin: 0 0 4px; font-size: 16px; }
+  .hint { color: var(--muted); font-size: 13px; margin: 0 0 12px; }
+  .grid2 { display: grid; gap: 16px; grid-template-columns: 1.4fr 1fr; }
+  @media (max-width: 860px) { .grid2 { grid-template-columns: minmax(0, 1fr); } }
+  label { display: block; font-size: 13px; color: var(--muted); margin-bottom: 4px; }
+  input, select { width: 100%; padding: 8px 10px; border: 1px solid var(--line); border-radius: 6px;
+                  background: var(--bg); color: var(--text); font: inherit; }
+  .options { display: grid; gap: 10px; grid-template-columns: 2fr 1fr 1fr; margin-bottom: 12px; }
+  @media (max-width: 600px) { .options { grid-template-columns: 1fr; } }
+  button { font: inherit; border-radius: 6px; border: 1px solid var(--line); background: var(--card);
+           color: var(--text); padding: 7px 14px; cursor: pointer; }
+  button.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-text); font-weight: 600; }
+  button:disabled { opacity: .5; cursor: default; }
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th { text-align: left; color: var(--muted); font-weight: 500; font-size: 13px; }
+  th, td { padding: 8px 8px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+  tr.clickable { cursor: pointer; }
+  tr.clickable:hover td { background: var(--bg); }
+  tr.selected td { background: var(--bg); }
+  .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; color: var(--muted); }
+  .badge { display: inline-block; padding: 1px 8px; border-radius: 999px; font-size: 12px; font-weight: 600; white-space: nowrap; }
+  .b-ok { color: var(--ok); background: var(--ok-bg); }
+  .b-warn { color: var(--warn); background: var(--warn-bg); }
+  .b-bad { color: var(--bad); background: var(--bad-bg); }
+  .b-idle { color: var(--idle); background: var(--idle-bg); }
+  .b-live { color: var(--accent); background: var(--idle-bg); }
+  .empty { color: var(--muted); padding: 16px 0; text-align: center; }
+  .error { color: var(--bad); background: var(--bad-bg); padding: 8px 12px; border-radius: 6px; margin: 8px 0; }
+  .steps { list-style: none; margin: 12px 0; padding: 0; }
+  .steps li { display: flex; gap: 10px; align-items: flex-start; padding: 6px 0; }
+  .dot { flex: none; width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center;
+         font-size: 12px; font-weight: 700; border: 2px solid var(--line); color: var(--muted); }
+  .dot.done { background: var(--ok); border-color: var(--ok); color: var(--card); }
+  .dot.active { border-color: var(--accent); color: var(--accent); }
+  .dot.fail { background: var(--bad); border-color: var(--bad); color: var(--card); }
+  .dot.warn { background: var(--warn); border-color: var(--warn); color: var(--card); }
+  .steps small { display: block; color: var(--muted); }
+  .result { font-weight: 600; padding: 10px 12px; border-radius: 8px; margin-top: 8px; }
+  .login { max-width: 360px; margin: 60px auto; }
+  .login .row { margin-bottom: 12px; }
+  details summary { cursor: pointer; font-weight: 600; overflow-wrap: anywhere; }
+  .req td:first-child { white-space: nowrap; }
+  [hidden] { display: none !important; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🔔 PDA Finder</h1>
+  <div id="userBox" hidden>
+    <span class="who" id="who"></span>
+    <button id="btnLogout">Đăng xuất</button>
+  </div>
+</header>
+
+<!-- ===== Đăng nhập ===== -->
+<section class="card login" id="loginView" hidden>
+  <h2>Đăng nhập quản lý</h2>
+  <p class="hint">Chỉ tài khoản ADMIN mới được gửi lệnh tìm PDA.</p>
+  <form id="loginForm">
+    <div class="row"><label for="username">Tài khoản</label><input id="username" autocomplete="username" value="admin" required></div>
+    <div class="row"><label for="password">Mật khẩu</label><input id="password" type="password" autocomplete="current-password" required></div>
+    <div id="loginError" class="error" hidden></div>
+    <button class="primary" type="submit">Đăng nhập</button>
+  </form>
+</section>
+
+<!-- ===== Màn hình chính ===== -->
+<main id="appView" hidden>
+  <div id="globalError" class="error" hidden></div>
+
+  <div class="grid2">
+    <section class="card">
+      <h2>1. Chọn PDA cần tìm</h2>
+      <p class="hint">PDA xuất hiện ở đây sau khi đã đăng nhập và liên lạc với server. Online = liên lạc trong 90 giây gần nhất. Tự làm mới mỗi 10 giây.</p>
+      <div class="options">
+        <div><label for="optMessage">Nội dung hiện trên PDA</label><input id="optMessage" maxlength="120"></div>
+        <div><label for="optStore">Mã cửa hàng</label><input id="optStore" placeholder="VD: STORE01" maxlength="20"></div>
+        <div><label for="optTtl">Hiệu lực lệnh</label>
+          <select id="optTtl">
+            <option value="60">60 giây</option>
+            <option value="90">90 giây</option>
+            <option value="120" selected>120 giây</option>
+          </select>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Máy</th><th>User đang login</th><th>Trạng thái</th><th></th></tr></thead>
+          <tbody id="deviceRows"><tr><td colspan="4" class="empty">Đang tải…</td></tr></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>2. Theo dõi lệnh</h2>
+      <p class="hint" id="trackHint">Bấm "Tìm" ở một PDA, hoặc bấm một dòng trong lịch sử để xem lại.</p>
+      <div id="trackBox" hidden>
+        <div><strong id="trackDevice"></strong> <span class="mono" id="trackId"></span></div>
+        <ol class="steps" id="trackSteps"></ol>
+        <div class="result" id="trackResult"></div>
+      </div>
+    </section>
+  </div>
+
+  <section class="card">
+    <h2>3. Lịch sử tìm kiếm</h2>
+    <p class="hint">Ai tìm, lúc nào, máy nào, kết quả ra sao. Bấm một dòng để theo dõi.</p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Lúc gửi</th><th>Máy</th><th>Người tìm</th><th>Cửa hàng</th><th>PDA nhận sau</th><th>Kết quả</th><th>Mã lệnh</th></tr></thead>
+        <tbody id="historyRows"><tr><td colspan="7" class="empty">Chưa có lệnh nào.</td></tr></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="card">
+    <details>
+      <summary>Đối chiếu requirement (docs/PDA_FINDER_ALERT_REQUIREMENTS.md)</summary>
+      <div class="table-wrap">
+        <table class="req">
+          <thead><tr><th>Requirement</th><th>Nội dung</th><th>Trên web</th><th>Trên PDA</th><th>Trạng thái</th></tr></thead>
+          <tbody>
+            <tr><td>§1</td><td>Quản lý gửi lệnh tìm PDA từ xa</td><td>Nút "Tìm" ở bảng 1</td><td>Nhận lệnh qua polling / WebSocket / FCM → <code>AlertDispatcher</code></td><td><span class="badge b-ok">Có</span></td></tr>
+            <tr><td>§3.1</td><td>Payload <code>requestId</code>, <code>storeCode</code>, <code>message</code></td><td>Ô "Nội dung", "Mã cửa hàng"; server sinh <code>requestId</code></td><td>Hiện nội dung trên popup</td><td><span class="badge b-ok">Có</span></td></tr>
+            <tr><td>§3.1</td><td>TTL 60–120 giây</td><td>Ô "Hiệu lực lệnh"</td><td>Server không giao lệnh đã hết hạn</td><td><span class="badge b-ok">Có</span></td></tr>
+            <tr><td>§1, §3.2–3.3</td><td>Foreground service, notification cao nhất, full-screen popup, volume max, âm thanh lặp</td><td>Bước "PDA đã nhận, đang đổ chuông"</td><td><code>PdaAlertService</code>, <code>AlertActivity</code></td><td><span class="badge b-warn">Có, còn bug A1–A3</span></td></tr>
+            <tr><td>§3.4</td><td>Stop → dừng ngay + log; tự tắt sau 60 giây</td><td>Kết quả "Đã tìm thấy" / "Hết giờ" trong lịch sử</td><td>Ack <code>STOPPED_BY_USER</code> / <code>TIMED_OUT</code></td><td><span class="badge b-warn">Có; timeout chưa cấu hình được (Open Q2)</span></td></tr>
+            <tr><td>§3.5</td><td>Bảng quản lý thiết bị (userId, deviceId, storeCode, updatedAt)</td><td>Bảng 1: máy, deviceId, user đang login, lần liên lạc cuối</td><td>Gửi <code>deviceId</code>, tên máy mỗi lần liên lạc</td><td><span class="badge b-warn">Thiếu storeCode của từng PDA</span></td></tr>
+            <tr><td>§3.6</td><td>Offline: thông báo rõ khi không gửi được</td><td>Cảnh báo trước khi tìm PDA offline; kết quả "Hết hạn, PDA không nhận được"</td><td>Nhận lệnh khi có mạng lại (trong thời hạn)</td><td><span class="badge b-ok">Có</span></td></tr>
+            <tr><td>Open Q6</td><td>Lịch sử: ai tìm, lúc nào, kết quả</td><td>Bảng 3</td><td>—</td><td><span class="badge b-ok">Có</span> (mock: mất khi restart)</td></tr>
+            <tr><td>§3.5</td><td>Lưu / làm mới token FCM</td><td>—</td><td><code>onNewToken</code> chưa gửi lên server</td><td><span class="badge b-bad">Chưa làm (T1)</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </details>
+  </section>
+</main>
+
+<script>
+'use strict';
+
+// ===== Phiên đăng nhập =====
+// POC lưu token trong sessionStorage (mất khi đóng tab). Production nên dùng cookie httpOnly
+// để script lạ trên trang không đọc được token.
+const SESSION_KEY = 'pdaFinderSession';
+let session = readSession();
+let devices = [];
+let history = [];
+let trackingId = null;
+const timers = [];
+
+function readSession() {
+  try { return JSON.parse(sessionStorage.getItem(SESSION_KEY)); } catch (e) { return null; }
+}
+function saveSession(s) {
+  session = s;
+  try { s ? sessionStorage.setItem(SESSION_KEY, JSON.stringify(s)) : sessionStorage.removeItem(SESSION_KEY); } catch (e) { /* ignore */ }
+}
+
+// ===== Gọi API: tự gắn token, 401 thì làm mới token (nếu backend có refresh token) rồi thử lại =====
+class ApiError extends Error {
+  constructor(status, message) { super(message); this.status = status; }
+}
+
+async function api(path, options = {}, retried = false) {
+  const headers = { 'Content-Type': 'application/json' };
+  if (session && session.token) headers.Authorization = 'Bearer ' + session.token;
+  const res = await fetch(path, { method: options.method || 'GET', headers,
+                                  body: options.body ? JSON.stringify(options.body) : undefined });
+  if (res.status === 401 && !retried && session && session.refreshToken && await refreshToken()) {
+    return api(path, options, true);
+  }
+  if (res.status === 401) { logout('Phiên đăng nhập đã hết, vui lòng đăng nhập lại.'); throw new ApiError(401, 'Unauthorized'); }
+  if (res.status === 403) throw new ApiError(403, 'Tài khoản không có quyền ADMIN.');
+  if (!res.ok) throw new ApiError(res.status, 'Lỗi server: HTTP ' + res.status);
+  const text = await res.text();
+  return text ? JSON.parse(text) : null;
+}
+
+let refreshing = null;
+function refreshToken() {
+  // Nhiều request cùng bị 401: chỉ làm mới 1 lần (server xoay vòng refresh token)
+  if (!refreshing) {
+    refreshing = fetch('/api/auth/refresh', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+                                              body: JSON.stringify({ refreshToken: session.refreshToken }) })
+      .then(r => r.ok ? r.json() : null)
+      .then(data => {
+        if (!data || !data.token) return false;
+        saveSession({ ...session, token: data.token, refreshToken: data.refreshToken });
+        return true;
+      })
+      .catch(() => false)
+      .finally(() => { refreshing = null; });
+  }
+  return refreshing;
+}
+
+// ===== Đăng nhập / đăng xuất =====
+const $ = id => document.getElementById(id);
+
+$('loginForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  $('loginError').hidden = true;
+  try {
+    const res = await fetch('/api/auth/login', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username: $('username').value.trim(), password: $('password').value }) });
+    if (!res.ok) throw new Error('Sai tài khoản hoặc mật khẩu.');
+    const data = await res.json();
+    if (data.role !== 'ADMIN') throw new Error('Tài khoản "' + data.username + '" không phải ADMIN, không gửi lệnh tìm PDA được.');
+    saveSession({ token: data.token, refreshToken: data.refreshToken || null, username: data.username, role: data.role });
+    start();
+  } catch (err) {
+    $('loginError').textContent = err.message.startsWith('Failed') ? 'Không kết nối được server.' : err.message;
+    $('loginError').hidden = false;
+  }
+});
+
+$('btnLogout').addEventListener('click', () => {
+  if (session && session.refreshToken) {
+    fetch('/api/auth/logout', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ refreshToken: session.refreshToken }) }).catch(() => {});
+  }
+  logout();
+});
+
+function logout(message) {
+  saveSession(null);
+  timers.forEach(clearInterval);
+  timers.length = 0;
+  trackingId = null;
+  $('appView').hidden = true;
+  $('userBox').hidden = true;
+  $('loginView').hidden = false;
+  if (message) { $('loginError').textContent = message; $('loginError').hidden = false; }
+}
+
+function start() {
+  $('loginView').hidden = true;
+  $('appView').hidden = false;
+  $('userBox').hidden = false;
+  $('who').textContent = session.username + ' (' + session.role + ') ';
+  $('optMessage').value = 'PDA đang được tìm bởi quản lý ' + session.username;
+  loadDevices();
+  loadHistory();
+  timers.push(setInterval(loadDevices, 10000));
+  timers.push(setInterval(loadHistory, 5000));
+  timers.push(setInterval(refreshTracking, 2000));
+}
+
+// ===== Bảng 1: danh sách PDA =====
+async function loadDevices() {
+  try {
+    devices = await api('/api/pda/devices');
+    renderDevices();
+    hideError();
+  } catch (err) { showError(err); }
+}
+
+function renderDevices() {
+  const tbody = $('deviceRows');
+  if (!devices.length) {
+    tbody.innerHTML = '<tr><td colspan="4" class="empty">Chưa có PDA nào. PDA cần đăng nhập app và liên lạc với server ít nhất 1 lần.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = '';
+  for (const d of devices) {
+    const tr = document.createElement('tr');
+    tr.innerHTML =
+      '<td><div class="name"></div><div class="mono"></div></td>' +
+      '<td class="user"></td>' +
+      '<td><span class="badge"></span><div class="mono ago"></div></td>' +
+      '<td style="text-align:right"><button class="primary">🔔 Tìm</button></td>';
+    // textContent: tên máy / user do PDA gửi lên, không chèn thẳng vào HTML
+    tr.querySelector('.name').textContent = d.deviceName || 'Không rõ tên';
+    tr.querySelector('.mono').textContent = d.deviceId;
+    tr.querySelector('.user').textContent = d.username || '—';
+    const badge = tr.querySelector('.badge');
+    badge.textContent = d.online ? 'Online' : 'Offline';
+    badge.className = 'badge ' + (d.online ? 'b-ok' : 'b-idle');
+    tr.querySelector('.ago').textContent = 'liên lạc ' + formatAgo(d.secondsSinceLastSeen) + ' trước';
+    tr.querySelector('button').addEventListener('click', () => findDevice(d));
+    tbody.appendChild(tr);
+  }
+}
+
+// ===== Gửi lệnh =====
+async function findDevice(d) {
+  const ttl = Number($('optTtl').value);
+  if (!d.online) {
+    const ok = confirm((d.deviceName || d.deviceId) + ' đang OFFLINE (liên lạc lần cuối ' + formatAgo(d.secondsSinceLastSeen) +
+      ' trước).\n\nLệnh có hiệu lực ' + ttl + ' giây: nếu máy liên lạc lại trong thời gian đó thì vẫn đổ chuông, ' +
+      'nếu không lệnh sẽ hết hạn.\n\nVẫn gửi?');
+    if (!ok) return;
+  }
+  try {
+    const alert = await api('/api/pda/alerts', { method: 'POST', body: {
+      deviceId: d.deviceId,
+      message: $('optMessage').value.trim() || null,
+      storeCode: $('optStore').value.trim() || null,
+      ttlSeconds: ttl
+    }});
+    trackingId = alert.requestId;
+    history = [alert, ...history.filter(a => a.requestId !== alert.requestId)];
+    renderTracking(alert);
+    renderHistory();
+  } catch (err) { showError(err); }
+}
+
+// ===== Khung 2: theo dõi một lệnh =====
+async function refreshTracking() {
+  if (!trackingId) return;
+  const current = history.find(a => a.requestId === trackingId);
+  if (current && isFinished(current)) return;
+  try {
+    const alert = await api('/api/pda/alerts/' + encodeURIComponent(trackingId));
+    history = history.map(a => a.requestId === alert.requestId ? alert : a);
+    renderTracking(alert);
+  } catch (err) { showError(err); }
+}
+
+function isFinished(a) {
+  return a.status === 'STOPPED_BY_USER' || a.status === 'TIMED_OUT' || (a.status === 'SENT' && a.expired);
+}
+
+function renderTracking(a) {
+  $('trackHint').hidden = true;
+  $('trackBox').hidden = false;
+  $('trackDevice').textContent = deviceLabel(a.deviceId);
+  $('trackId').textContent = a.requestId;
+
+  const sentAt = formatTime(a.createdAt);
+  const deliveredIn = secondsBetween(a.createdAt, a.deliveredAt);
+  let steps, result, tone;
+  if (a.status === 'SENT' && a.expired) {
+    steps = [['done', 'Đã gửi lệnh', sentAt],
+             ['fail', 'PDA không nhận được lệnh', 'Hết hạn mà PDA không liên lạc với server'],
+             ['', 'Tìm thấy máy', '']];
+    result = '❌ Lệnh hết hạn. PDA có thể đã tắt nguồn, mất mạng, hết pin, hoặc app bị dừng. Có thể gửi lại khi máy online.';
+    tone = 'b-bad';
+  } else if (a.status === 'SENT') {
+    steps = [['done', 'Đã gửi lệnh', sentAt],
+             ['active', 'Đang chờ PDA nhận lệnh…', 'Polling: tối đa ~30 giây khi máy thức, lâu hơn nếu máy đang ngủ. WebSocket: ~1 giây.'],
+             ['', 'Tìm thấy máy', '']];
+    result = '⏳ Đang chờ PDA nhận lệnh.';
+    tone = 'b-live';
+  } else if (a.status === 'DELIVERED') {
+    steps = [['done', 'Đã gửi lệnh', sentAt],
+             ['done', 'PDA đã nhận, đang đổ chuông', deliveredIn != null ? 'Nhận sau ' + deliveredIn + ' giây' : ''],
+             ['active', 'Chờ người tìm thấy máy và tắt chuông…', 'Chuông tự tắt sau 60 giây']];
+    result = '🔔 PDA đang đổ chuông. Đi theo tiếng chuông để tìm máy.';
+    tone = 'b-live';
+  } else if (a.status === 'STOPPED_BY_USER') {
+    steps = [['done', 'Đã gửi lệnh', sentAt],
+             ['done', 'PDA đã nhận, đổ chuông', deliveredIn != null ? 'Nhận sau ' + deliveredIn + ' giây' : ''],
+             ['done', 'Đã tìm thấy máy', 'Có người bấm "Dừng Alert" lúc ' + formatTime(a.finishedAt)]];
+    result = '✅ Đã tìm thấy PDA.';
+    tone = 'b-ok';
+  } else {
+    steps = [['done', 'Đã gửi lệnh', sentAt],
+             ['done', 'PDA đã nhận, đổ chuông', deliveredIn != null ? 'Nhận sau ' + deliveredIn + ' giây' : ''],
+             ['warn', 'Chuông đã tự tắt', 'Kêu hết thời gian mà chưa ai tắt trên máy']];
+    result = '⏱ Chuông đã kêu hết thời gian, chưa ai tìm thấy máy. Có thể gửi lại lệnh.';
+    tone = 'b-warn';
+  }
+
+  const ol = $('trackSteps');
+  ol.innerHTML = '';
+  steps.forEach(([state, title, sub], i) => {
+    const li = document.createElement('li');
+    const icon = state === 'done' ? '✓' : state === 'fail' ? '✕' : state === 'warn' ? '!' : String(i + 1);
+    li.innerHTML = '<span class="dot ' + state + '">' + icon + '</span><div><div class="t"></div><small></small></div>';
+    li.querySelector('.t').textContent = title;
+    li.querySelector('small').textContent = sub;
+    ol.appendChild(li);
+  });
+  const res = $('trackResult');
+  res.textContent = result;
+  res.className = 'result ' + tone;
+  highlightHistory();
+}
+
+// ===== Bảng 3: lịch sử =====
+async function loadHistory() {
+  try {
+    history = await api('/api/pda/alerts');
+    renderHistory();
+    const tracked = trackingId && history.find(a => a.requestId === trackingId);
+    if (tracked) renderTracking(tracked);
+  } catch (err) { showError(err); }
+}
+
+function renderHistory() {
+  const tbody = $('historyRows');
+  if (!history.length) {
+    tbody.innerHTML = '<tr><td colspan="7" class="empty">Chưa có lệnh nào.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = '';
+  for (const a of history.slice(0, 50)) {
+    const tr = document.createElement('tr');
+    tr.className = 'clickable';
+    tr.dataset.id = a.requestId;
+    tr.innerHTML = '<td></td><td></td><td></td><td></td><td></td><td><span class="badge"></span></td><td class="mono"></td>';
+    const cells = tr.children;
+    cells[0].textContent = formatTime(a.createdAt);
+    cells[1].textContent = deviceLabel(a.deviceId);
+    cells[2].textContent = a.requestedBy || '—';
+    cells[3].textContent = a.storeCode || '—';
+    const delivered = secondsBetween(a.createdAt, a.deliveredAt);
+    cells[4].textContent = delivered != null ? delivered + ' giây' : '—';
+    const [text, tone] = statusBadge(a);
+    cells[5].firstChild.textContent = text;
+    cells[5].firstChild.className = 'badge ' + tone;
+    cells[6].textContent = a.requestId;
+    tr.addEventListener('click', () => { trackingId = a.requestId; renderTracking(a); });
+    tbody.appendChild(tr);
+  }
+  highlightHistory();
+}
+
+function highlightHistory() {
+  document.querySelectorAll('#historyRows tr').forEach(tr => tr.classList.toggle('selected', tr.dataset.id === trackingId));
+}
+
+function statusBadge(a) {
+  switch (a.status) {
+    case 'STOPPED_BY_USER': return ['Đã tìm thấy', 'b-ok'];
+    case 'TIMED_OUT': return ['Hết giờ, chưa tìm thấy', 'b-warn'];
+    case 'DELIVERED': return ['Đang đổ chuông', 'b-live'];
+    case 'SENT': return a.expired ? ['Hết hạn, PDA không nhận', 'b-bad'] : ['Chờ PDA nhận', 'b-live'];
+    default: return [a.status, 'b-idle'];
+  }
+}
+
+// ===== Tiện ích =====
+function deviceLabel(deviceId) {
+  if (!deviceId) return 'Tất cả PDA';
+  const d = devices.find(x => x.deviceId === deviceId);
+  return d && d.deviceName ? d.deviceName : deviceId;
+}
+function formatAgo(sec) {
+  if (sec == null) return '?';
+  if (sec < 60) return sec + ' giây';
+  if (sec < 3600) return Math.floor(sec / 60) + ' phút';
+  if (sec < 86400) return Math.floor(sec / 3600) + ' giờ';
+  return Math.floor(sec / 86400) + ' ngày';
+}
+function formatTime(iso) {
+  if (!iso) return '—';
+  const d = new Date(iso);
+  return d.toLocaleTimeString('vi-VN') + ' ' + d.toLocaleDateString('vi-VN');
+}
+function secondsBetween(fromIso, toIso) {
+  if (!fromIso || !toIso) return null;
+  return Math.max(0, Math.round((new Date(toIso) - new Date(fromIso)) / 1000));
+}
+function showError(err) {
+  if (err.status === 401) return; // đã chuyển về màn hình đăng nhập
+  $('globalError').textContent = err.message && err.message.startsWith('Failed') ? 'Không kết nối được server.' : err.message;
+  $('globalError').hidden = false;
+}
+function hideError() { $('globalError').hidden = true; }
+
+// ===== Khởi động =====
+if (session && session.token) start(); else logout();
+</script>
+</body>
+</html>
