@@ -1,5 +1,6 @@
 package com.example.andemo.entity;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -37,6 +38,12 @@ public class PdaAlert {
     private Instant deliveredAt;
 
     private Instant finishedAt;
+
+    /** Hết hạn theo giờ server. Lệnh SENT mà expired = PDA không nhận được kịp. */
+    @JsonProperty("expired")
+    public boolean isExpired() {
+        return expiresAt != null && !expiresAt.isAfter(Instant.now());
+    }
 
     public boolean isFor(String deviceId) {
         return this.deviceId == null || this.deviceId.equals(deviceId);

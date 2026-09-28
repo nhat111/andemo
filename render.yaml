@@ -13,4 +13,11 @@ services:
         generateValue: true
       - key: JAVA_OPTS
         value: "-Xms128m -Xmx384m -XX:+UseContainerSupport"
-    healthCheckPath: /api/auth/login
+      # Mật khẩu tài khoản mẫu admin / user / user2. Nhập trong Render Dashboard, không commit.
+      - key: APP_SEED_PASSWORD
+        sync: false
+      # Database bền (khuyến nghị): thêm tay SPRING_DATASOURCE_URL / _USERNAME / _PASSWORD trong
+      # Dashboard, xem docs/DEPLOY_RENDER.md. Không khai báo ở đây vì biến rỗng làm backend không chạy.
+      # Không đặt thì dùng H2 trong RAM: mỗi lần deploy / restart là mất lịch sử, PDA, refresh token.
+    # GET /api/auth/login trả 405 (chỉ nhận POST) nên không dùng làm health check được
+    healthCheckPath: /api/health

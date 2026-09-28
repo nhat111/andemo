@@ -141,7 +141,10 @@ public class FindPdaActivity extends AppCompatActivity {
     }
 
     private String label(PdaDeviceDto device) {
-        String name = device.getDeviceName() != null ? device.getDeviceName() : device.getDeviceId();
+        // Cả cửa hàng thường dùng cùng 1 model (VD 20 máy "Zebra TC21"): thêm đuôi deviceId để phân biệt
+        String id = device.getDeviceId();
+        String shortId = id.length() > 6 ? id.substring(id.length() - 6) : id;
+        String name = device.getDeviceName() != null ? device.getDeviceName() + " · " + shortId : id;
         // Cho phép tìm chính máy này: tiện khi chỉ có 1 máy để test
         return device.getDeviceId().equals(myDeviceId) ? name + " (máy này)" : name;
     }

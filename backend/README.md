@@ -39,12 +39,6 @@ Chạy test: `mvn test`
 
 ## Deploy lên Render (miễn phí)
 
-1. Vào [render.com](https://render.com) → New → Web Service
-2. Connect repo `nhat111/andemo`
-3. Render sẽ tự detect `render.yaml` + Dockerfile
-4. Hoặc set thủ công:
-   - **Root Directory**: `backend`
-   - **Dockerfile Path**: `./Dockerfile`
-5. Deploy → lấy URL public
+Xem hướng dẫn đầy đủ: [`docs/DEPLOY_RENDER.md`](../docs/DEPLOY_RENDER.md) (biến môi trường, database bền, health check, checklist trước khi demo).
 
-Sau đó đổi `BASE_URL` trong Android `ApiClient.java` thành URL Render.
+Tóm tắt: Render build theo `render.yaml` + `backend/Dockerfile`; health check `/api/health`; **bắt buộc đặt `APP_SEED_PASSWORD`** khi deploy công khai; nên đặt `SPRING_DATASOURCE_*` để dùng Postgres. Web quản lý: `https://<service>.onrender.com/pda-finder.html`.

@@ -1,5 +1,6 @@
 package com.example.andemo.websocket;
 
+import com.example.andemo.service.PdaDeviceService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -26,17 +27,24 @@ public class PdaWebSocketHandler extends TextWebSocketHandler {
     private static final String ATTR_DEVICE_ID = "deviceId";
 
     private final PdaSessionRegistry registry;
+    private final PdaDeviceService deviceService;
 
     @Override
     public void afterConnectionEstablished(WebSocketSession session) throws IOException {
-        String deviceId = session.getUri() == null ? null
-                : UriComponentsBuilder.fromUri(session.getUri()).build().getQueryParams().getFirst("deviceId");
+        var params = session.getUri() == null ? null
+                : UriComponentsBuilder.fromUri(session.getUri()).build().getQueryParams();
+        String deviceId = params == null ? null : params.getFirst("deviceId");
         if (deviceId == null || deviceId.isBlank()) {
             session.close(CloseStatus.POLICY_VIOLATION.withReason("Missing deviceId"));
             return;
         }
         session.getAttributes().put(ATTR_DEVICE_ID, deviceId);
         registry.register(deviceId, session);
+        // deviceName gửi dạng query param nên đã được mã hóa URL: giải mã trước khi lưu
+        String deviceName = params.getFirst("deviceName");
+        deviceService.recordContact(deviceId,
+                deviceName == null ? null : java.net.URLDecoder.decode(deviceName, java.nio.charset.StandardCharsets.UTF_8),
+                session.getPrincipal() == null ? null : session.getPrincipal().getName());
     }
 
     @Override
@@ -44,6 +52,8 @@ public class PdaWebSocketHandler extends TextWebSocketHandler {
         String deviceId = (String) session.getAttributes().get(ATTR_DEVICE_ID);
         if (deviceId != null) {
             registry.unregister(deviceId, session);
+            // Ghi lại thời điểm liên lạc cuối để màn hình requester hiện "offline, liên lạc x phút trước"
+            deviceService.recordContact(deviceId, null, null);
         }
     }
 

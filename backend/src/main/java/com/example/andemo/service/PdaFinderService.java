@@ -97,6 +97,11 @@ public class PdaFinderService {
     }
 
     @Transactional(readOnly = true)
+    public Optional<PdaAlert> find(String requestId) {
+        return repository.findById(requestId);
+    }
+
+    @Transactional(readOnly = true)
     public List<PdaAlert> findAll() {
         return repository.findAllByOrderByCreatedAtDesc();
     }

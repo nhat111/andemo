@@ -103,6 +103,17 @@ Trước đây access token sống 24 giờ và không làm mới được, nên
 
 ---
 
+### Requester: web quản lý và nút "Tìm PDA"
+
+| Method | Endpoint | Quyền | Mô tả |
+|---|---|---|---|
+| `GET` | `/api/pda/devices` | ADMIN | PDA server biết: tên máy, user đang login, `lastSeenAt`, `secondsSinceLastSeen`, `online` (đang giữ WebSocket hoặc poll trong 90 giây), `connected` (đang giữ WebSocket) |
+| `GET` | `/api/pda/alerts/{requestId}` | ADMIN | Trạng thái 1 lệnh, có cờ `expired` |
+| `GET` | `/pda-finder.html` (hoặc `/`) | Công khai | Web quản lý; dữ liệu trên trang vẫn cần login ADMIN |
+| `GET` | `/api/health` | Công khai | Health check cho Render |
+
+Bảng `pda_device` được cập nhật mỗi lần PDA liên lạc: poll pending (`deviceName` là query param), kết nối WebSocket (`/ws/pda?deviceId=…&deviceName=…`), và ngắt WebSocket. Deploy: xem [DEPLOY_RENDER.md](DEPLOY_RENDER.md).
+
 ## 4. Android
 
 | Thành phần | File | Vai trò |

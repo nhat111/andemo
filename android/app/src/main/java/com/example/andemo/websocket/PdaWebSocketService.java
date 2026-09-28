@@ -178,6 +178,8 @@ public class PdaWebSocketService extends Service {
         return HttpUrl.get(BuildConfig.API_BASE_URL).newBuilder()
                 .addPathSegments("ws/pda")
                 .addQueryParameter("deviceId", DeviceIdProvider.get(this))
+                // Tên máy cho màn hình requester (web / nút "Tìm PDA")
+                .addQueryParameter("deviceName", DeviceIdProvider.getDeviceName())
                 .build();
     }
 
