@@ -9,4 +9,6 @@ public class LoginResponse {
     private String token;
     private String role;
     private String username;
+    // Dùng để lấy access token mới khi token hết hạn: POST /api/auth/refresh
+    private String refreshToken;
 }

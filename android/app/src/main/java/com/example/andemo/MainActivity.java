@@ -9,8 +9,10 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.andemo.api.ApiClient;
+import com.example.andemo.api.AuthService;
 import com.example.andemo.api.ItemService;
 import com.example.andemo.model.ItemDto;
+import com.example.andemo.model.RefreshTokenRequest;
 import com.example.andemo.command.CommandChannel;
 import com.example.andemo.util.PreferenceManager;
 
@@ -59,6 +61,7 @@ public class MainActivity extends AppCompatActivity {
 
         btnLogout.setOnClickListener(v -> {
             CommandChannel.stop(this);
+            revokeRefreshToken();
             pref.clear();
             Toast.makeText(this, "Đã logout", Toast.LENGTH_SHORT).show();
             goToLogin();
@@ -75,6 +78,24 @@ public class MainActivity extends AppCompatActivity {
         if (pref.isLoggedIn()) {
             CommandChannel.start(this);
         }
+    }
+
+    /** Thu hồi refresh token trên server. Gửi 1 lần, lỗi thì bỏ qua (token tự hết hạn sau 30 ngày). */
+    private void revokeRefreshToken() {
+        String refreshToken = pref.getRefreshToken();
+        if (refreshToken == null) {
+            return;
+        }
+        AuthService service = ApiClient.getClient(this).create(AuthService.class);
+        service.logout(new RefreshTokenRequest(refreshToken)).enqueue(new Callback<Void>() {
+            @Override
+            public void onResponse(Call<Void> call, Response<Void> response) {
+            }
+
+            @Override
+            public void onFailure(Call<Void> call, Throwable t) {
+            }
+        });
     }
 
     private void loadItems() {

@@ -86,6 +86,21 @@ API pending và ack giống contract của bản polling, nên app bản polling
 cd backend && mvn test
 ```
 
+### Xác thực: access token + refresh token
+
+Trước đây access token sống 24 giờ và không làm mới được, nên sau 24 giờ PDA ngừng nhận lệnh cho tới khi có người login lại. Nay:
+
+| Token | Thời hạn | Ghi chú |
+|---|---|---|
+| Access token (JWT) | 1 giờ (`jwt.expiration`) | Gửi trong header `Authorization: Bearer …` |
+| Refresh token | 30 ngày (`jwt.refresh-expiration-days`) | Chuỗi ngẫu nhiên; server chỉ lưu hash SHA-256 |
+
+- `POST /api/auth/login` trả thêm `refreshToken`.
+- `POST /api/auth/refresh` với body `{"refreshToken": "…"}` trả **cặp token mới**; refresh token cũ bị thu hồi (xoay vòng). PDA còn liên lạc với server thì phiên được gia hạn mãi; im lặng quá 30 ngày thì phải login lại.
+- **Refresh token đã thu hồi mà bị dùng lại** (dấu hiệu bị lộ): server thu hồi **toàn bộ** refresh token của user đó, buộc login lại.
+- `POST /api/auth/logout` với body `{"refreshToken": "…"}` thu hồi refresh token.
+- Token sai, hết hạn, ký bằng khóa khác, hoặc thiếu token: **401** (trước đây là 403, kèm log ERROR có stack trace ở mỗi request). Không có quyền (ví dụ USER gọi API của ADMIN): **403**. Client dựa vào mã 401 để biết khi nào cần làm mới token.
+
 ---
 
 ## 4. Android
@@ -96,6 +111,8 @@ cd backend && mvn test
 | `CommandChannel` | `command/CommandChannel.java` | Chọn WebSocket hay polling lúc build |
 | `CommandNotification` | `command/CommandNotification.java` | Notification thường trực dùng chung (`IMPORTANCE_MIN`) |
 | Dùng lại từ bản polling | `AlertPoller`, `AlertDispatcher`, `AlertAckReporter`, `BootReceiver` | Poll bắt kịp, chống trùng, ack, khởi động lại sau reboot |
+| `TokenRefresher` | `api/TokenRefresher.java` | Đổi refresh token lấy cặp token mới. Chỉ 1 thread làm mới tại một thời điểm, các thread khác chờ rồi dùng token mới (quan trọng vì server xoay vòng token) |
+| `TokenAuthenticator` | `api/TokenAuthenticator.java` | OkHttp gọi khi REST trả 401: làm mới token rồi gửi lại đúng request đó. Poll, ack, màn hình… không cần biết token đã hết hạn |
 
 ### Giữ kết nối
 
@@ -105,7 +122,8 @@ cd backend && mvn test
 | Kết nối chết mà app không biết (khi CPU ngủ, ping không chạy) | Alarm `setAndAllowWhileIdle` mỗi 3 phút: poll pending 1 lần, rồi kết nối lại nếu cần |
 | Rớt mạng, server restart | Kết nối lại với backoff 1s, 2s, 4s… tối đa 60s, cộng ngẫu nhiên để hàng loạt PDA không kết nối lại cùng lúc |
 | Có mạng trở lại | Kết nối ngay, bỏ qua thời gian chờ backoff |
-| Token sai / hết hạn (HTTP 401/403) | Không kết nối lại dồn dập: chờ 60 giây giữa các lần |
+| Access token hết hạn (handshake 401) | Làm mới token bằng `TokenRefresher` rồi kết nối lại ngay. Refresh token cũng hết hạn thì logout và dừng service |
+| Không có quyền (403), hoặc làm mới token thất bại vì mạng/server | Không kết nối lại dồn dập: chờ 60 giây giữa các lần |
 | Callback của OkHttp chạy trên thread khác | Mọi thay đổi trạng thái chuyển về 1 `HandlerThread`, nên không cần lock. Callback của kết nối cũ (đã bị thay) thì bỏ qua |
 
 ### Chọn kênh lúc build
@@ -155,16 +173,19 @@ curl -H "Authorization: Bearer $TOKEN" localhost:8080/api/pda/alerts
 | Không kêu 2 lần | Tạo lệnh khi đang online | Chỉ kêu 1 lần dù lệnh tới qua cả WebSocket và poll bắt kịp |
 | Máy vào Doze | Tắt màn hình, `adb shell dumpsys deviceidle force-idle`, đợi vài phút, tạo lệnh | **Đo độ trễ thực tế.** Đây là số liệu quan trọng nhất để so với polling |
 | PDA online/offline | Mở app, rồi logout | `/api/pda/devices/online` có rồi mất `deviceId` |
-| Token hết hạn | Đợi token hết hạn (mặc định 24 giờ) | Xem mục 6 |
+| Token hết hạn | Chạy backend với `--jwt.expiration=60000` (1 phút), đợi 2 phút rồi tạo lệnh | App tự làm mới token (logcat `TokenRefresher: Access token refreshed`) và vẫn nhận lệnh |
+| Phiên hết hạn | Chạy backend với `--jwt.expiration=60000`, login trên PDA, **restart backend** (H2 in-memory mất hết refresh token), đợi 2 phút | Lần làm mới bị 401 → app logout, notification thường trực biến mất |
 
 ---
 
 ## 6. Hạn chế và phát hiện của POC
 
-- **Token JWT hết hạn sau 24 giờ (`jwt.expiration`), và app không tự làm mới token.** Sau 24 giờ, WebSocket, pending và ack đều bị từ chối, nên **PDA ngừng nhận lệnh cho tới khi user login lại**. Vấn đề này có ở cả bản polling. Cần làm refresh token, hoặc cấp một token riêng dài hạn cho thiết bị (nằm trong phần JWT/backend đang để sau).
-- **`JwtFilter` có sẵn ném exception khi token sai hoặc hết hạn**, và log ERROR kèm stack trace ở mỗi request. Client vẫn nhận 403 như mong đợi, nhưng log server sẽ đầy khi nhiều PDA cầm token hết hạn và kết nối lại. Nên bắt `JwtException` trong filter (phần JWT đang để sau).
+- ~~Token hết hạn sau 24 giờ thì PDA ngừng nhận lệnh~~ và ~~`JwtFilter` log ERROR khi token sai~~: **đã sửa**, xem "Xác thực" ở mục 3.
+- **PDA không liên lạc với server quá 30 ngày** (ví dụ cất trong kho) thì refresh token hết hạn và phải login lại. Có thể tăng `jwt.refresh-expiration-days` nếu khách cần.
+- **App bị logout khi đang mở màn hình chính** (refresh token bị thu hồi): service tự dừng, nhưng màn hình chưa tự chuyển về trang login; thao tác tiếp theo mới báo lỗi.
+- **Access token đã cấp vẫn dùng được tới khi hết hạn** (tối đa 1 giờ) kể cả sau logout. Đây là đặc điểm chung của JWT không trạng thái.
 - **Registry chỉ đúng khi backend chạy 1 instance.** Chạy nhiều instance thì cần Redis pub/sub hoặc message broker để chuyển lệnh tới instance đang giữ kết nối của PDA.
-- **H2 in-memory**: restart backend là mất lịch sử lệnh. Production cần database thật.
+- **H2 in-memory**: restart backend là mất lịch sử lệnh **và toàn bộ refresh token**, nên mọi PDA bị logout khi access token hết hạn (tối đa 1 giờ sau restart). Production bắt buộc dùng database thật.
 - **Gói hosting free (ví dụ Render free) không phù hợp**: server ngủ khi rảnh và restart làm rớt mọi kết nối.
 - **Alert từ background trên Android 12+**: giống bản polling, cần tắt tối ưu pin để start được `PdaAlertService`; nếu không, app tự chuyển sang notification fallback.
 - **Notification thường trực và nút Stop trong "Active apps"**: giống bản polling (xem `PDA_POLLING_DESIGN.md` mục 5.1).

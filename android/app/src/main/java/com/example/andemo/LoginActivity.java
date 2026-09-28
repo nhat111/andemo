@@ -61,7 +61,7 @@ public class LoginActivity extends AppCompatActivity {
             public void onResponse(Call<LoginResponse> call, Response<LoginResponse> response) {
                 if (response.isSuccessful() && response.body() != null) {
                     LoginResponse body = response.body();
-                    pref.saveLogin(body.getToken(), body.getRole(), body.getUsername());
+                    pref.saveLogin(body.getToken(), body.getRefreshToken(), body.getRole(), body.getUsername());
                     Toast.makeText(LoginActivity.this, "Login thành công!", Toast.LENGTH_SHORT).show();
                     goToMain();
                 } else {

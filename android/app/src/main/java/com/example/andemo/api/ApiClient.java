@@ -14,45 +14,52 @@ public class ApiClient {
     private static final String BASE_URL = BuildConfig.API_BASE_URL;
 
     private static Retrofit retrofit = null;
+    private static Retrofit publicRetrofit = null;
 
     /**
-     * Phải truyền Context để Interceptor lấy được token
+     * Client cho API cần đăng nhập: tự gắn Bearer token, và tự làm mới token khi server trả 401.
      */
-    public static Retrofit getClient(Context context) {
+    public static synchronized Retrofit getClient(Context context) {
         if (retrofit == null) {
-            HttpLoggingInterceptor logging = new HttpLoggingInterceptor();
-            logging.setLevel(HttpLoggingInterceptor.Level.BODY);
-
+            // Dùng application context: client sống suốt vòng đời app, giữ Activity sẽ bị leak
+            Context appContext = context.getApplicationContext();
             OkHttpClient client = new OkHttpClient.Builder()
-                    .addInterceptor(new AuthInterceptor(context))  // ← tự gắn Bearer token
-                    .addInterceptor(logging)
+                    .addInterceptor(new AuthInterceptor(appContext))  // ← tự gắn Bearer token
+                    .authenticator(new TokenAuthenticator(appContext)) // ← 401 thì làm mới token rồi gửi lại
+                    .addInterceptor(buildLogging())
                     .build();
 
-            retrofit = new Retrofit.Builder()
-                    .baseUrl(BASE_URL)
-                    .client(client)
-                    .addConverterFactory(GsonConverterFactory.create())
-                    .build();
+            retrofit = build(client);
         }
         return retrofit;
     }
 
-    // Giữ method cũ cho chỗ chưa có context (sẽ không gắn token)
-    public static Retrofit getClient() {
-        if (retrofit == null) {
-            HttpLoggingInterceptor logging = new HttpLoggingInterceptor();
-            logging.setLevel(HttpLoggingInterceptor.Level.BODY);
-
+    /**
+     * Client không gắn token, không tự làm mới token. Dùng cho refresh token:
+     * nếu dùng client ở trên, lời gọi refresh bị 401 sẽ lại kích hoạt refresh, lặp vô hạn.
+     */
+    static synchronized Retrofit getPublicClient() {
+        if (publicRetrofit == null) {
             OkHttpClient client = new OkHttpClient.Builder()
-                    .addInterceptor(logging)
+                    .addInterceptor(buildLogging())
                     .build();
-
-            retrofit = new Retrofit.Builder()
-                    .baseUrl(BASE_URL)
-                    .client(client)
-                    .addConverterFactory(GsonConverterFactory.create())
-                    .build();
+            publicRetrofit = build(client);
         }
-        return retrofit;
+        return publicRetrofit;
+    }
+
+    private static HttpLoggingInterceptor buildLogging() {
+        HttpLoggingInterceptor logging = new HttpLoggingInterceptor();
+        // Bản release không log body: body chứa token và refresh token
+        logging.setLevel(BuildConfig.DEBUG ? HttpLoggingInterceptor.Level.BODY : HttpLoggingInterceptor.Level.NONE);
+        return logging;
+    }
+
+    private static Retrofit build(OkHttpClient client) {
+        return new Retrofit.Builder()
+                .baseUrl(BASE_URL)
+                .client(client)
+                .addConverterFactory(GsonConverterFactory.create())
+                .build();
     }
 }

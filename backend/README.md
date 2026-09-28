@@ -21,6 +21,16 @@ docker run -p 8080:8080 andemo-backend
 
 API: http://localhost:8080/api/auth/login
 
+Auth:
+- `POST /api/auth/login` → `{token, refreshToken, role, username}`. Access token sống 1 giờ.
+- `POST /api/auth/refresh` body `{"refreshToken": "…"}` → cặp token mới (refresh token xoay vòng, sống 30 ngày).
+- `POST /api/auth/logout` body `{"refreshToken": "…"}` → thu hồi refresh token.
+- Token sai / hết hạn / thiếu → 401; không có quyền → 403.
+
+PDA Finder (lệnh tìm PDA, WebSocket `/ws/pda`): xem `docs/PDA_WEBSOCKET_DESIGN.md`.
+
+Chạy test: `mvn test`
+
 ### Tài khoản mẫu
 | Username | Password | Role  |
 |----------|----------|-------|

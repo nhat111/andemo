@@ -21,6 +21,7 @@ import androidx.core.content.ContextCompat;
 import com.example.andemo.BuildConfig;
 import com.example.andemo.alert.AlertAckReporter;
 import com.example.andemo.alert.AlertDispatcher;
+import com.example.andemo.api.TokenRefresher;
 import com.example.andemo.command.CommandNotification;
 import com.example.andemo.model.PendingAlertDto;
 import com.example.andemo.polling.AlertPoller;
@@ -80,6 +81,9 @@ public class PdaWebSocketService extends Service {
     private WebSocket webSocket;      // khác null = đang kết nối hoặc đã kết nối
     private boolean connected;
     private int reconnectAttempt;
+    // Token dùng cho lần kết nối hiện tại: bị 401 thì biết cần làm mới token nào
+    @Nullable
+    private String connectionToken;
 
     private final Runnable connectRunnable = this::connectIfNeeded;
 
@@ -160,10 +164,10 @@ public class PdaWebSocketService extends Service {
         }
         wsHandler.removeCallbacks(connectRunnable);
 
-        String token = new PreferenceManager(this).getToken();
+        connectionToken = new PreferenceManager(this).getToken();
         Request request = new Request.Builder()
                 .url(buildWebSocketUrl())
-                .header("Authorization", "Bearer " + token)
+                .header("Authorization", "Bearer " + connectionToken)
                 .build();
         Log.d(TAG, "Connecting to " + request.url());
         webSocket = client.newWebSocket(request, new Listener());
@@ -182,10 +186,26 @@ public class PdaWebSocketService extends Service {
         if (!isLoggedIn()) {
             return;
         }
+        int code = response == null ? 0 : response.code();
+        if (code == 401) {
+            // Access token hết hạn: làm mới rồi kết nối lại ngay. Client WebSocket không có
+            // TokenAuthenticator như client REST nên phải tự làm ở đây.
+            Log.d(TAG, "Handshake rejected: HTTP 401, refreshing token");
+            if (TokenRefresher.refresh(getApplicationContext(), connectionToken) != null) {
+                reconnectAttempt = 0;
+                connectIfNeeded();
+                return;
+            }
+            if (!isLoggedIn()) {
+                return; // refresh token cũng hết hạn: đã logout, service tự dừng
+            }
+            // Lỗi mạng / server khi làm mới: chờ rồi thử lại như bình thường
+        }
+
         long delay;
-        if (response != null && (response.code() == 401 || response.code() == 403)) {
-            // Token hết hạn / không hợp lệ: không kết nối lại dồn dập, chờ lâu nhất
-            Log.w(TAG, "Handshake rejected: HTTP " + response.code());
+        if (code == 401 || code == 403) {
+            // Không làm mới được token, hoặc không có quyền: không kết nối lại dồn dập
+            Log.w(TAG, "Handshake rejected: HTTP " + code);
             delay = MAX_RECONNECT_DELAY_MS;
         } else {
             // Backoff tăng dần 1s, 2s, 4s… tối đa 60s, cộng ngẫu nhiên để hàng loạt PDA
