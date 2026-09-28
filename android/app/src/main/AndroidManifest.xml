@@ -108,6 +108,15 @@
                 android:value="pda_finder_command_polling" />
         </service>
 
+        <service
+            android:name=".websocket.PdaWebSocketService"
+            android:foregroundServiceType="specialUse"
+            android:exported="false">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="pda_finder_command_websocket" />
+        </service>
+
         <!-- exported=true để nhận broadcast của hệ thống; 2 action này chỉ hệ thống gửi được -->
         <receiver
             android:name=".polling.BootReceiver"

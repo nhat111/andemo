@@ -1,16 +1,12 @@
 package com.example.andemo.polling;
 
 import android.app.AlarmManager;
-import android.app.Notification;
-import android.app.NotificationChannel;
-import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
 import android.net.ConnectivityManager;
 import android.net.Network;
-import android.os.Build;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.IBinder;
@@ -19,9 +15,9 @@ import android.os.SystemClock;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
-import androidx.core.app.NotificationCompat;
 import androidx.core.content.ContextCompat;
 
+import com.example.andemo.command.CommandNotification;
 import com.example.andemo.util.PreferenceManager;
 
 /**
@@ -46,10 +42,6 @@ public class PdaPollingService extends Service {
     private static final long POLL_WAKE_LOCK_TIMEOUT_MS = 20_000L;
 
     private static final String ACTION_POLL_NOW = "com.example.andemo.polling.POLL_NOW";
-    // Importance của channel không đổi được sau khi tạo, nên đổi importance = đổi sang ID mới
-    private static final String CHANNEL_ID = "pda_polling_min_channel";
-    private static final String OLD_CHANNEL_ID = "pda_polling_channel";
-    private static final int NOTIFICATION_ID = 2001;
 
     private HandlerThread pollThread;
     private Handler pollHandler;
@@ -90,8 +82,7 @@ public class PdaPollingService extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         try {
-            createNotificationChannel();
-            startForeground(NOTIFICATION_ID, buildNotification());
+            startForeground(CommandNotification.NOTIFICATION_ID, CommandNotification.build(this));
         } catch (IllegalStateException e) {
             // Android 12+: hệ thống khởi động lại service (START_STICKY) hoặc alarm gọi tới
             // trong lúc app không được phép chạy foreground service → dừng, chờ user mở app
@@ -168,41 +159,6 @@ public class PdaPollingService extends Service {
             }
         };
         connectivityManager.registerDefaultNetworkCallback(networkCallback);
-    }
-
-    private void createNotificationChannel() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            NotificationManager manager = getSystemService(NotificationManager.class);
-            if (manager == null) {
-                return;
-            }
-            // Xóa channel IMPORTANCE_LOW của bản POC trước (nếu máy đã cài)
-            manager.deleteNotificationChannel(OLD_CHANNEL_ID);
-
-            // IMPORTANCE_MIN: không kêu, không có icon trên thanh trạng thái, chỉ nằm thu gọn
-            // ở cuối danh sách khi kéo thanh thông báo xuống. Foreground service bắt buộc phải có
-            // notification; đây là mức ít gây chú ý nhất. Không bỏ được nút Stop trong
-            // "Active apps" (Android 13+), xem docs/PDA_POLLING_DESIGN.md mục 5.
-            NotificationChannel channel = new NotificationChannel(
-                    CHANNEL_ID,
-                    "Chờ lệnh tìm PDA",
-                    NotificationManager.IMPORTANCE_MIN
-            );
-            channel.setDescription("Hiển thị khi app đang chờ lệnh tìm PDA từ server");
-            channel.setShowBadge(false);
-            manager.createNotificationChannel(channel);
-        }
-    }
-
-    private Notification buildNotification() {
-        return new NotificationCompat.Builder(this, CHANNEL_ID)
-                .setContentTitle("Andemo")
-                .setContentText("Đang chờ lệnh tìm PDA")
-                .setSmallIcon(android.R.drawable.ic_popup_sync)
-                .setPriority(NotificationCompat.PRIORITY_MIN) // cho Android 7.x (chưa có channel)
-                .setOngoing(true)
-                .setShowWhen(false)
-                .build();
     }
 
     @Override

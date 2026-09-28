@@ -20,14 +20,14 @@ import retrofit2.Response;
  *
  * Gọi đồng bộ (execute) nên KHÔNG được gọi trên main thread.
  */
-final class AlertPoller {
+public final class AlertPoller {
 
     private static final String TAG = "AlertPoller";
 
     private AlertPoller() {
     }
 
-    static void pollOnce(Context context) {
+    public static void pollOnce(Context context) {
         AlertApi api = ApiClient.getClient(context).create(AlertApi.class);
         Response<List<PendingAlertDto>> response;
         try {

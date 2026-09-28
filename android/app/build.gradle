@@ -26,6 +26,11 @@ android {
         //   ./gradlew assembleDebug -PapiBaseUrl=http://10.0.2.2:8081/
         buildConfigField "String", "API_BASE_URL",
                 "\"${project.findProperty('apiBaseUrl') ?: 'https://andemo.onrender.com/'}\""
+
+        // Kênh nhận lệnh tìm PDA: websocket (mặc định) hoặc polling
+        //   ./gradlew assembleDebug -PpdaChannel=polling
+        buildConfigField "String", "PDA_COMMAND_CHANNEL",
+                "\"${project.findProperty('pdaChannel') ?: 'websocket'}\""
     }
 
     buildFeatures {
