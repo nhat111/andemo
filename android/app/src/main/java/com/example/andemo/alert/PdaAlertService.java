@@ -54,7 +54,7 @@ public class PdaAlertService extends Service {
     private MediaPlayer mediaPlayer;
     // Tạo 1 lần cho cả vòng đời service, để luôn huỷ được timeout cũ trước khi đặt timeout mới
     private final Handler timeoutHandler = new Handler(Looper.getMainLooper());
-    private final Runnable timeoutRunnable = this::stopAlert;
+    private final Runnable timeoutRunnable = this::onTimeout;
     // null = không có alert nào đang chạy
     private String currentRequestId;
     // Volume STREAM_ALARM trước khi alert bắt đầu; -1 = chưa lưu
@@ -71,6 +71,13 @@ public class PdaAlertService extends Service {
         // Xử lý action Stop
         if (ACTION_STOP_ALERT.equals(intent.getAction())) {
             Log.d(TAG, "Stop action received");
+            // Lấy requestId từ intent: Stop từ notification fallback đến khi service chưa chạy,
+            // lúc đó currentRequestId là null
+            String stoppedRequestId = intent.getStringExtra(EXTRA_REQUEST_ID);
+            if (stoppedRequestId == null) {
+                stoppedRequestId = currentRequestId;
+            }
+            AlertAckReporter.report(this, stoppedRequestId, AlertAckReporter.STATUS_STOPPED_BY_USER);
             stopAlert();
             return START_NOT_STICKY;
         }
@@ -318,6 +325,11 @@ public class PdaAlertService extends Service {
         currentRequestId = null;
         // Gỡ luôn notification fallback (nếu có) khi user bấm Stop
         NotificationManagerCompat.from(this).cancel(FALLBACK_NOTIFICATION_ID);
+    }
+
+    private void onTimeout() {
+        AlertAckReporter.report(this, currentRequestId, AlertAckReporter.STATUS_TIMED_OUT);
+        stopAlert();
     }
 
     private void stopAlert() {

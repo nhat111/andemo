@@ -2,14 +2,16 @@ package com.example.andemo.api;
 
 import android.content.Context;
 
+import com.example.andemo.BuildConfig;
+
 import okhttp3.OkHttpClient;
 import okhttp3.logging.HttpLoggingInterceptor;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
 public class ApiClient {
-    // Backend deployed on Render
-    private static final String BASE_URL = "https://andemo.onrender.com/";
+    // Mặc định là backend trên Render; đổi lúc build bằng -PapiBaseUrl (xem app/build.gradle)
+    private static final String BASE_URL = BuildConfig.API_BASE_URL;
 
     private static Retrofit retrofit = null;
 

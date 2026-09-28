@@ -21,6 +21,15 @@ android {
         targetSdk 34
         versionCode 1
         versionName "1.0"
+
+        // Đổi backend lúc build, ví dụ trỏ vào mock server (tools/MockPdaAlertServer.java):
+        //   ./gradlew assembleDebug -PapiBaseUrl=http://10.0.2.2:8081/
+        buildConfigField "String", "API_BASE_URL",
+                "\"${project.findProperty('apiBaseUrl') ?: 'https://andemo.onrender.com/'}\""
+    }
+
+    buildFeatures {
+        buildConfig true
     }
 
     buildTypes {

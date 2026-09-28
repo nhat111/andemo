@@ -11,6 +11,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.example.andemo.api.ApiClient;
 import com.example.andemo.api.ItemService;
 import com.example.andemo.model.ItemDto;
+import com.example.andemo.polling.PdaPollingService;
 import com.example.andemo.util.PreferenceManager;
 
 import java.util.List;
@@ -57,12 +58,23 @@ public class MainActivity extends AppCompatActivity {
         );
 
         btnLogout.setOnClickListener(v -> {
+            PdaPollingService.stop(this);
             pref.clear();
             Toast.makeText(this, "Đã logout", Toast.LENGTH_SHORT).show();
             goToLogin();
         });
 
         loadItems();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        // Start khi activity đang hiển thị: Android 12+ cho phép start foreground service lúc này.
+        // Service đang chạy rồi thì chỉ poll ngay 1 lần (bắt kịp lệnh khi mở app).
+        if (pref.isLoggedIn()) {
+            PdaPollingService.start(this);
+        }
     }
 
     private void loadItems() {

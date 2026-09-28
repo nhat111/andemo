@@ -1,12 +1,10 @@
 package com.example.andemo.fcm;
 
-import android.content.Intent;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
-import androidx.core.content.ContextCompat;
 
-import com.example.andemo.alert.PdaAlertService;
+import com.example.andemo.alert.AlertDispatcher;
 import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.messaging.RemoteMessage;
 
@@ -50,38 +48,14 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
             String message = data.get("message");
             String storeCode = data.get("storeCode");
 
-            if (requestId == null || requestId.isEmpty()) {
-                Log.w(TAG, "Missing requestId, ignore alert");
-                return;
-            }
-
             if (message == null || message.isEmpty()) {
                 message = "PDA đang được tìm kiếm";
             }
 
-            startAlertService(requestId, message, storeCode);
+            // Chống trùng (FCM gửi lại, hoặc polling đã giao cùng lệnh) nằm trong AlertDispatcher
+            AlertDispatcher.dispatch(this, requestId, message, storeCode);
         } else {
             Log.d(TAG, "Unknown message type: " + type);
-        }
-    }
-
-    private void startAlertService(String requestId, String message, String storeCode) {
-        Intent intent = new Intent(this, PdaAlertService.class);
-        intent.putExtra(PdaAlertService.EXTRA_REQUEST_ID, requestId);
-        intent.putExtra(PdaAlertService.EXTRA_MESSAGE, message);
-        if (storeCode != null) {
-            intent.putExtra(PdaAlertService.EXTRA_STORE_CODE, storeCode);
-        }
-
-        try {
-            ContextCompat.startForegroundService(this, intent);
-            Log.d(TAG, "Started PdaAlertService for requestId=" + requestId);
-        } catch (IllegalStateException e) {
-            // Android 12+ ném ForegroundServiceStartNotAllowedException (lớp con của
-            // IllegalStateException) nếu message không phải high priority hoặc bị FCM hạ ưu tiên.
-            // Không bắt thì app crash và mất luôn alert → chuyển sang chỉ hiện notification.
-            Log.w(TAG, "Cannot start PdaAlertService, showing fallback notification", e);
-            PdaAlertService.showFallbackNotification(this, requestId, message);
         }
     }
 
