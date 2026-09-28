@@ -1,6 +1,9 @@
 package com.example.andemo.api;
 
 import com.example.andemo.model.AlertAckRequest;
+import com.example.andemo.model.AlertStatusDto;
+import com.example.andemo.model.CreateAlertRequest;
+import com.example.andemo.model.PdaDeviceDto;
 import com.example.andemo.model.PendingAlertDto;
 
 import java.util.List;
@@ -17,10 +20,28 @@ import retrofit2.http.Query;
  */
 public interface AlertApi {
 
-    /** Các lệnh chưa được PDA xác nhận và chưa hết hạn (server lọc theo giờ của server). */
+    // ----- Phía PDA -----
+
+    /**
+     * Các lệnh chưa được PDA xác nhận và chưa hết hạn (server lọc theo giờ của server).
+     * Server cũng ghi nhận PDA này vừa liên lạc (deviceName, thời điểm) cho màn hình requester.
+     */
     @GET("api/pda/alerts/pending")
-    Call<List<PendingAlertDto>> getPending(@Query("deviceId") String deviceId);
+    Call<List<PendingAlertDto>> getPending(@Query("deviceId") String deviceId,
+                                           @Query("deviceName") String deviceName);
 
     @POST("api/pda/alerts/{requestId}/ack")
     Call<Void> ack(@Path("requestId") String requestId, @Body AlertAckRequest body);
+
+    // ----- Phía requester (ADMIN) -----
+
+    /** Các PDA server biết, PDA liên lạc gần nhất đứng đầu. */
+    @GET("api/pda/devices")
+    Call<List<PdaDeviceDto>> getDevices();
+
+    @POST("api/pda/alerts")
+    Call<AlertStatusDto> createAlert(@Body CreateAlertRequest body);
+
+    @GET("api/pda/alerts/{requestId}")
+    Call<AlertStatusDto> getAlert(@Path("requestId") String requestId);
 }

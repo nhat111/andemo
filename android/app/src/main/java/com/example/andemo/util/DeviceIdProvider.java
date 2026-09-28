@@ -2,6 +2,7 @@ package com.example.andemo.util;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.os.Build;
 import android.provider.Settings;
 
 /**
@@ -18,5 +19,10 @@ public final class DeviceIdProvider {
     @SuppressLint("HardwareIds")
     public static String get(Context context) {
         return Settings.Secure.getString(context.getContentResolver(), Settings.Secure.ANDROID_ID);
+    }
+
+    /** Tên dễ đọc để requester nhận ra máy, ví dụ "realme RMX1851". */
+    public static String getDeviceName() {
+        return Build.MANUFACTURER + " " + Build.MODEL;
     }
 }

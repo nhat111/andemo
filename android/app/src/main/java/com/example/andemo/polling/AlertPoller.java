@@ -31,7 +31,7 @@ public final class AlertPoller {
         AlertApi api = ApiClient.getClient(context).create(AlertApi.class);
         Response<List<PendingAlertDto>> response;
         try {
-            response = api.getPending(DeviceIdProvider.get(context)).execute();
+            response = api.getPending(DeviceIdProvider.get(context), DeviceIdProvider.getDeviceName()).execute();
         } catch (IOException e) {
             // Mất mạng, timeout, server ngủ… lần poll sau thử lại
             Log.w(TAG, "Poll failed: " + e.getMessage());
