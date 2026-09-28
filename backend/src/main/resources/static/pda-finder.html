@@ -115,7 +115,7 @@
   <div class="grid2">
     <section class="card">
       <h2>1. Chọn PDA cần tìm</h2>
-      <p class="hint">PDA xuất hiện ở đây sau khi đã đăng nhập và liên lạc với server. Online = liên lạc trong 90 giây gần nhất. Tự làm mới mỗi 10 giây.</p>
+      <p class="hint">PDA xuất hiện ở đây sau khi đã đăng nhập và liên lạc với server. Online = đang kết nối hoặc liên lạc trong 90 giây gần nhất. Tự làm mới mỗi 10 giây. <span id="fcmStatus"></span></p>
       <div class="options">
         <div><label for="optMessage">Nội dung hiện trên PDA</label><input id="optMessage" maxlength="120"></div>
         <div><label for="optStore">Mã cửa hàng</label><input id="optStore" placeholder="VD: STORE01" maxlength="20"></div>
@@ -278,12 +278,25 @@ function logout(message) {
   if (message) { $('loginError').textContent = message; $('loginError').hidden = false; }
 }
 
+// Server đã cấu hình Firebase chưa (GET /api/health có "fcm"; mock server không có trường này)
+let fcmEnabled = false;
+async function loadServerInfo() {
+  try {
+    const health = await (await fetch('/api/health')).json();
+    fcmEnabled = health.fcm === true;
+    $('fcmStatus').textContent = health.fcm === undefined ? '' : (fcmEnabled
+      ? 'FCM trên server: bật (PDA có nhãn FCM nhận lệnh qua Firebase kể cả khi offline).'
+      : 'FCM trên server: tắt (chưa cấu hình Firebase).');
+  } catch (e) { /* server cũ / mock không có /api/health */ }
+}
+
 function start() {
   $('loginView').hidden = true;
   $('appView').hidden = false;
   $('userBox').hidden = false;
   $('who').textContent = session.username + ' (' + session.role + ') ';
   $('optMessage').value = 'PDA đang được tìm bởi quản lý ' + session.username;
+  loadServerInfo();
   loadDevices();
   loadHistory();
   timers.push(setInterval(loadDevices, 10000));
@@ -312,7 +325,7 @@ function renderDevices() {
     tr.innerHTML =
       '<td><div class="name"></div><div class="mono"></div></td>' +
       '<td class="user"></td>' +
-      '<td><span class="badge"></span><div class="mono ago"></div></td>' +
+      '<td><span class="badge"></span> <span class="badge b-live fcm" hidden>FCM</span><div class="mono ago"></div></td>' +
       '<td style="text-align:right"><button class="primary">🔔 Tìm</button></td>';
     // textContent: tên máy / user do PDA gửi lên, không chèn thẳng vào HTML
     tr.querySelector('.name').textContent = d.deviceName || 'Không rõ tên';
@@ -322,6 +335,8 @@ function renderDevices() {
     badge.textContent = d.online ? 'Online' : 'Offline';
     badge.className = 'badge ' + (d.online ? 'b-ok' : 'b-idle');
     tr.querySelector('.ago').textContent = 'liên lạc ' + formatAgo(d.secondsSinceLastSeen) + ' trước';
+    // FCM: server gửi được lệnh qua Firebase kể cả khi máy không online (không giữ kết nối, không poll)
+    tr.querySelector('.fcm').hidden = !d.fcm;
     tr.querySelector('button').addEventListener('click', () => findDevice(d));
     tbody.appendChild(tr);
   }
@@ -330,7 +345,7 @@ function renderDevices() {
 // ===== Gửi lệnh =====
 async function findDevice(d) {
   const ttl = Number($('optTtl').value);
-  if (!d.online) {
+  if (!d.online && !(d.fcm && fcmEnabled)) {
     const ok = confirm((d.deviceName || d.deviceId) + ' đang OFFLINE (liên lạc lần cuối ' + formatAgo(d.secondsSinceLastSeen) +
       ' trước).\n\nLệnh có hiệu lực ' + ttl + ' giây: nếu máy liên lạc lại trong thời gian đó thì vẫn đổ chuông, ' +
       'nếu không lệnh sẽ hết hạn.\n\nVẫn gửi?');

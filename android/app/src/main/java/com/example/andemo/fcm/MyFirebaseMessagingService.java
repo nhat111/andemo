@@ -4,7 +4,9 @@ import android.util.Log;
 
 import androidx.annotation.NonNull;
 
+import com.example.andemo.alert.AlertAckReporter;
 import com.example.andemo.alert.AlertDispatcher;
+import com.example.andemo.command.CommandChannel;
 import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.messaging.RemoteMessage;
 
@@ -24,10 +26,13 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
     @Override
     public void onNewToken(@NonNull String token) {
         super.onNewToken(token);
-        Log.d(TAG, "New FCM token: " + token);
+        Log.d(TAG, "New FCM token received");
 
-        // TODO: Gửi token này lên backend của bạn
-        // sendTokenToServer(token);
+        // Firebase đổi token (cài lại app, xóa dữ liệu, token hết hạn…): báo lại server.
+        // Chỉ ở chế độ fcm, để polling / WebSocket so sánh được độc lập.
+        if (CommandChannel.isFcm(this)) {
+            FcmTokenRegistrar.send(this, token);
+        }
     }
 
     @Override
@@ -54,12 +59,10 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
 
             // Chống trùng (FCM gửi lại, hoặc polling đã giao cùng lệnh) nằm trong AlertDispatcher
             AlertDispatcher.dispatch(this, requestId, message, storeCode);
+            // Báo server đã nhận (giống polling / WebSocket): web quản lý chuyển sang "đang đổ chuông"
+            AlertAckReporter.report(this, requestId, AlertAckReporter.STATUS_DELIVERED);
         } else {
             Log.d(TAG, "Unknown message type: " + type);
         }
     }
-
-    // private void sendTokenToServer(String token) {
-    //     // Gọi API backend để lưu token + device info
-    // }
 }

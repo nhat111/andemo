@@ -4,6 +4,7 @@ import com.example.andemo.dto.CreatePdaAlertRequest;
 import com.example.andemo.dto.PdaAlertCommand;
 import com.example.andemo.entity.PdaAlert;
 import com.example.andemo.entity.PdaAlertStatus;
+import com.example.andemo.push.PushSender;
 import com.example.andemo.repository.PdaAlertRepository;
 import com.example.andemo.websocket.PdaSessionRegistry;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -13,8 +14,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Duration;
 import java.time.Instant;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -36,6 +40,8 @@ public class PdaFinderService {
     private final PdaAlertRepository repository;
     private final PdaSessionRegistry sessionRegistry;
     private final ObjectMapper objectMapper;
+    private final PdaDeviceService deviceService;
+    private final PushSender pushSender;
 
     @Transactional
     public PdaAlert create(CreatePdaAlertRequest request, String requestedBy) {
@@ -55,10 +61,37 @@ public class PdaFinderService {
         repository.save(alert);
 
         int pushed = sessionRegistry.send(alert.getDeviceId(), toJson(PdaAlertCommand.from(alert)));
-        log.info("Alert {} created by {} for {}, pushed via WebSocket to {} PDA(s)",
+        int viaFcm = sendFcm(alert);
+        log.info("Alert {} created by {} for {}, pushed via WebSocket to {} PDA(s), via FCM to {} PDA(s)",
                 alert.getRequestId(), requestedBy,
-                alert.getDeviceId() == null ? "all PDAs" : alert.getDeviceId(), pushed);
+                alert.getDeviceId() == null ? "all PDAs" : alert.getDeviceId(), pushed, viaFcm);
         return alert;
+    }
+
+    /**
+     * Gửi qua FCM tới các PDA đã đăng ký token. Cùng lệnh có thể tới PDA qua cả WebSocket / poll:
+     * app chống trùng theo requestId.
+     */
+    private int sendFcm(PdaAlert alert) {
+        if (!pushSender.isEnabled()) {
+            return 0;
+        }
+        // FCM data message chỉ nhận giá trị String, không nhận null
+        Map<String, String> data = new HashMap<>();
+        data.put("type", "PDA_FINDER_ALERT");
+        data.put("requestId", alert.getRequestId());
+        data.put("message", alert.getMessage());
+        data.put("expiresAt", alert.getExpiresAt().toString());
+        if (alert.getStoreCode() != null) {
+            data.put("storeCode", alert.getStoreCode());
+        }
+        Duration ttl = Duration.between(Instant.now(), alert.getExpiresAt());
+
+        List<String> tokens = deviceService.fcmTokens(alert.getDeviceId());
+        for (String token : tokens) {
+            pushSender.send(token, data, ttl, () -> deviceService.removeFcmToken(token));
+        }
+        return tokens.size();
     }
 
     /** Lệnh chưa được PDA xác nhận và chưa hết hạn (theo giờ server). */

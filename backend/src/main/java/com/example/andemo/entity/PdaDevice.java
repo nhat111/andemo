@@ -1,5 +1,6 @@
 package com.example.andemo.entity;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
@@ -28,4 +29,10 @@ public class PdaDevice {
     private String username;
 
     private Instant lastSeenAt;
+
+    // FCM registration token của app trên PDA (null = không nhận qua FCM)
+    @Column(length = 512)
+    private String fcmToken;
+
+    private Instant fcmTokenUpdatedAt;
 }

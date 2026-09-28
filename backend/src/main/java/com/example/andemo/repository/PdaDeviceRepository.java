@@ -8,4 +8,8 @@ import java.util.List;
 public interface PdaDeviceRepository extends JpaRepository<PdaDevice, String> {
 
     List<PdaDevice> findAllByOrderByLastSeenAtDesc();
+
+    List<PdaDevice> findByFcmTokenIsNotNull();
+
+    List<PdaDevice> findByFcmToken(String fcmToken);
 }

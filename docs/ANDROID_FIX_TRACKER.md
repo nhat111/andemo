@@ -35,7 +35,7 @@ Tổng hợp từ bản review Android client. Mỗi khi fix xong một bug thì
 | A13 | P3 | Channel chính kêu thêm 1 lần, không `setBypassDnd` | `PdaAlertService` | Notification channel | 5–6 | ⬜ |
 | A14 | P3 | `FLAG_DISMISS_KEYGUARD` deprecated; service bỏ qua `requestId` khi Stop | `AlertActivity`, `PdaAlertService` | Lock screen | 5–6 | ⬜ |
 | A15 | P3 | Popup có action bar | `AlertActivity`, `themes.xml` | Theme | 3 | ⬜ |
-| T1 | P1 | Vòng đời FCM token: `onNewToken` là TODO, không `getToken()` sau login, không retry | `MyFirebaseMessagingService`, `LoginActivity` | FCM token, WorkManager | 10 | ⬜ |
+| T1 | P1 | Vòng đời FCM token: `onNewToken` là TODO, không `getToken()` sau login, không retry | `MyFirebaseMessagingService`, `LoginActivity` | FCM token, WorkManager | 10 | 🟡 nhánh `claude/pda-finder-fcm`: đăng ký sau login, gửi lại khi `onNewToken`, xóa khi logout; chưa retry bằng WorkManager |
 | T2 | P2 | Không check / hướng dẫn tắt battery optimization | `MainActivity` | Doze, App Standby | 11 | ⬜ |
 
 ## Barcode và sản phẩm

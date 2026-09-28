@@ -21,4 +21,6 @@ public class PdaDeviceDto {
     private boolean online;
     // Đang giữ kết nối WebSocket: lệnh được đẩy xuống ngay
     private boolean connected;
+    // Đã đăng ký FCM token: server gửi lệnh qua Firebase được, kể cả khi máy không online
+    private boolean fcm;
 }

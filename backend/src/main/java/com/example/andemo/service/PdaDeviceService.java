@@ -56,9 +56,51 @@ public class PdaDeviceService {
                             : Math.max(0, Duration.between(device.getLastSeenAt(), now).getSeconds());
                     boolean online = isConnected || seconds < ONLINE_WINDOW.getSeconds();
                     return new PdaDeviceDto(device.getDeviceId(), device.getDeviceName(), device.getUsername(),
-                            device.getLastSeenAt(), seconds, online, isConnected);
+                            device.getLastSeenAt(), seconds, online, isConnected, device.getFcmToken() != null);
                 })
                 .toList();
+    }
+
+    /**
+     * PDA gửi FCM token lên (sau login, hoặc khi Firebase cấp token mới). Token rỗng = xóa.
+     * Một token chỉ thuộc 1 PDA: nếu token đang gắn với máy khác (cài lại app, đổi deviceId) thì gỡ ở máy đó.
+     */
+    @Transactional
+    public void saveFcmToken(String deviceId, String deviceName, String username, String fcmToken) {
+        String token = fcmToken == null || fcmToken.isBlank() ? null : fcmToken;
+        if (token != null) {
+            for (PdaDevice other : repository.findByFcmToken(token)) {
+                if (!other.getDeviceId().equals(deviceId)) {
+                    other.setFcmToken(null);
+                }
+            }
+        }
+        recordContact(deviceId, deviceName, username);
+        repository.findById(deviceId).ifPresent(device -> {
+            device.setFcmToken(token);
+            device.setFcmTokenUpdatedAt(Instant.now());
+        });
+    }
+
+    /** FCM báo token không còn hợp lệ (app bị gỡ, token bị xóa khi logout…). */
+    @Transactional
+    public void removeFcmToken(String fcmToken) {
+        for (PdaDevice device : repository.findByFcmToken(fcmToken)) {
+            device.setFcmToken(null);
+            device.setFcmTokenUpdatedAt(Instant.now());
+        }
+    }
+
+    /** FCM token của 1 PDA, hoặc của mọi PDA khi deviceId là null. */
+    @Transactional(readOnly = true)
+    public List<String> fcmTokens(String deviceId) {
+        if (deviceId == null) {
+            return repository.findByFcmTokenIsNotNull().stream().map(PdaDevice::getFcmToken).toList();
+        }
+        return repository.findById(deviceId)
+                .map(PdaDevice::getFcmToken)
+                .map(List::of)
+                .orElse(List.of());
     }
 
     private static String truncate(String value) {

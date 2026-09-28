@@ -39,6 +39,7 @@ Service tạo tay: **Settings → Health Check Path** = `/api/health`.
 | `SPRING_DATASOURCE_URL` | Khuyến nghị | `jdbc:postgresql://<host>:5432/<database>` (xem bước 4) |
 | `SPRING_DATASOURCE_USERNAME` | Đi cùng URL | User database |
 | `SPRING_DATASOURCE_PASSWORD` | Đi cùng URL | Mật khẩu database |
+| `FIREBASE_SERVICE_ACCOUNT_JSON` | Không (chỉ khi dùng FCM) | Toàn bộ nội dung file service account JSON của Firebase. Trống hoặc sai thì FCM tắt, backend vẫn chạy. Xem [FCM_SETUP.md](FCM_SETUP.md) |
 | `JAVA_OPTS` | Không | Đã có trong Blueprint: `-Xms128m -Xmx384m -XX:+UseContainerSupport` |
 
 **Không tạo biến với giá trị rỗng** cho `SPRING_DATASOURCE_*`: URL rỗng làm backend không khởi động được. Không dùng Postgres thì đừng tạo 3 biến này.

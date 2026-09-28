@@ -40,6 +40,7 @@ API: `http://localhost:8080/api/auth/login`
 ## Tài liệu
 
 - `docs/LOCAL_SETUP_GUIDE.md`: **hướng dẫn setup và test trên máy local** (mock server, web quản lý, máy ảo / máy thật)
+- `docs/FCM_SETUP.md`: setup Firebase và test nhận lệnh qua FCM (so sánh với polling / WebSocket)
 - `docs/ANDROID_LEARNING_PLAN.md`: plan học Android dựa trên project này
 - `docs/ANDROID_FIX_TRACKER.md`: danh sách bug Android cần fix
 - `docs/PDA_FINDER_ALERT_REQUIREMENTS.md`: requirement PDA Finder

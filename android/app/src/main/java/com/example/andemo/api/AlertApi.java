@@ -3,6 +3,7 @@ package com.example.andemo.api;
 import com.example.andemo.model.AlertAckRequest;
 import com.example.andemo.model.AlertStatusDto;
 import com.example.andemo.model.CreateAlertRequest;
+import com.example.andemo.model.FcmTokenRequest;
 import com.example.andemo.model.PdaDeviceDto;
 import com.example.andemo.model.PendingAlertDto;
 
@@ -12,6 +13,7 @@ import retrofit2.Call;
 import retrofit2.http.Body;
 import retrofit2.http.GET;
 import retrofit2.http.POST;
+import retrofit2.http.PUT;
 import retrofit2.http.Path;
 import retrofit2.http.Query;
 
@@ -32,6 +34,10 @@ public interface AlertApi {
 
     @POST("api/pda/alerts/{requestId}/ack")
     Call<Void> ack(@Path("requestId") String requestId, @Body AlertAckRequest body);
+
+    /** Đăng ký FCM token của PDA (chế độ pdaChannel=fcm). Token null = hủy đăng ký. */
+    @PUT("api/pda/devices/{deviceId}/fcm-token")
+    Call<Void> updateFcmToken(@Path("deviceId") String deviceId, @Body FcmTokenRequest body);
 
     // ----- Phía requester (ADMIN) -----
 

@@ -458,6 +458,7 @@ Muốn xem URL app đang gọi: lọc chữ `okhttp`, sẽ thấy các dòng `--
 | App dùng WebSocket (kêu gần như ngay lập tức) | Nhánh websocket, build mặc định là WebSocket | `PDA_WEBSOCKET_DESIGN.md` |
 | App nhánh websocket nhưng vẫn chạy polling | Thêm `pdaChannel=polling` vào `gradle.properties` (hoặc `-PpdaChannel=polling`) | |
 | Deploy lên Render | Nhánh websocket | `DEPLOY_RENDER.md` |
+| App nhận lệnh qua FCM (Firebase) | Nhánh `claude/pda-finder-fcm`, `pdaChannel=fcm`, cần Firebase project | `FCM_SETUP.md` |
 
 Web quản lý của backend Spring nằm ở `http://localhost:8080/pda-finder.html`.
 

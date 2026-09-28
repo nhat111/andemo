@@ -1,6 +1,7 @@
 package com.example.andemo.controller;
 
 import com.example.andemo.dto.CreatePdaAlertRequest;
+import com.example.andemo.dto.FcmTokenRequest;
 import com.example.andemo.dto.PdaAlertAckRequest;
 import com.example.andemo.dto.PdaAlertCommand;
 import com.example.andemo.dto.PdaDeviceDto;
@@ -70,6 +71,15 @@ public class PdaAlertController {
         return pdaFinderService.pending(deviceId);
     }
 
+    /** PDA đăng ký FCM token (token rỗng / null = hủy đăng ký). */
+    @PutMapping("/devices/{deviceId}/fcm-token")
+    public ResponseEntity<Void> updateFcmToken(@PathVariable String deviceId, @RequestBody FcmTokenRequest request,
+                                               Authentication authentication) {
+        pdaDeviceService.saveFcmToken(deviceId, request.getDeviceName(), authentication.getName(),
+                request.getFcmToken());
+        return ResponseEntity.noContent().build();
+    }
+
     /** PDA server biết, liên lạc gần nhất đứng đầu. */
     @GetMapping("/devices")
     public ResponseEntity<List<PdaDeviceDto>> devices(Authentication authentication) {
@@ -80,7 +90,10 @@ public class PdaAlertController {
     }
 
     @PostMapping("/alerts/{requestId}/ack")
-    public ResponseEntity<Void> ack(@PathVariable String requestId, @RequestBody PdaAlertAckRequest request) {
+    public ResponseEntity<Void> ack(@PathVariable String requestId, @RequestBody PdaAlertAckRequest request,
+                                    Authentication authentication) {
+        // PDA nhận qua FCM không poll: ack cũng là một lần liên lạc
+        pdaDeviceService.recordContact(request.getDeviceId(), null, authentication.getName());
         return pdaFinderService.ack(requestId, request.getDeviceId(), request.getStatus())
                 .<ResponseEntity<Void>>map(alert -> ResponseEntity.noContent().build())
                 .orElse(ResponseEntity.notFound().build());

@@ -16,6 +16,10 @@ services:
       # Mật khẩu tài khoản mẫu admin / user / user2. Nhập trong Render Dashboard, không commit.
       - key: APP_SEED_PASSWORD
         sync: false
+      # FCM (không bắt buộc): dán toàn bộ nội dung file service account JSON của Firebase.
+      # Để trống thì FCM tắt, polling / WebSocket vẫn chạy. Xem docs/FCM_SETUP.md
+      - key: FIREBASE_SERVICE_ACCOUNT_JSON
+        sync: false
       # Database bền (khuyến nghị): thêm tay SPRING_DATASOURCE_URL / _USERNAME / _PASSWORD trong
       # Dashboard, xem docs/DEPLOY_RENDER.md. Không khai báo ở đây vì biến rỗng làm backend không chạy.
       # Không đặt thì dùng H2 trong RAM: mỗi lần deploy / restart là mất lịch sử, PDA, refresh token.
