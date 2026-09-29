@@ -15,6 +15,7 @@ import com.example.andemo.api.ItemService;
 import com.example.andemo.model.ItemDto;
 import com.example.andemo.model.RefreshTokenRequest;
 import com.example.andemo.command.CommandChannel;
+import com.example.andemo.disposal.DisposalListActivity;
 import com.example.andemo.migration.NexacroGatewayDemoActivity;
 import com.example.andemo.migration.ProductSearchActivity;
 import com.example.andemo.requester.FindPdaActivity;
@@ -67,6 +68,9 @@ public class MainActivity extends AppCompatActivity {
         );
         findViewById(R.id.btnNexacroGateway).setOnClickListener(v ->
                 startActivity(new Intent(this, NexacroGatewayDemoActivity.class))
+        );
+        findViewById(R.id.btnDisposal).setOnClickListener(v ->
+                startActivity(new Intent(this, DisposalListActivity.class))
         );
 
         // Requester: chỉ quản lý (ADMIN) mới được gửi lệnh tìm PDA; server cũng kiểm tra lại

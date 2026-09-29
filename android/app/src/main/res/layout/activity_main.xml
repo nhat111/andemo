@@ -49,6 +49,14 @@
         android:text="Demo X-API → JSON"
         android:layout_marginBottom="8dp" />
 
+    <!-- Task 17/18: docs/DISPOSAL_TASK_17_18.md -->
+    <Button
+        android:id="@+id/btnDisposal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Phiếu hủy hàng"
+        android:layout_marginBottom="8dp" />
+
     <!-- Chỉ hiện với ADMIN (MainActivity) -->
     <Button
         android:id="@+id/btnFindPda"

@@ -74,6 +74,14 @@
             android:exported="false" />
 
         <activity
+            android:name=".disposal.DisposalListActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".disposal.DisposalDetailActivity"
+            android:exported="false" />
+
+        <activity
             android:name=".requester.FindPdaActivity"
             android:exported="false" />
 
