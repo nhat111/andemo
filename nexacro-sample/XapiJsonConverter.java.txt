@@ -1,0 +1,91 @@
+// Helper chuyển X-API (PlatformData / DataSet) → JSON, dùng NGAY TRONG backend Nexacro thật của dự án
+// (nơi đã có thư viện X-API). Cách B trong docs/NEXACRO_XAPI_TO_JSON.md.
+//
+// File .txt để không bị biên dịch trong repo này (không có thư viện X-API).
+// Tên lớp / hàm X-API dưới đây theo X-API của Nexacro; có thể khác một chút tuỳ phiên bản
+// (ví dụ package com.nexacro.xapi.* hoặc com.nexacro17.xapi.*): đối chiếu Javadoc X-API của dự án.
+
+import com.nexacro.xapi.data.ColumnHeader;
+import com.nexacro.xapi.data.DataSet;
+import com.nexacro.xapi.data.DataSetList;
+import com.nexacro.xapi.data.PlatformData;
+import com.nexacro.xapi.data.Variable;
+import com.nexacro.xapi.data.VariableList;
+
+import java.util.*;
+
+public final class XapiJsonConverter {
+
+    private XapiJsonConverter() {
+    }
+
+    /**
+     * PlatformData → Map (Spring/Jackson tự ghi ra JSON):
+     * { "errorCode": 0, "errorMsg": "SUCC", "params": {...}, "datasets": { "ds_list": [ {...}, ... ] } }
+     * Cùng định dạng với cổng /api/nx/** trong repo này, để app Android dùng chung NxResponse.
+     */
+    public static Map<String, Object> toJson(PlatformData data) {
+        Map<String, Object> params = new LinkedHashMap<>();
+        VariableList vars = data.getVariableList();
+        for (int i = 0; i < vars.size(); i++) {
+            Variable v = vars.get(i);
+            params.put(v.getName(), v.getObject());
+        }
+        Object code = params.remove("ErrorCode");
+        Object msg = params.remove("ErrorMsg");
+
+        Map<String, Object> datasets = new LinkedHashMap<>();
+        DataSetList list = data.getDataSetList();
+        for (int i = 0; i < list.size(); i++) {
+            DataSet ds = list.get(i);
+            datasets.put(ds.getName(), rows(ds));
+        }
+
+        Map<String, Object> json = new LinkedHashMap<>();
+        json.put("errorCode", code == null ? 0 : ((Number) code).intValue());
+        json.put("errorMsg", msg == null ? "" : msg.toString());
+        json.put("params", params);
+        json.put("datasets", datasets);
+        return json;
+    }
+
+    /** DataSet → danh sách dòng; mỗi dòng Map tên cột → giá trị (kiểu Java X-API đã chuyển sẵn). */
+    public static List<Map<String, Object>> rows(DataSet ds) {
+        List<Map<String, Object>> rows = new ArrayList<>();
+        for (int r = 0; r < ds.getRowCount(); r++) {
+            Map<String, Object> row = new LinkedHashMap<>();
+            for (int c = 0; c < ds.getColumnCount(); c++) {
+                ColumnHeader col = ds.getColumn(c);
+                row.put(col.getName(), ds.getObject(r, c));
+            }
+            int type = ds.getRowType(r);
+            if (type == DataSet.ROW_TYPE_INSERTED) row.put("_rowType", "insert");
+            if (type == DataSet.ROW_TYPE_UPDATED) row.put("_rowType", "update");
+            rows.add(row);
+        }
+        // Dòng đã xoá nằm riêng (removed rows) trong X-API
+        for (int r = 0; r < ds.getRemovedRowCount(); r++) {
+            Map<String, Object> row = new LinkedHashMap<>();
+            for (int c = 0; c < ds.getColumnCount(); c++) {
+                row.put(ds.getColumn(c).getName(), ds.getRemovedData(r, c));
+            }
+            row.put("_rowType", "delete");
+            rows.add(row);
+        }
+        return rows;
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Cách dùng: thêm controller JSON bên cạnh controller X-API cũ, dùng lại đúng service cũ.
+//
+//   // Cũ (Nexacro gọi):      /product/search.do   → XML Dataset
+//   // Mới (Android gọi):     /api/product/search  → JSON
+//   @PostMapping("/api/product/search")
+//   public Map<String, Object> searchJson(@RequestBody Map<String, Object> req) {
+//       PlatformData out = productXapiService.search(toPlatformData(req));   // hàm cũ trả PlatformData
+//       return XapiJsonConverter.toJson(out);
+//   }
+//
+// Nếu service cũ nhận/trả List<VO> (không dính X-API) thì tốt hơn nữa: gọi thẳng service,
+// trả List<VO>, Jackson tự ra JSON, không cần converter (xem ProductController.search).

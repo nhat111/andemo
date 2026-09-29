@@ -70,6 +70,10 @@
             android:exported="false" />
 
         <activity
+            android:name=".migration.NexacroGatewayDemoActivity"
+            android:exported="false" />
+
+        <activity
             android:name=".requester.FindPdaActivity"
             android:exported="false" />
 

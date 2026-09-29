@@ -40,6 +40,9 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/**", "/h2-console/**").permitAll()
                         // Trang web quản lý là file tĩnh; dữ liệu trên trang vẫn cần đăng nhập ADMIN
                         .requestMatchers("/", "/pda-finder.html", "/favicon.ico", "/api/health", "/error").permitAll()
+                        // Server Nexacro GIẢ LẬP (demo X-API → JSON, dữ liệu mock): form Nexacro gọi không kèm JWT.
+                        // Cổng JSON cho app (/api/nx/**) vẫn cần đăng nhập.
+                        .requestMatchers("/nexacro/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
