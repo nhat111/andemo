@@ -5,10 +5,11 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.Instant;
+import java.time.LocalDate;
 
 /**
- * Lịch sử biến động tồn kho (Task 18 "Inventory Transaction History Update").
- * Mỗi lần trừ / cộng tồn ghi 1 dòng, không sửa không xóa: truy vết được tồn kho thay đổi vì đâu.
+ * 수불 (sổ nhập–xuất–tồn): mỗi lần tồn thay đổi ghi 1 dòng, không sửa / xóa.
+ * Hủy xác nhận không xóa dòng cũ mà ghi thêm 1 dòng ngược dấu (역분개).
  */
 @Entity
 @Table(name = "inventory_transaction")
@@ -16,22 +17,34 @@ import java.time.Instant;
 @NoArgsConstructor
 public class InventoryTransaction {
 
+    /** DISPOSAL: 폐기 (trừ tồn) */
+    public static final String TYPE_DISPOSAL = "DISPOSAL";
+    /** DISPOSAL_CANCEL: 폐기확정취소 (cộng lại tồn) */
+    public static final String TYPE_DISPOSAL_CANCEL = "DISPOSAL_CANCEL";
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    private String storeCode;
+
+    /** 영업일자 của chứng từ gốc */
+    private LocalDate businessDate;
+
     private String itemCode;
 
-    /** DISPOSAL (hủy hàng); sau này: RECEIPT, ISSUE, ADJUST… */
     private String txType;
 
-    /** Âm = trừ tồn */
+    /** Âm = trừ tồn, dương = cộng tồn */
     private long qtyChange;
 
     private long beforeQty;
     private long afterQty;
 
-    /** Chứng từ gốc, ví dụ số phiếu hủy */
+    /** 원가금액 của biến động (cùng dấu với số lượng) */
+    private long costAmount;
+
+    /** Chứng từ gốc: số phiếu hủy + dòng */
     private String refNo;
     private int refLineNo;
 

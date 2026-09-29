@@ -27,12 +27,12 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-/** Task 17 – Disposal Inquiry Screen: lọc theo trạng thái, bấm 1 phiếu để xem chi tiết. */
+/** Task 17 – Disposal Inquiry Screen (폐기조회): lọc theo trạng thái, bấm 1 phiếu để xem chi tiết, nút đăng ký mới. */
 public class DisposalListActivity extends AppCompatActivity {
 
-    /** Nhãn hiển thị ↔ giá trị gửi server (null = tất cả). Mặc định: chờ xác nhận */
-    private static final String[] STATUS_LABELS = {"Chờ xác nhận", "Đã xác nhận", "Đã hủy", "Tất cả"};
-    private static final String[] STATUS_VALUES = {"REQUESTED", "CONFIRMED", "CANCELLED", null};
+    /** Nhãn hiển thị ↔ giá trị gửi server (null = tất cả). Mặc định: đã đăng ký, chờ 점장 xác nhận */
+    private static final String[] STATUS_LABELS = {"Đã đăng ký (등록)", "Đã xác nhận (확정)", "Đã hủy (취소)", "Tất cả"};
+    private static final String[] STATUS_VALUES = {"REGISTERED", "CONFIRMED", "CANCELLED", null};
 
     private DisposalApi api;
     private DisposalListAdapter adapter;
@@ -59,6 +59,9 @@ public class DisposalListActivity extends AppCompatActivity {
             startActivity(intent);
         });
         rv.setAdapter(adapter);
+
+        findViewById(R.id.btnNew).setOnClickListener(v ->
+                startActivity(new Intent(this, DisposalEditActivity.class)));
 
         spStatus = findViewById(R.id.spStatus);
         ArrayAdapter<String> statusAdapter = new ArrayAdapter<>(this,

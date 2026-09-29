@@ -82,6 +82,11 @@
             android:exported="false" />
 
         <activity
+            android:name=".disposal.DisposalEditActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
+
+        <activity
             android:name=".requester.FindPdaActivity"
             android:exported="false" />
 

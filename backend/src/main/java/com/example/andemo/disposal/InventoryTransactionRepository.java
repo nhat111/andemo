@@ -8,5 +8,5 @@ public interface InventoryTransactionRepository extends JpaRepository<InventoryT
 
     List<InventoryTransaction> findByItemCodeOrderByIdDesc(String itemCode);
 
-    List<InventoryTransaction> findByRefNoOrderByRefLineNo(String refNo);
+    List<InventoryTransaction> findByRefNoOrderById(String refNo);
 }

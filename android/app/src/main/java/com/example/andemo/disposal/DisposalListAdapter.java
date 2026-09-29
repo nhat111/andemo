@@ -14,7 +14,7 @@ import com.example.andemo.model.DisposalSummaryDto;
 import java.util.ArrayList;
 import java.util.List;
 
-/** Danh sách phiếu hủy (Grid của màn inquiry). */
+/** Danh sách phiếu hủy (Grid của màn 폐기조회). */
 class DisposalListAdapter extends RecyclerView.Adapter<DisposalListAdapter.ViewHolder> {
 
     interface OnClick {
@@ -46,9 +46,11 @@ class DisposalListAdapter extends RecyclerView.Adapter<DisposalListAdapter.ViewH
         h.txtNo.setText(d.getDisposalNo());
         h.txtStatus.setText(DisposalUi.statusLabel(d.getStatus()));
         h.txtStatus.setTextColor(DisposalUi.statusColor(d.getStatus()));
-        h.txtReason.setText(d.getReason());
-        h.txtMeta.setText(d.getLineCount() + " mặt hàng · SL " + d.getTotalQty() + " · "
-                + d.getRequestedBy() + " · " + DisposalUi.formatTime(d.getRequestedAt()));
+        h.txtReason.setText(d.getLineCount() + " mặt hàng · SL " + d.getTotalQty()
+                + " · giá vốn " + DisposalUi.won(d.getTotalCostAmount())
+                + (d.getRemark() == null ? "" : "\n" + d.getRemark()));
+        h.txtMeta.setText("영업일자 " + d.getBusinessDate() + " · " + d.getRegisteredBy()
+                + " · " + DisposalUi.formatTime(d.getRegisteredAt()));
         h.itemView.setOnClickListener(v -> onClick.onClick(d));
     }
 

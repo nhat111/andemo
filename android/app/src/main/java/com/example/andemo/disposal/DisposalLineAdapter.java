@@ -19,7 +19,7 @@ import java.util.List;
 class DisposalLineAdapter extends RecyclerView.Adapter<DisposalLineAdapter.ViewHolder> {
 
     private final List<DisposalDetailDto.Line> items = new ArrayList<>();
-    /** Chỉ tô đỏ khi phiếu còn chờ xác nhận; phiếu đã xác nhận thì tồn hiện tại không còn ý nghĩa so sánh */
+    /** Chỉ tô đỏ khi phiếu còn 등록; phiếu đã xác nhận thì tồn hiện tại không còn ý nghĩa so sánh */
     private boolean highlightShortage;
 
     void submit(List<DisposalDetailDto.Line> data, boolean highlightShortage) {
@@ -42,7 +42,8 @@ class DisposalLineAdapter extends RecyclerView.Adapter<DisposalLineAdapter.ViewH
     public void onBindViewHolder(@NonNull ViewHolder h, int position) {
         DisposalDetailDto.Line line = items.get(position);
         h.txtName.setText(line.getLineNo() + ". " + (line.getItemName() == null ? "(không có trong tồn kho)" : line.getItemName()));
-        h.txtCode.setText(line.getItemCode() + " · Lý do: " + line.getReasonCode());
+        h.txtCode.setText(line.getItemCode() + " · " + line.getReasonName()
+                + " · giá vốn " + DisposalUi.won(line.getCostAmount()));
 
         String qty = "Hủy " + line.getQty();
         if (line.getAvailableQty() != null) {

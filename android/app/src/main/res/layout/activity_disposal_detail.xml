@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Task 17: Disposal Detail View + Confirm Button -->
+<!-- Task 17: Disposal Detail View + Confirm Button (폐기상세) -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -16,14 +16,14 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:textSize="18sp"
+            android:textSize="17sp"
             android:textStyle="bold" />
 
         <TextView
             android:id="@+id/tvStatus"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textSize="14sp"
+            android:textSize="13sp"
             android:textStyle="bold" />
     </LinearLayout>
 
@@ -32,9 +32,9 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="4dp"
-        android:textSize="14sp" />
+        android:textSize="13sp" />
 
-    <!-- Lý do không xác nhận được (trạng thái, thiếu tồn) -->
+    <!-- Lý do chưa xác nhận được (마감, thiếu tồn) -->
     <TextView
         android:id="@+id/tvIssues"
         android:layout_width="match_parent"
@@ -47,10 +47,10 @@
         android:visibility="gone" />
 
     <TextView
+        android:id="@+id/tvTotal"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="12dp"
-        android:text="Mặt hàng hủy"
+        android:layout_marginTop="8dp"
         android:textStyle="bold" />
 
     <androidx.recyclerview.widget.RecyclerView
@@ -67,10 +67,40 @@
         android:indeterminate="true"
         android:visibility="gone" />
 
+    <!-- Nút hiện theo actions server trả về -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/btnEdit"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Sửa (수정)"
+            android:visibility="gone" />
+
+        <Button
+            android:id="@+id/btnCancel"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Hủy phiếu (취소)"
+            android:visibility="gone" />
+    </LinearLayout>
+
     <Button
         android:id="@+id/btnConfirm"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Xác nhận hủy hàng"
+        android:text="Xác nhận hủy hàng (확정)"
+        android:visibility="gone" />
+
+    <Button
+        android:id="@+id/btnCancelConfirm"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Hủy xác nhận (확정취소)"
         android:visibility="gone" />
 </LinearLayout>

@@ -8,8 +8,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
- * Tồn kho của 1 mặt hàng tại 1 kho (demo: 1 kho).
- * Số lượng khả dụng = tồn thực tế − đã giữ chỗ (cho đơn khác đang xử lý).
+ * 점포재고: tồn kho 1 mặt hàng tại cửa hàng (demo: 1 cửa hàng, khóa theo mã hàng).
+ * Giá vốn / giá bán dùng để tính 폐기금액 (tiền hàng hủy) lúc đăng ký phiếu.
  */
 @Entity
 @Table(name = "inventory_item")
@@ -17,31 +17,43 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class InventoryItem {
 
+    /** 상품코드 (thường là barcode) */
     @Id
     private String itemCode;
 
     private String itemName;
 
-    private String warehouseCode;
+    /** 점포코드 */
+    private String storeCode;
 
-    /** Tồn thực tế trong kho */
+    /** 현재고: tồn thực tế */
     private long onHandQty;
 
-    /** Đã giữ chỗ cho nghiệp vụ khác (xuất hàng, chuyển kho…): không được hủy phần này */
+    /** Đã giữ chỗ cho nghiệp vụ khác (반품 대기, 점간이동 출고 대기…): không được hủy phần này */
     private long allocatedQty;
 
-    /** Khóa lạc quan: phát hiện 2 người cùng sửa tồn kho (Task 18 "Inventory Quantity Synchronization") */
+    /** 원가 (giá vốn, KRW) */
+    private long costPrice;
+
+    /** 매가 (giá bán, KRW) */
+    private long salePrice;
+
+    /** Khóa lạc quan: phát hiện 2 nghiệp vụ cùng sửa tồn */
     @Version
     private long version;
 
-    public InventoryItem(String itemCode, String itemName, String warehouseCode, long onHandQty, long allocatedQty) {
+    public InventoryItem(String itemCode, String itemName, String storeCode, long onHandQty, long allocatedQty,
+                         long costPrice, long salePrice) {
         this.itemCode = itemCode;
         this.itemName = itemName;
-        this.warehouseCode = warehouseCode;
+        this.storeCode = storeCode;
         this.onHandQty = onHandQty;
         this.allocatedQty = allocatedQty;
+        this.costPrice = costPrice;
+        this.salePrice = salePrice;
     }
 
+    /** 가용재고 = 현재고 − 할당 */
     public long getAvailableQty() {
         return onHandQty - allocatedQty;
     }
