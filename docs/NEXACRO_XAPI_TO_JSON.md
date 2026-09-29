@@ -1,7 +1,7 @@
 # Chuyển response X-API (XML Dataset) sang JSON cho Android
 
 > Nhánh: `claude/android-nexacro-migration`. Đi kèm [NEXACRO_MIGRATION_LAB.md](NEXACRO_MIGRATION_LAB.md), [NEXACRO_TO_ANDROID.md](NEXACRO_TO_ANDROID.md).
-> Cập nhật: 2026-09-29. Demo chạy được và có test (backend 48/48).
+> Cập nhật: 2026-09-29. Demo chạy được và có test (backend 52/52), đã đối chiếu với tài liệu chính thức của TOBESOFT (mục 6).
 
 ---
 
@@ -13,7 +13,7 @@ Server Nexacro hiện có (các URL `*.do`) dùng **X-API**, gửi / nhận **XM
 |---|---|---|---|
 | **A. Cổng chuyển đổi** (demo trong repo) | Backend mới nhận JSON → đổi sang XML → gọi `*.do` cũ → đổi XML trả về → JSON | **Không** | Cần chạy nhanh, server cũ không được đụng vào, hoặc do team khác quản lý |
 | **B. Controller JSON trong server cũ** | Thêm `@RestController` cạnh controller X-API, gọi lại **service cũ**; dùng `XapiJsonConverter` nếu service trả `PlatformData` | Có (thêm, không sửa cái cũ) | Hướng lâu dài, khuyên dùng. Bỏ được 1 bước mạng + chuyển đổi |
-| **C. X-API / Nexacro trả JSON sẵn** | Một số phiên bản Nexacro / X-API có hỗ trợ định dạng JSON | Tuỳ phiên bản | **Mình chưa kiểm chứng được**; kiểm tra tài liệu X-API đúng bản dự án trước khi dựa vào |
+| **C. X-API tự trả JSON** | Dùng định dạng JSON có sẵn của X-API | — | **X-API Java của Nexacro 17 không có**: Javadoc chỉ có XML, SSV, Binary (mục 6). Bản N / bản khác: kiểm tra Javadoc đúng bản dự án |
 
 Định dạng JSON của cách A và B **giống nhau**, nên app Android viết 1 lần, sau này chuyển từ A sang B chỉ cần đổi URL.
 
@@ -24,15 +24,15 @@ Server Nexacro hiện có (các URL `*.do`) dùng **X-API**, gửi / nhận **XM
 ### XML Dataset (X-API)
 
 ```xml
-<Root xmlns="http://www.nexacroplatform.com/platform/dataset">
+<Root xmlns="http://www.nexacroplatform.com/platform/dataset" ver="4000">
   <Parameters>
     <Parameter id="ErrorCode" type="int">0</Parameter>
     <Parameter id="ErrorMsg" type="string">SUCC</Parameter>
   </Parameters>
   <Dataset id="ds_list">
     <ColumnInfo>
-      <Column id="barcode" type="string" size="256"/>
-      <Column id="stockQuantity" type="int" size="10"/>
+      <Column id="barcode" type="STRING" size="256"/>
+      <Column id="stockQuantity" type="INT" size="10"/>
     </ColumnInfo>
     <Rows>
       <Row>
@@ -66,16 +66,18 @@ Server Nexacro hiện có (các URL `*.do`) dùng **X-API**, gửi / nhận **XM
 | `Parameter ErrorCode` / `ErrorMsg` | `errorCode` / `errorMsg` (tách riêng cho dễ kiểm tra) |
 | Các `Parameter` khác | `params` |
 | `Dataset id="ds_x"` | `datasets.ds_x` = mảng, **mỗi dòng 1 object** |
-| Cột `int` | số nguyên JSON |
-| Cột `bigdecimal` / `float` | số thập phân JSON |
-| Cột `string`, `date` (`yyyyMMdd`), `datetime` | chuỗi, giữ nguyên dạng |
-| `<Col>` rỗng hoặc không có | không có key (null) |
+| Cột `INT` | số nguyên JSON |
+| Cột `BIGDECIMAL` / `DECIMAL` / `FLOAT` | số thập phân JSON |
+| Cột `STRING`, `DATE` (`yyyyMMdd`), `DATETIME`, `TIME` | chuỗi, giữ nguyên dạng |
+| `<ConstColumn id="x" value="…"/>` (cùng giá trị cho mọi dòng) | có mặt trong **mọi** object dòng |
+| `<Col id="x"/>` hoặc `<Col id="x"></Col>` | `"x": ""` (chuỗi rỗng; cột số thì null) |
+| Không có thẻ `<Col id="x">` | không có key `x` (null) |
 | `<Row type="insert/update/delete">` | `"_rowType": "insert"` … |
 | `<OrgRow>` (giá trị gốc của dòng update) | `"_orgRow": { ... }` |
 
-Chiều ngược lại (JSON từ app → XML gửi server cũ): cột và kiểu cột **suy ra từ dữ liệu** (số nguyên → `int`, số thập phân → `bigdecimal`, còn lại `string`).
+Chiều ngược lại (JSON từ app → XML gửi server cũ): cột và kiểu cột **suy ra từ dữ liệu** (số nguyên → `INT`, số thập phân → `BIGDECIMAL`, còn lại `STRING`); kiểu cột ghi chữ hoa như tài liệu.
 
-Chưa hỗ trợ trong demo: SSV, binary, `ConstColumn`, cột blob.
+Chưa hỗ trợ: SSV, binary, cột `BLOB`.
 
 ---
 
@@ -91,7 +93,8 @@ Chưa hỗ trợ trong demo: SSV, binary, `ConstColumn`, cột blob.
 | `backend/.../nexacro/NexacroGatewayController.java` | **Cổng JSON** `/api/nx/**` cho app (cần JWT) |
 | `android/.../api/NexacroGatewayApi.java`, `model/NxRequest.java`, `model/NxResponse.java` | Client Android |
 | `android/.../migration/NexacroGatewayDemoActivity.java` | Màn demo 4 nút |
-| `backend/src/test/.../NexacroGatewayIntegrationTest.java`, `NexacroXmlTest.java` | 12 test |
+| `backend/.../nexacro/NexacroToolsController.java` | Công cụ dán XML → xem JSON (mục 5) |
+| `backend/src/test/.../NexacroGatewayIntegrationTest.java`, `NexacroXmlTest.java` | 16 test, gồm 2 ví dụ nguyên văn từ tài liệu TOBESOFT (`backend/src/test/resources/nexacro/`) |
 | `nexacro-sample/XapiJsonConverter.java.txt` | Helper cho cách B (dùng X-API thật) |
 
 ```
@@ -240,6 +243,45 @@ row.put("_orgRow", Map.of("barcode", "8936036020151", "qty", 5));
 
 ---
 
-## 5. Còn về phía Nexacro (client)
+## 5. Thử với XML thật: công cụ chuyển đổi
 
-Nếu ý là "form Nexacro nhận JSON thay XML": `transaction()` của Nexacro mặc định làm việc với XML / SSV / binary. Một số phiên bản Nexacro N có hỗ trợ JSON hoặc có thể tự gọi HTTP và parse JSON trong script, nhưng **mình chưa kiểm chứng được trên bản của dự án**. Cách an toàn: giữ form Nexacro nói XML như cũ, chỉ app Android dùng JSON (cách A hoặc B).
+Khi có response XML thật từ server dự án (bắt bằng DevTools tab Network của trình duyệt khi chạy app Nexacro bản HTML5, hoặc log server), dán vào để xem JSON app sẽ nhận:
+
+```bash
+curl -s -X POST http://localhost:8080/api/nx-tools/xml-to-json \
+  -H "Authorization: Bearer $TOKEN" -H 'Content-Type: text/xml; charset=UTF-8' \
+  --data-binary @response.xml
+```
+
+Ví dụ với XML nguyên văn trong tài liệu TOBESOFT (`backend/src/test/resources/nexacro/official_dataset_example.xml`, có `ConstColumn`):
+```json
+{"errorCode":0,"errorMsg":"","params":{"service":"stock","method":"search"},
+ "datasets":{"output":[
+   {"market":"kse","openprice":15000,"currentCode":"10001","currentprice":5700},
+   {"market":"kse","openprice":15000,"currentCode":"10002","currentprice":14500}]}}
+```
+(Tài liệu gốc khai báo cột `stockCode` nhưng dữ liệu ghi `currentCode`; bộ chuyển đổi vẫn đọc được, coi là chuỗi.)
+
+Chiều ngược lại: `POST /api/nx-tools/json-to-xml` với body JSON dạng `{"params":{...},"datasets":{...}}`.
+
+Nhớ **bỏ dữ liệu thật / nhạy cảm** trước khi dán XML vào công cụ trên máy khác hoặc gửi cho người khác.
+
+---
+
+## 6. Nguồn đã đối chiếu
+
+| Nội dung | Nguồn | Kết quả |
+|---|---|---|
+| Định dạng XML Dataset: `Root` + namespace, `Parameters`, `ColumnInfo` (`ConstColumn` trước `Column`), `Rows`, `Row type`, `OrgRow`, kiểu cột, rỗng và null | [Nexacro 17 – Dataset XML Format](http://docs.tobesoft.com/advanced_development_guide_nexacro_17_en_kr/bf38022de252cfc6) | Bộ chuyển đổi làm theo; 2 ví dụ trong tài liệu dùng làm test |
+| `ErrorCode` / `ErrorMsg`, luồng service X-API (search / save) | [Nexacro N – Creating Data Transaction Service using X-API](https://docs.tobesoft.com/getting_started_nexacro_n_en/225bff549bb2aad9) | Khớp với cách demo trả lỗi |
+| Tên lớp X-API (`DataSet.getRowType`, `ROW_TYPE_INSERTED/UPDATED/DELETED/NORMAL`, `getRemovedRowCount`, `getRemovedData`, `ColumnHeader.getName`, `DataSetList.get`, `VariableList.get`, `Variable.getObject`) | [Javadoc X-API Nexacro 17](http://docs.tobesoft.com/xapi_java_nexacro_17_ko/index-all.html) (package `com.nexacro17.xapi.data`) | Có đủ, dùng trong `XapiJsonConverter.java.txt` |
+| X-API có kiểu nội dung JSON không | Cùng Javadoc trên | Không thấy: chỉ XML, SSV, Binary |
+| Cấu trúc file `.xfdl` (Grid / Format / Band / Cell, Dataset `type="STRING"`) | [nexacro-spring/nexacro-sample-egov](https://github.com/nexacro-spring/nexacro-sample-egov) | Khớp với `frm_product_search.xfdl` |
+
+**Chưa kiểm chứng:** X-API bản Nexacro N (package có thể khác `com.nexacro17.xapi`), và việc Nexacro Studio mở được đúng `frm_product_search.xfdl` (mình không có Studio).
+
+---
+
+## 7. Còn về phía Nexacro (client)
+
+`transaction()` của Nexacro làm việc với XML / SSV / binary. Cách an toàn: giữ form Nexacro nói XML như cũ, chỉ app Android dùng JSON (cách A hoặc B).

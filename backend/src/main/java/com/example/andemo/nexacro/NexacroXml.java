@@ -38,7 +38,8 @@ import java.util.Map;
  * &lt;/Root&gt;
  * </pre>
  *
- * Rút gọn cho demo: không hỗ trợ SSV / binary, ConstColumn, cột blob.
+ * Theo "Dataset XML Format" trong tài liệu Nexacro (docs.tobesoft.com), có hỗ trợ ConstColumn,
+ * rowtype (insert / update / delete) và OrgRow. Chưa hỗ trợ: SSV / binary, cột BLOB.
  */
 public final class NexacroXml {
 
@@ -75,15 +76,22 @@ public final class NexacroXml {
 
     private static NxDataset parseDataset(Element dsEl) {
         NxDataset ds = new NxDataset(dsEl.getAttribute("id"));
+        // ConstColumn: cột có cùng 1 giá trị cho mọi dòng (khai báo trước Column, có thuộc tính value)
+        Map<String, Object> constValues = new LinkedHashMap<>();
         for (Element info : children(dsEl, "ColumnInfo")) {
+            for (Element col : children(info, "ConstColumn")) {
+                String type = normalizeType(col.getAttribute("type"));
+                ds.addColumn(col.getAttribute("id"), type);
+                constValues.put(col.getAttribute("id"), convert(col.getAttribute("value"), type));
+            }
             for (Element col : children(info, "Column")) {
-                String type = col.getAttribute("type");
-                ds.addColumn(col.getAttribute("id"), type.isEmpty() ? "string" : type.toLowerCase(Locale.ROOT));
+                ds.addColumn(col.getAttribute("id"), normalizeType(col.getAttribute("type")));
             }
         }
         for (Element rowsEl : children(dsEl, "Rows")) {
             for (Element rowEl : children(rowsEl, "Row")) {
                 Map<String, Object> row = ds.addRow();
+                row.putAll(constValues);
                 readCols(rowEl, ds, row);
                 String type = rowEl.getAttribute("type");
                 if (!type.isEmpty() && !"normal".equalsIgnoreCase(type)) {
@@ -106,12 +114,18 @@ public final class NexacroXml {
         }
     }
 
-    /** Giá trị trong XML luôn là chữ; đổi sang kiểu Java theo kiểu cột. Chuỗi rỗng = null. */
+    /**
+     * Giá trị trong XML luôn là chữ; đổi sang kiểu Java theo kiểu cột.
+     * Theo tài liệu Nexacro: không có thẻ Col = null (không đưa vào Map);
+     * {@code <Col id="x"/>} = chuỗi rỗng (cột số: null).
+     */
     static Object convert(String text, String type) {
+        String t = normalizeType(type);
         if (text == null || text.isEmpty()) {
-            return null;
+            return "string".equals(t) || "date".equals(t) || "datetime".equals(t) || "time".equals(t)
+                    ? "" : null;
         }
-        switch (type == null ? "string" : type.toLowerCase(Locale.ROOT)) {
+        switch (t) {
             case "int":
                 return Long.parseLong(text.trim());
             case "bigdecimal":
@@ -125,10 +139,16 @@ public final class NexacroXml {
         }
     }
 
+    /** Tài liệu dùng chữ hoa (STRING, INT…); trong code dùng chữ thường cho dễ so sánh. */
+    static String normalizeType(String type) {
+        return type == null || type.isEmpty() ? "string" : type.toLowerCase(Locale.ROOT);
+    }
+
     public static String write(NexacroData data) {
         try {
             Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
             Element root = doc.createElementNS(NAMESPACE, "Root");
+            root.setAttribute("ver", "4000");
             doc.appendChild(root);
 
             if (!data.getParams().isEmpty()) {
@@ -136,7 +156,7 @@ public final class NexacroXml {
                 data.getParams().forEach((name, value) -> {
                     Element p = el(doc, params, "Parameter");
                     p.setAttribute("id", name);
-                    p.setAttribute("type", typeOf(value));
+                    p.setAttribute("type", typeOf(value).toUpperCase(Locale.ROOT));
                     if (value != null) {
                         p.setTextContent(value.toString());
                     }
@@ -149,7 +169,7 @@ public final class NexacroXml {
                 ds.getColumns().forEach((name, type) -> {
                     Element c = el(doc, info, "Column");
                     c.setAttribute("id", name);
-                    c.setAttribute("type", type);
+                    c.setAttribute("type", type.toUpperCase(Locale.ROOT));
                     c.setAttribute("size", "int".equals(type) ? "10" : "256");
                 });
                 Element rowsEl = el(doc, dsEl, "Rows");

@@ -147,4 +147,24 @@ class NexacroGatewayIntegrationTest {
         }
         return rest.exchange("/api/nx/" + service, HttpMethod.POST, new HttpEntity<>(body, headers), JsonNode.class);
     }
+
+    @Test
+    void toolConvertsPastedXmlToJson() throws Exception {
+        String xml;
+        try (var in = getClass().getResourceAsStream("/nexacro/official_dataset_example.xml")) {
+            xml = new String(in.readAllBytes(), java.nio.charset.StandardCharsets.UTF_8);
+        }
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.TEXT_XML);
+        headers.setBearerAuth(userToken);
+
+        ResponseEntity<JsonNode> res = rest.exchange("/api/nx-tools/xml-to-json", HttpMethod.POST,
+                new HttpEntity<>(xml, headers), JsonNode.class);
+
+        assertThat(res.getStatusCode()).isEqualTo(HttpStatus.OK);
+        JsonNode rows = res.getBody().get("datasets").get("output");
+        assertThat(rows).hasSize(2);
+        assertThat(rows.get(0).get("market").asText()).isEqualTo("kse");
+        assertThat(rows.get(1).get("currentprice").asInt()).isEqualTo(14500);
+    }
 }

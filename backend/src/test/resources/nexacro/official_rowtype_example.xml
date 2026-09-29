@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 3 dòng insert / update / delete lấy từ tài liệu TOBESOFT "Dataset XML Format" (Nexacro 17),
+     ghép vào 1 Dataset kèm ErrorCode / ErrorMsg như response X-API, và thêm 1 dòng có Col rỗng. -->
+<Root xmlns="http://www.nexacroplatform.com/platform/dataset" ver="4000">
+     <Parameters>
+          <Parameter id="ErrorCode" type="int">0</Parameter>
+          <Parameter id="ErrorMsg" type="string">SUCC</Parameter>
+     </Parameters>
+     <Dataset id="ds_stock">
+          <ColumnInfo>
+               <Column id="currentCode" size="5" type="STRING"/>
+               <Column id="currentprice" size="10" type="INT"/>
+               <Column id="memo" size="100" type="STRING"/>
+          </ColumnInfo>
+          <Rows>
+               <Row type="insert">
+                    <Col id="currentCode">10001</Col>
+                    <Col id="currentprice">13400</Col>
+               </Row>
+               <Row type="update">
+                    <Col id="currentCode">10001</Col>
+                    <Col id="currentprice">13400</Col>
+                    <OrgRow>
+                         <Col id="currentCode">10001</Col>
+                         <Col id="currentprice">13700</Col>
+                    </OrgRow>
+               </Row>
+               <Row type="delete">
+                    <Col id="currentCode">10001</Col>
+                    <Col id="currentprice">13400</Col>
+               </Row>
+               <Row>
+                    <Col id="currentCode">10002</Col>
+                    <Col id="memo"/>
+               </Row>
+          </Rows>
+     </Dataset>
+</Root>

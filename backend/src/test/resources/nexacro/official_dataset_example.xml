@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Ví dụ lấy nguyên văn từ tài liệu TOBESOFT "Dataset XML Format" (Nexacro 17):
+     http://docs.tobesoft.com/advanced_development_guide_nexacro_17_en_kr/bf38022de252cfc6
+     Lưu ý: bản gốc ghi Col id="currentCode" trong khi ColumnInfo khai báo "stockCode" (lỗi trong tài liệu),
+     giữ nguyên để kiểm tra bộ chuyển đổi không vỡ với cột không khai báo. -->
+<Root xmlns="http://www.nexacroplatform.com/platform/dataset" ver="4000" >
+     <Parameters>
+          <Parameter id="service">stock</Parameter>
+          <Parameter id="method">search</Parameter>
+     </Parameters>
+     <Dataset id="output">
+          <ColumnInfo>
+               <ConstColumn id="market" size="10" type="STRING" value="kse"/>
+               <ConstColumn id="openprice" size="10" type="INT"
+               value="15000"/>
+               <Column id="stockCode" size="5" type="STRING"/>
+               <Column id="currentprice" size="10" type="INT"/>
+          </ColumnInfo>
+          <Rows>
+               <Row>
+                    <Col id="currentCode">10001</Col>
+                    <Col id="currentprice">5700</Col>
+               </Row>
+               <Row>
+                    <Col id="currentCode">10002</Col>
+                    <Col id="currentprice">14500</Col>
+               </Row>
+          </Rows>
+     </Dataset>
+</Root>
