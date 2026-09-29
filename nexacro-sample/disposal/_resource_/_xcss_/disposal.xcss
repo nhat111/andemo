@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<XCSS version="1.0"><![CDATA[/* Màu chữ cho Grid của các form 폐기. Cell dùng cssclass="expr:…" để chọn class theo dữ liệu */
+
+/* 등록 (10): cam · 확정 (20): xanh lá · 취소 (90): xám */
+.Grid .body .row .cell.cell_stat_reg
+{
+	color : #E65100;
+	font : normal bold 11pt "Malgun Gothic";
+}
+.Grid .body .row .cell.cell_stat_cfm
+{
+	color : #2E7D32;
+	font : normal bold 11pt "Malgun Gothic";
+}
+.Grid .body .row .cell.cell_stat_cncl
+{
+	color : #9E9E9E;
+}
+
+/* Thiếu tồn khả dụng */
+.Grid .body .row .cell.cell_short
+{
+	color : #FF0000;
+	font : normal bold 11pt "Malgun Gothic";
+}]]></XCSS>

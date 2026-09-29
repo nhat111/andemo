@@ -1,9 +1,9 @@
-# 폐기 (hủy hàng) bản Nexacro mobile: mã nguồn "cũ" để luyện đọc và migrate
+# 폐기 (hủy hàng) bản Nexacro 17 mobile: mã nguồn "cũ" để luyện đọc và migrate
 
-> Đây là **bản mô phỏng hệ thống Nexacro mobile cũ** cho task 17–18, dùng để luyện đúng việc sẽ làm ở dự án thật:
+> Đây là **bản mô phỏng hệ thống Nexacro 17 mobile cũ** cho task 17–18, dùng để luyện đúng việc sẽ làm ở dự án thật:
 > đọc form Nexacro → rút quy tắc → chuyển sang Android (Java).
 > - **Phía server (X-API giả lập): chạy được, có test** (`LegacyDisposalXapiTest`, 5 test).
-> - **Phía client (.xfdl, .xjs): viết tay theo cú pháp Nexacro 17 / N, CHƯA mở thử trong Nexacro Studio** (không có Studio). Có thể phải chỉnh vài thuộc tính giao diện theo đúng phiên bản.
+> - **Phía client (.xfdl, .xjs, .xcss): viết tay theo cú pháp Nexacro 17**, đã đối chiếu với project mẫu chính thức của TOBESOFT và tài liệu (mục 7), **nhưng CHƯA mở thử trong Nexacro Studio**. Mở lên có thể phải chỉnh vài thuộc tính giao diện.
 >
 > Bản Android đã làm sẵn nằm ở `android/.../disposal/` và `docs/DISPOSAL_TASK_17_18.md`: coi như **đáp án**, đừng mở trước khi tự làm bài tập ở mục 5.
 
@@ -13,6 +13,9 @@
 
 ```
 nexacro-sample/disposal/
+├─ appvariables.xml           biến toàn cục gv_* (định dạng Nexacro 17)
+├─ _resource_/_xcss_/
+│  └─ disposal.xcss           màu chữ Grid theo điều kiện (Cell cssclass="expr:…")
 ├─ lib/
 │  └─ common.xjs              thư viện chung gfn_: thông báo, kiểm tra, định dạng, transaction, chuyển form
 └─ form/
@@ -36,15 +39,44 @@ frm_login ──► frm_disposal_list ──(chọn phiếu)──► frm_dispos
 
 ---
 
-## 2. Cấu hình Application (nếu mở bằng Nexacro Studio)
+## 2. Mở bằng Nexacro Studio 17
 
-| Mục | Giá trị |
+Cách an toàn nhất: **tạo project mới bằng wizard của Studio** (để Studio tự sinh theme, `typedefinition.xml`, `environment.xml`), rồi chép các file ở đây vào và bổ sung cấu hình dưới đây.
+
+**1. Chép file**
+
+| Từ | Vào project |
 |---|---|
-| TypeDefinition › Services | `svc` → `http://localhost:8080/nexacro/` (máy ảo Android: `http://10.0.2.2:8080/nexacro/`) · `lib` → thư mục `lib/` · `frm` → thư mục `form/` |
-| Application › biến toàn cục | `gv_userId`, `gv_userRole`, `gv_storeCd`, `gv_bizDt`, `gv_disposalNo` (đều kiểu string, mặc định rỗng) |
-| MainFrame › ChildFrame | `formurl` = `frm::frm_login.xfdl` |
+| `form/*.xfdl` | thư mục `form/` |
+| `lib/common.xjs` | thư mục `lib/` |
+| `_resource_/_xcss_/disposal.xcss` | `_resource_/_xcss_/` |
+| `appvariables.xml` | thay file cùng tên (hoặc thêm 5 biến `gv_*` trong Studio: Project Explorer › AppVariables) |
 
-`gfn_go` đổi form bằng `getOwnerFrame().set_formurl(...)`. Nếu dự án dùng cách khác (`this.go()`, menu, frameset…) thì sửa trong `common.xjs`.
+**2. TypeDefinition › Services** (thêm vào `<Services>` của `typedefinition.xml`, hoặc dùng nút `+` ở User Service):
+
+```xml
+<Service prefixid="frm" type="form" cachelevel="session" url="./form/" version="0" communicationversion="0" include_subdir="false"/>
+<Service prefixid="lib" type="form" cachelevel="session" url="./lib/" version="0" communicationversion="0" include_subdir="false"/>
+<Service prefixid="xcssrc" type="resource" url="./_resource_/_xcss_/" include_subdir="false"/>
+<!-- Server: backend nhánh này. Máy ảo Android: http://10.0.2.2:8080/nexacro/ -->
+<Service prefixid="svc" type="JSP" cachelevel="none" url="http://localhost:8080/nexacro/" version="0" communicationversion="0" include_subdir="false"/>
+```
+
+Loại service lấy theo tài liệu TypeDefinition của Nexacro 17: `form` quản lý cả `*.xfdl` và `*.xjs`; `JSP` là service gọi server (dùng được cho URL `*.do` của Spring).
+
+**3. Application (`.xadl`)**: form đầu tiên là màn login, và nạp file xcss:
+
+```xml
+<MainFrame id="mainframe" showtitlebar="false" showstatusbar="false" width="480" height="800">
+  <ChildFrame id="ChildFrame00" formurl="frm::frm_login.xfdl" showtitlebar="false"/>
+</MainFrame>
+...
+<Style url="xcssrc::disposal.xcss"/>
+```
+
+**4. Environment**: màn hình mobile, ví dụ `<Screen id="Screen_M" type="phone"/>` (hoặc giữ Screen wizard đã tạo cho mobile).
+
+Chuyển form dùng `this.go("frm::…")` trong `gfn_go` (có trong project mẫu Nexacro 17). Nếu dự án dùng cách khác (`set_formurl`, menu, frameset…) thì sửa 1 chỗ trong `common.xjs`.
 
 ---
 
@@ -187,3 +219,27 @@ Trả lời câu hỏi bước 4:
 5. R5, R9, R10 (xem trên).
 
 </details>
+
+---
+
+## 7. Đối chiếu với Nexacro 17
+
+Nguồn: project mẫu chính thức [TOBESOFT-DOCS/sample_nexacroplatform_17](https://github.com/TOBESOFT-DOCS/sample_nexacroplatform_17) (315 form) và tài liệu TOBESOFT.
+
+| Mục | Dùng trong bộ form này | Đối chiếu |
+|---|---|---|
+| Đầu file form | `<FDL version="2.1">`, `<Script type="xscript5.1">` | Project mẫu 17 có cả `2.0` và `2.1`; script đều `xscript5.1` |
+| Include thư viện | `include "lib::common.xjs";` | Tài liệu: `include "ServiceID::file.xjs";` |
+| Service | `form` (frm, lib), `resource` (xcss), `JSP` (server) | Tài liệu TypeDefinition 17 |
+| Combo mã | `innerdataset="@ds_rsn"` | Project mẫu dùng `@ds_…` khi trỏ tới Dataset của form |
+| Màu theo điều kiện trong Grid | `cssclass="expr:…"` + class trong `.xcss` | Cách project mẫu 17 và tài liệu Grid dùng |
+| File xcss | `<XCSS version="1.0"><![CDATA[…]]></XCSS>` + `<Style url="xcssrc::…"/>` trong xadl | Giống project mẫu |
+| Biến toàn cục | `appvariables.xml` `<AppVariables version="2.0">` | Giống project mẫu |
+| Div con | `this.div_rsn.form.edt_rsn`, `addEventHandler("onclick", this.fn, this)` | Giống project mẫu |
+| Chuyển form | `this.go("frm::…")` | Có trong project mẫu |
+| Ô số | `Edit inputtype="number" maxlength="4"` | Có trong project mẫu |
+| Tham số transaction | `nexacro.wrapQuote(…)` | Ví dụ trong tài liệu truyền tham số transaction |
+| Giữ cột của client | `useclientlayout="true"` | Thuộc tính Dataset có trong tài liệu 17 |
+| Font | `font="bold 14px/normal &quot;Malgun Gothic&quot;"` | Project mẫu viết `bold 12pt Arial`; nếu Studio báo lỗi, đổi sang dạng đó |
+
+**Chưa kiểm chứng được** (cần Studio): hiển thị thực tế, `confirm()` chạy đồng bộ trên runtime mobile (nếu không, đổi sang popup có callback), thứ tự sự kiện khi `go()` sang form khác.

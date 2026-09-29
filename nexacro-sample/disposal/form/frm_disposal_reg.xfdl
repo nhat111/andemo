@@ -21,7 +21,7 @@
                 onclick="btn_add_onclick"/>
         <Static id="sta_rsn" taborder="4" text="기본사유" left="10" top="118" width="90" height="40"/>
         <Combo id="cbo_rsn" taborder="5" left="100" top="118" width="370" height="40"
-               innerdataset="ds_rsn" codecolumn="CD" datacolumn="CD_NM"/>
+               innerdataset="@ds_rsn" codecolumn="CD" datacolumn="CD_NM"/>
 
         <!-- (B) 상품 목록: chạm 1 dòng để sửa -->
         <Grid id="grd_detail" taborder="6" binddataset="ds_detail" left="10" top="166" right="10" bottom="176"
@@ -40,7 +40,7 @@
                 <Cell colspan="2" text="bind:ITEM_NM" font="bold 14px/normal &quot;Malgun Gothic&quot;"/>
                 <Cell row="1" text="expr:ITEM_CD + '  ' + REASON_NM"/>
                 <Cell row="1" col="1" textAlign="right" text="expr:DISP_QTY + '개 / 가용 ' + AVAIL_QTY"
-                      color="expr:DISP_QTY > AVAIL_QTY ? 'red' : 'black'"/>
+                      cssclass="expr:DISP_QTY &gt; AVAIL_QTY ? 'cell_short' : ''"/>
               </Band>
             </Format>
           </Formats>
@@ -58,7 +58,7 @@
             <Layout>
               <Static id="sta_item" taborder="0" left="10" top="10" width="420" height="36"/>
               <Static id="sta_qty" taborder="1" text="수량" left="10" top="54" width="80" height="44"/>
-              <MaskEdit id="msk_qty" taborder="2" left="90" top="54" width="340" height="44" format="####"/>
+              <Edit id="edt_qty" taborder="2" left="90" top="54" width="340" height="44" inputtype="number" maxlength="4"/>
               <Static id="sta_lrsn" taborder="3" text="사유" left="10" top="106" width="80" height="44"/>
               <Combo id="cbo_lineRsn" taborder="4" left="90" top="106" width="340" height="44"
                      codecolumn="CD" datacolumn="CD_NM"/>
@@ -224,7 +224,7 @@ this.grd_detail_oncellclick = function (obj, e)
     this.fv_editRow = e.row;
     var f = this.div_line.form;
     f.sta_item.set_text(this.ds_detail.getColumn(e.row, "ITEM_NM"));
-    f.msk_qty.set_value(this.ds_detail.getColumn(e.row, "DISP_QTY"));
+    f.edt_qty.set_value(this.ds_detail.getColumn(e.row, "DISP_QTY"));
     f.cbo_lineRsn.set_value(this.ds_detail.getColumn(e.row, "REASON_CD"));
     this.div_line.set_visible(true);
 };
@@ -232,7 +232,7 @@ this.grd_detail_oncellclick = function (obj, e)
 this.btn_lineOk_onclick = function (obj, e)
 {
     var f = this.div_line.form;
-    var qty = parseInt(f.msk_qty.value, 10);
+    var qty = parseInt(f.edt_qty.value, 10);
     if (isNaN(qty) || qty < 1 || qty > 9999) {
         this.gfn_alert("MSG_QTY_RANGE", [this.fv_editRow + 1]);
         return;

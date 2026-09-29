@@ -69,7 +69,7 @@ Thời lượng dưới đây chỉ để hình dung thứ tự và độ lớn 
 
 | # | Câu hỏi | Tìm ở đâu |
 |---|---|---|
-| K1 | Phiên bản Nexacro (14 / 17 / N) và X-API? | Nexacro Studio, thư viện trong `WEB-INF/lib` của server |
+| K1 | Phiên bản Nexacro và X-API? **Dự án: Nexacro 17** (đã biết); cần xác nhận bản vá (17.1.x) và phiên bản X-API (package `com.nexacro17.xapi`) | Nexacro Studio, thư viện trong `WEB-INF/lib` của server |
 | K2 | Đăng nhập thế nào: session cookie, token, hay biến toàn cục gửi kèm? Hết phiên xử lý ra sao? | Form login, `Application` (`gv_*`), filter / interceptor phía server |
 | K3 | Có bao nhiêu màn trên mobile? Màn nào dùng nhiều nhất? | Menu, `TypeDefinition`, thống kê truy cập nếu có |
 | K4 | Scanner: dùng đối tượng thiết bị Nexacro, plugin hãng, hay keyboard wedge? Những dòng máy nào? | Script các màn có quét, cấu hình máy, danh sách thiết bị |

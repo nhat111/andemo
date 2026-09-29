@@ -17,7 +17,7 @@
         <Static id="sta_stat" taborder="2" left="360" top="10" width="110" height="40" textAlign="right"/>
         <TextArea id="txa_info" taborder="3" left="10" top="56" width="460" height="120" readonly="true"/>
         <!-- Lý do chưa xác nhận được (script tự tính) -->
-        <Static id="sta_warn" taborder="4" text="" left="10" top="180" width="460" height="30" color="red" visible="false"/>
+        <Static id="sta_warn" taborder="4" text="" left="10" top="180" width="460" height="30" color="#FF0000" visible="false"/>
 
         <!-- (B) Dòng hàng: đỏ = thiếu tồn khả dụng (SHORT_YN do script tính) -->
         <Grid id="grd_detail" taborder="5" binddataset="ds_detail" left="10" top="214" right="10" bottom="200"
@@ -37,7 +37,7 @@
                 <Cell row="1" text="expr:ITEM_CD + '  ' + REASON_NM"/>
                 <Cell row="1" col="1" textAlign="right"
                       text="expr:'폐기 ' + DISP_QTY + ' / 가용 ' + AVAIL_QTY"
-                      color="expr:SHORT_YN=='Y' ? 'red' : 'black'"/>
+                      cssclass="expr:SHORT_YN=='Y' ? 'cell_short' : ''"/>
               </Band>
             </Format>
           </Formats>

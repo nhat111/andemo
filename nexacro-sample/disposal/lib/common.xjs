@@ -1,8 +1,8 @@
 //==============================================================================
 // common.xjs : thư viện dùng chung (gfn_) cho các form 폐기  [MẪU MINH HOẠ]
 //
-// Mọi form include file này:  include "lib::common.xjs";
-// Biến toàn cục của Application (khai báo trong Application, xem README):
+// Mọi form include file này:  include "lib::common.xjs";   (cú pháp Nexacro 17: include "ServiceID::file.xjs";)
+// Biến toàn cục của Application (khai báo trong appvariables.xml, xem README):
 //   gv_userId, gv_userRole ("ADMIN" | "USER"), gv_storeCd, gv_bizDt (yyyyMMdd), gv_disposalNo
 //==============================================================================
 
@@ -98,10 +98,12 @@ this.gfn_isManager = function ()
 
 //------------------------------------------------------------------------------
 // Chuyển form (mobile: 1 form tại 1 thời điểm trong ChildFrame chính)
+// Form.go() thay form hiện tại bằng form khác trong cùng frame (có trong project mẫu Nexacro 17).
+// Cách khác: this.getOwnerFrame().set_formurl("frm::" + formFile);
 //------------------------------------------------------------------------------
 this.gfn_go = function (formFile)
 {
-    this.getOwnerFrame().set_formurl("frm::" + formFile);
+    this.go("frm::" + formFile);
 };
 
 this.gfn_goLogin = function ()

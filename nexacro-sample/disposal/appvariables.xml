@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Biến toàn cục của Application (định dạng appvariables.xml của Nexacro 17) -->
+<AppVariables version="2.0">
+  <Datasets/>
+  <Variables>
+    <Variable id="gv_userId" initval=""/>
+    <Variable id="gv_userRole" initval=""/>
+    <Variable id="gv_storeCd" initval=""/>
+    <Variable id="gv_bizDt" initval=""/>
+    <Variable id="gv_disposalNo" initval=""/>
+  </Variables>
+  <DataObjects/>
+</AppVariables>
