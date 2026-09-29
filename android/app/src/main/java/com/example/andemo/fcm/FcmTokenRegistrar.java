@@ -3,6 +3,7 @@ package com.example.andemo.fcm;
 import android.content.Context;
 import android.util.Log;
 
+import com.example.andemo.BuildConfig;
 import com.example.andemo.api.AlertApi;
 import com.example.andemo.api.ApiClient;
 import com.example.andemo.model.FcmTokenRequest;
@@ -59,6 +60,10 @@ public final class FcmTokenRegistrar {
             public void onResponse(Call<Void> call, Response<Void> response) {
                 if (response.isSuccessful()) {
                     Log.d(TAG, "FCM token registered with server");
+                    if (BuildConfig.DEBUG) {
+                        // Chỉ bản debug: để gửi thử từ Firebase Console (Messaging → Send test message)
+                        Log.d(TAG, "FCM token: " + token);
+                    }
                 } else {
                     Log.w(TAG, "FCM token rejected: HTTP " + response.code());
                 }
