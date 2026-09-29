@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Form Nexacro MẪU để luyện migrate (không phải mã nguồn dự án thật).
+  Đã rút gọn: bỏ bớt thuộc tính style / layout mà Nexacro Studio tự sinh.
+  Bản Android tương ứng: android/app/src/main/java/com/example/andemo/migration/ProductSearchActivity.java
+  Đối chiếu từng phần: docs/NEXACRO_MIGRATION_LAB.md, mục 3.
+-->
+<FDL version="2.1">
+  <Form id="frm_product_search" width="480" height="800" titletext="Tra cứu sản phẩm" onload="form_onload">
+    <Layouts>
+      <Layout width="480" height="800">
+        <!-- (A) Điều kiện tìm -->
+        <Static id="sta_keyword" taborder="0" text="Từ khoá" left="10" top="10" width="70" height="34"/>
+        <Edit id="edt_keyword" taborder="1" left="80" top="10" width="270" height="34"
+              onkeydown="edt_keyword_onkeydown"/>
+        <Button id="btn_search" taborder="2" text="Tìm" left="360" top="10" width="110" height="34"
+                onclick="btn_search_onclick"/>
+
+        <!-- (B) Số dòng -->
+        <Static id="sta_count" taborder="3" text="" left="10" top="50" width="460" height="24"/>
+
+        <!-- (C) Kết quả -->
+        <Grid id="grd_list" taborder="4" binddataset="ds_list" left="10" top="80" right="10" bottom="10"
+              oncellclick="grd_list_oncellclick">
+          <Formats>
+            <Format id="default">
+              <Columns>
+                <Column size="140"/>
+                <Column size="230"/>
+                <Column size="70"/>
+              </Columns>
+              <Rows>
+                <Row size="30" band="head"/>
+                <Row size="30"/>
+              </Rows>
+              <Band id="head">
+                <Cell text="Barcode"/>
+                <Cell col="1" text="Tên sản phẩm"/>
+                <Cell col="2" text="Tồn"/>
+              </Band>
+              <Band id="body">
+                <Cell text="bind:barcode"/>
+                <Cell col="1" text="bind:name"/>
+                <!-- Hết hàng thì chữ đỏ -->
+                <Cell col="2" text="bind:stockQuantity" displaytype="number"
+                      color="expr:stockQuantity == 0 ? 'red' : 'black'"/>
+              </Band>
+            </Format>
+          </Formats>
+        </Grid>
+      </Layout>
+    </Layouts>
+
+    <Objects>
+      <!-- (D) Dataset điều kiện: 1 dòng -->
+      <Dataset id="ds_search">
+        <ColumnInfo>
+          <Column id="keyword" type="STRING" size="100"/>
+        </ColumnInfo>
+        <Rows>
+          <Row/>
+        </Rows>
+      </Dataset>
+
+      <!-- (E) Dataset kết quả: nhiều dòng -->
+      <Dataset id="ds_list">
+        <ColumnInfo>
+          <Column id="barcode" type="STRING" size="20"/>
+          <Column id="name" type="STRING" size="200"/>
+          <Column id="description" type="STRING" size="500"/>
+          <Column id="imageUrl" type="STRING" size="500"/>
+          <Column id="stockQuantity" type="INT" size="10"/>
+        </ColumnInfo>
+      </Dataset>
+    </Objects>
+
+    <!-- (F) Bind ô nhập vào Dataset điều kiện -->
+    <Bind>
+      <BindItem id="item0" compid="edt_keyword" propid="value" datasetid="ds_search" columnid="keyword"/>
+    </Bind>
+
+    <Script type="xscript5.1"><![CDATA[
+/* (G) Mở form: tìm luôn (từ khoá trống = tất cả) */
+this.form_onload = function (obj, e) {
+    this.fn_search();
+};
+
+/* (H) Bấm nút Tìm */
+this.btn_search_onclick = function (obj, e) {
+    this.fn_search();
+};
+
+/* (I) Enter trong ô từ khoá */
+this.edt_keyword_onkeydown = function (obj, e) {
+    if (e.keycode == 13) {
+        this.fn_search();
+    }
+};
+
+/* (J) Gọi server */
+this.fn_search = function () {
+    this.transaction("search",
+        "svc::product/search.do",
+        "ds_search=ds_search",
+        "ds_list=ds_list",
+        "",
+        "fn_callback");
+};
+
+/* (K) Server trả về */
+this.fn_callback = function (svcID, errorCode, errorMsg) {
+    if (errorCode < 0) {
+        this.alert(errorMsg);
+        return;
+    }
+    if (svcID == "search") {
+        var cnt = this.ds_list.getRowCount();
+        this.sta_count.set_text(cnt == 0 ? "Không có sản phẩm nào" : cnt + " sản phẩm");
+    }
+};
+
+/* (L) Chọn 1 dòng: mở form chi tiết */
+this.grd_list_oncellclick = function (obj, e) {
+    var barcode = this.ds_list.getColumn(e.row, "barcode");
+    var objApp = nexacro.getApplication();
+    objApp.gv_barcode = barcode;
+    this.go("frm::frm_product_detail.xfdl");
+};
+]]></Script>
+  </Form>
+</FDL>

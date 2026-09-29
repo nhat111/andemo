@@ -34,6 +34,14 @@
         android:text="Tìm bạn quanh đây"
         android:layout_marginBottom="8dp" />
 
+    <!-- Bài mẫu migrate Nexacro: docs/NEXACRO_MIGRATION_LAB.md -->
+    <Button
+        android:id="@+id/btnProductSearch"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Tra cứu sản phẩm (bài mẫu Nexacro)"
+        android:layout_marginBottom="8dp" />
+
     <!-- Chỉ hiện với ADMIN (MainActivity) -->
     <Button
         android:id="@+id/btnFindPda"

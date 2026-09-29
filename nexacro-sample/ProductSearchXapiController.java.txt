@@ -1,0 +1,60 @@
+// Phía server kiểu Nexacro (X-API) MẪU, để so sánh với API JSON trong
+// backend/src/main/java/com/example/andemo/controller/ProductController.java (hàm search).
+// File .txt để không bị biên dịch: project không có thư viện X-API (nexacro-xapi).
+// Rút gọn; tên lớp X-API có thể khác một chút tuỳ phiên bản.
+
+@Controller
+public class ProductSearchXapiController {
+
+    private final ProductService productService;   // service / DAO có sẵn: tái sử dụng khi migrate
+
+    @RequestMapping("/product/search.do")
+    public void search(HttpServletRequest request, HttpServletResponse response) throws Exception {
+        // 1. Đọc Dataset gửi lên (ds_search)
+        HttpPlatformRequest req = new HttpPlatformRequest(request);
+        req.receiveData();
+        PlatformData in = req.getData();
+        DataSet dsSearch = in.getDataSet("ds_search");
+        String keyword = dsSearch.getString(0, "keyword");
+
+        // 2. Gọi nghiệp vụ (phần này GIỮ NGUYÊN khi viết API JSON)
+        List<Product> products = productService.search(keyword);
+
+        // 3. Chuyển List → Dataset trả về (ds_list)
+        DataSet dsList = new DataSet("ds_list");
+        dsList.addColumn("barcode", PlatformDataType.STRING);
+        dsList.addColumn("name", PlatformDataType.STRING);
+        dsList.addColumn("description", PlatformDataType.STRING);
+        dsList.addColumn("imageUrl", PlatformDataType.STRING);
+        dsList.addColumn("stockQuantity", PlatformDataType.INT);
+        for (Product p : products) {
+            int row = dsList.newRow();
+            dsList.set(row, "barcode", p.getBarcode());
+            dsList.set(row, "name", p.getName());
+            dsList.set(row, "description", p.getDescription());
+            dsList.set(row, "imageUrl", p.getImageUrl());
+            dsList.set(row, "stockQuantity", p.getStockQuantity());
+        }
+
+        PlatformData out = new PlatformData();
+        out.addDataSet(dsList);
+        VariableList vars = out.getVariableList();
+        vars.add("ErrorCode", 0);
+        vars.add("ErrorMsg", "SUCC");
+
+        // 4. Gửi về dạng XML/SSV
+        HttpPlatformResponse res = new HttpPlatformResponse(response, PlatformType.CONTENT_TYPE_XML);
+        res.setData(out);
+        res.sendData();
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Bản JSON cho Android (đã có trong ProductController):
+//
+//   @GetMapping("/api/products")
+//   public List<ProductDto> search(@RequestParam(required = false) String keyword) {
+//       return productService.search(keyword);   // Spring + Jackson tự chuyển List → JSON
+//   }
+//
+// Bước 1, 3, 4 (đọc/ghi Dataset) biến mất; bước 2 giữ nguyên.
