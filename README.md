@@ -43,6 +43,7 @@ API: `http://localhost:8080/api/auth/login`
 - `docs/FCM_SETUP.md`: setup Firebase và test nhận lệnh qua FCM (so sánh với polling / WebSocket)
 - `docs/ANDROID_LEARNING_PLAN.md`: plan học Android dựa trên project này
 - `docs/NEXACRO_MIGRATION_LAB.md`: **lab học Android qua migrate Nexacro** (bài mẫu + bài tập), nhánh `claude/android-nexacro-migration`
+- `docs/NEXACRO_MOBILE_MIGRATION_PLAN.md`: **kế hoạch migrate Nexacro mobile → Android (Java) + lộ trình học 6 tuần**
 - `docs/DISPOSAL_TASK_17_18.md`: task 17–18 hủy hàng (폐기) theo luồng bán lẻ Hàn Quốc: 등록 → 확정 → 확정취소, 수불, 마감 (demo backend + Android)
 - `docs/NEXACRO_XAPI_TO_JSON.md`: chuyển response X-API (XML Dataset) sang JSON cho Android, có demo chạy được
 - `docs/NEXACRO_TO_ANDROID.md`: đối chiếu Nexacro → Android (Form, Dataset, Grid, transaction…) để migrate màn hình
