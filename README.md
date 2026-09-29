@@ -44,6 +44,7 @@ API: `http://localhost:8080/api/auth/login`
 - `docs/ANDROID_LEARNING_PLAN.md`: plan học Android dựa trên project này
 - `docs/NEXACRO_MIGRATION_LAB.md`: **lab học Android qua migrate Nexacro** (bài mẫu + bài tập), nhánh `claude/android-nexacro-migration`
 - `docs/NEXACRO_MOBILE_MIGRATION_PLAN.md`: **kế hoạch migrate Nexacro mobile → Android (Java) + lộ trình học 6 tuần**
+- `nexacro-sample/disposal/README.md`: **bản Nexacro mobile "cũ" của task 17–18** (form .xfdl + gfn_ + server X-API giả lập) để luyện đọc và migrate
 - `docs/DISPOSAL_TASK_17_18.md`: task 17–18 hủy hàng (폐기) theo luồng bán lẻ Hàn Quốc: 등록 → 확정 → 확정취소, 수불, 마감 (demo backend + Android)
 - `docs/NEXACRO_XAPI_TO_JSON.md`: chuyển response X-API (XML Dataset) sang JSON cho Android, có demo chạy được
 - `docs/NEXACRO_TO_ANDROID.md`: đối chiếu Nexacro → Android (Form, Dataset, Grid, transaction…) để migrate màn hình

@@ -1,0 +1,147 @@
+//==============================================================================
+// common.xjs : thư viện dùng chung (gfn_) cho các form 폐기  [MẪU MINH HOẠ]
+//
+// Mọi form include file này:  include "lib::common.xjs";
+// Biến toàn cục của Application (khai báo trong Application, xem README):
+//   gv_userId, gv_userRole ("ADMIN" | "USER"), gv_storeCd, gv_bizDt (yyyyMMdd), gv_disposalNo
+//==============================================================================
+
+//------------------------------------------------------------------------------
+// Thông báo (hệ thống thật thường lấy từ bảng message trên server)
+//------------------------------------------------------------------------------
+this.MSG = {
+    MSG_REQUIRED        : "{0}을(를) 입력하세요. ({0} bắt buộc)",
+    MSG_LOGIN_REQUIRED  : "아이디와 비밀번호를 입력하세요.",
+    MSG_DATE_RANGE      : "시작일이 종료일보다 늦습니다. (Từ ngày > đến ngày)",
+    MSG_NO_ITEM         : "폐기할 상품이 없습니다. (Chưa có mặt hàng)",
+    MSG_QTY_RANGE       : "{0}번째 상품: 수량은 1 ~ 9999 입니다.",
+    MSG_REASON_REQUIRED : "{0}번째 상품: 폐기사유를 선택하세요.",
+    MSG_REMARK_LENGTH   : "비고는 100자 이내로 입력하세요.",
+    MSG_STOCK_WARN      : "{0}: 가용재고가 {1} 입니다. 그래도 등록하시겠습니까?",
+    MSG_CONFIRM_SAVE    : "저장하시겠습니까?",
+    MSG_CONFIRM_DISP    : "{0}건, 원가 {1}원을 폐기확정 하시겠습니까?\n재고가 차감됩니다.",
+    MSG_CONFIRM_BIG     : "원가 {0}원: 고액 폐기입니다. 정말 확정하시겠습니까?",
+    MSG_ONLY_TODAY      : "당일 전표만 확정할 수 있습니다. (Chỉ xác nhận phiếu của hôm nay)",
+    MSG_SHORT_STOCK     : "가용재고가 부족한 상품이 있습니다. (Có mặt hàng thiếu tồn)",
+    MSG_RSN_REQUIRED    : "사유를 입력하세요. (Nhập lý do)",
+    MSG_SAVED           : "저장되었습니다.",
+    MSG_CONFIRMED       : "확정되었습니다. 재고가 차감되었습니다.",
+    MSG_CANCELLED       : "취소되었습니다.",
+    MSG_CFM_CANCELLED   : "확정취소 되었습니다. 재고가 복원되었습니다."
+};
+
+this.gfn_getMsg = function (msgId, args)
+{
+    var msg = this.MSG[msgId] || msgId;
+    if (args) {
+        for (var i = 0; i < args.length; i++) {
+            msg = msg.split("{" + i + "}").join(args[i]);
+        }
+    }
+    return msg;
+};
+
+this.gfn_alert = function (msgId, args)
+{
+    this.alert(this.gfn_getMsg(msgId, args));
+};
+
+this.gfn_confirm = function (msgId, args)
+{
+    return this.confirm(this.gfn_getMsg(msgId, args));
+};
+
+//------------------------------------------------------------------------------
+// Kiểm tra / định dạng
+//------------------------------------------------------------------------------
+this.gfn_isNull = function (v)
+{
+    return (v === undefined || v === null || String(v).trim() == "");
+};
+
+this.gfn_nvl = function (v, defaultValue)
+{
+    return this.gfn_isNull(v) ? defaultValue : v;
+};
+
+// 12345 → "12,345"
+this.gfn_fmtAmt = function (n)
+{
+    return String(this.gfn_nvl(n, 0)).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+};
+
+// "20260929143015" → "09/29 14:30"
+this.gfn_fmtDtm = function (s)
+{
+    if (this.gfn_isNull(s) || s.length < 12) return "";
+    return s.substr(4, 2) + "/" + s.substr(6, 2) + " " + s.substr(8, 2) + ":" + s.substr(10, 2);
+};
+
+//------------------------------------------------------------------------------
+// Biến toàn cục / quyền
+//------------------------------------------------------------------------------
+this.gfn_getGv = function (name)
+{
+    return nexacro.getApplication()[name];
+};
+
+this.gfn_setGv = function (name, value)
+{
+    nexacro.getApplication()[name] = value;
+};
+
+// 점장 (cửa hàng trưởng)
+this.gfn_isManager = function ()
+{
+    return this.gfn_getGv("gv_userRole") == "ADMIN";
+};
+
+//------------------------------------------------------------------------------
+// Chuyển form (mobile: 1 form tại 1 thời điểm trong ChildFrame chính)
+//------------------------------------------------------------------------------
+this.gfn_go = function (formFile)
+{
+    this.getOwnerFrame().set_formurl("frm::" + formFile);
+};
+
+this.gfn_goLogin = function ()
+{
+    this.gfn_setGv("gv_userId", "");
+    this.gfn_go("frm_login.xfdl");
+};
+
+//------------------------------------------------------------------------------
+// Transaction chung: mọi form gọi server qua đây
+//   - service "svc" trong TypeDefinition trỏ tới http://<server>/nexacro/
+//   - ErrorCode -99 = hết phiên → về màn login
+//   - ErrorCode < 0 khác → hiện ErrorMsg, rồi vẫn gọi callback của form (để form tự xử lý nếu cần)
+//------------------------------------------------------------------------------
+this.gfn_transaction = function (svcId, url, inDs, outDs, args, callback)
+{
+    if (!this.fv_txCallback) this.fv_txCallback = {};
+    this.fv_txCallback[svcId] = callback;
+    this.transaction(svcId, "svc::" + url, inDs, outDs, args, "gfn_callback");
+};
+
+this.gfn_callback = function (svcId, errorCode, errorMsg)
+{
+    if (errorCode == -99) {
+        this.alert(errorMsg);
+        this.gfn_goLogin();
+        return;
+    }
+    if (errorCode < 0) {
+        this.alert(errorMsg);
+    }
+    var fn = this.fv_txCallback ? this.fv_txCallback[svcId] : null;
+    if (fn && this[fn]) {
+        this[fn](svcId, errorCode, errorMsg);
+    }
+};
+
+// Tải mã chung vào dataset của form: gfn_loadCode("DISP_RSN", "ds_rsn", "fn_afterCode")
+this.gfn_loadCode = function (grpCd, dsName, callback)
+{
+    this.gfn_transaction("code_" + dsName, "common/selectCode.do", "", dsName + "=ds_code",
+                         "GRP_CD=" + nexacro.wrapQuote(grpCd), callback);
+};

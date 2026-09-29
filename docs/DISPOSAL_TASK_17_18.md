@@ -1,6 +1,7 @@
 # Task 17–18: Hủy hàng (폐기) theo luồng bán lẻ Hàn Quốc
 
 > Nhánh: `claude/android-nexacro-migration`. Cập nhật: 2026-09-29.
+> Bản Nexacro mobile "cũ" của cùng chức năng (để luyện đọc code và migrate): [nexacro-sample/disposal/README.md](../nexacro-sample/disposal/README.md).
 > Chưa có spec, nên làm theo **luồng 폐기 thường gặp ở chuỗi bán lẻ Hàn Quốc** (cửa hàng tiện lợi CU / GS25 / 세븐일레븐, siêu thị). Khi có spec thật, đối chiếu lại các giả định ở mục 6 và câu hỏi ở mục 7.
 
 ---

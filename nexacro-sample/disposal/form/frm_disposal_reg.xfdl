@@ -1,0 +1,322 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  폐기등록 / 폐기수정 (đăng ký / sửa phiếu hủy)
+  [MẪU MINH HOẠ – chưa chạy thử trong Nexacro Studio]
+  gv_disposalNo trống = đăng ký mới; có = sửa phiếu đó.
+  Server: disposal/selectDetail.do · selectItem.do · save.do (ds_master + ds_detail:U) · common/selectCode.do
+-->
+<FDL version="2.1">
+  <Form id="frm_disposal_reg" width="480" height="800" titletext="폐기등록" onload="form_onload">
+    <Layouts>
+      <Layout width="480" height="800">
+        <Button id="btn_back" taborder="0" text="◀" left="10" top="10" width="60" height="44"
+                onclick="btn_back_onclick"/>
+        <Static id="sta_title" taborder="1" text="폐기등록" left="80" top="10" width="390" height="44"
+                font="bold 17px/normal &quot;Malgun Gothic&quot;"/>
+
+        <!-- (A) 스캔: scanner PDA (keyboard wedge) gõ barcode vào ô này rồi gửi Enter -->
+        <Edit id="edt_scan" taborder="2" left="10" top="62" width="340" height="48" displaynulltext="바코드 스캔"
+              onkeyup="edt_scan_onkeyup"/>
+        <Button id="btn_add" taborder="3" text="추가" left="360" top="62" width="110" height="48"
+                onclick="btn_add_onclick"/>
+        <Static id="sta_rsn" taborder="4" text="기본사유" left="10" top="118" width="90" height="40"/>
+        <Combo id="cbo_rsn" taborder="5" left="100" top="118" width="370" height="40"
+               innerdataset="ds_rsn" codecolumn="CD" datacolumn="CD_NM"/>
+
+        <!-- (B) 상품 목록: chạm 1 dòng để sửa -->
+        <Grid id="grd_detail" taborder="6" binddataset="ds_detail" left="10" top="166" right="10" bottom="176"
+              autofittype="col" oncellclick="grd_detail_oncellclick">
+          <Formats>
+            <Format id="default">
+              <Columns>
+                <Column size="300"/>
+                <Column size="160"/>
+              </Columns>
+              <Rows>
+                <Row size="32"/>
+                <Row size="28"/>
+              </Rows>
+              <Band id="body">
+                <Cell colspan="2" text="bind:ITEM_NM" font="bold 14px/normal &quot;Malgun Gothic&quot;"/>
+                <Cell row="1" text="expr:ITEM_CD + '  ' + REASON_NM"/>
+                <Cell row="1" col="1" textAlign="right" text="expr:DISP_QTY + '개 / 가용 ' + AVAIL_QTY"
+                      color="expr:DISP_QTY > AVAIL_QTY ? 'red' : 'black'"/>
+              </Band>
+            </Format>
+          </Formats>
+        </Grid>
+        <Static id="sta_total" taborder="7" left="10" bottom="134" width="460" height="36"
+                font="bold 14px/normal &quot;Malgun Gothic&quot;"/>
+        <Edit id="edt_remark" taborder="8" left="10" bottom="80" width="460" height="48" displaynulltext="비고"/>
+        <Button id="btn_save" taborder="9" text="저장" left="10" bottom="10" width="460" height="60"
+                onclick="btn_save_onclick"/>
+
+        <!-- (C) Sửa 1 dòng -->
+        <Div id="div_line" taborder="10" left="20" top="250" width="440" height="250" visible="false"
+             background="#FFFFFF" border="1px solid #999999">
+          <Layouts>
+            <Layout>
+              <Static id="sta_item" taborder="0" left="10" top="10" width="420" height="36"/>
+              <Static id="sta_qty" taborder="1" text="수량" left="10" top="54" width="80" height="44"/>
+              <MaskEdit id="msk_qty" taborder="2" left="90" top="54" width="340" height="44" format="####"/>
+              <Static id="sta_lrsn" taborder="3" text="사유" left="10" top="106" width="80" height="44"/>
+              <Combo id="cbo_lineRsn" taborder="4" left="90" top="106" width="340" height="44"
+                     codecolumn="CD" datacolumn="CD_NM"/>
+              <Button id="btn_lineOk" taborder="5" text="확인" left="10" top="180" width="135" height="50"/>
+              <Button id="btn_lineDel" taborder="6" text="삭제" left="152" top="180" width="135" height="50"/>
+              <Button id="btn_lineClose" taborder="7" text="닫기" left="295" top="180" width="135" height="50"/>
+            </Layout>
+          </Layouts>
+        </Div>
+      </Layout>
+    </Layouts>
+    <Objects>
+      <Dataset id="ds_master">
+        <ColumnInfo>
+          <Column id="DISPOSAL_NO" type="STRING" size="20"/>
+          <Column id="REMARK" type="STRING" size="100"/>
+          <Column id="VER" type="INT" size="10"/>
+        </ColumnInfo>
+        <Rows>
+          <Row/>
+        </Rows>
+      </Dataset>
+      <!-- Gửi ds_detail:U → chỉ dòng insert / update / delete đi lên server -->
+      <Dataset id="ds_detail" useclientlayout="true">
+        <ColumnInfo>
+          <Column id="ITEM_CD" type="STRING" size="20"/>
+          <Column id="ITEM_NM" type="STRING" size="100"/>
+          <Column id="DISP_QTY" type="INT" size="10"/>
+          <Column id="REASON_CD" type="STRING" size="2"/>
+          <Column id="REASON_NM" type="STRING" size="30"/>
+          <Column id="COST_PRC" type="INT" size="15"/>
+          <Column id="COST_AMT" type="INT" size="15"/>
+          <Column id="AVAIL_QTY" type="INT" size="10"/>
+        </ColumnInfo>
+      </Dataset>
+      <Dataset id="ds_item">
+        <ColumnInfo>
+          <Column id="ITEM_CD" type="STRING" size="20"/>
+          <Column id="ITEM_NM" type="STRING" size="100"/>
+          <Column id="STOCK_QTY" type="INT" size="10"/>
+          <Column id="AVAIL_QTY" type="INT" size="10"/>
+          <Column id="COST_PRC" type="INT" size="15"/>
+          <Column id="SALE_PRC" type="INT" size="15"/>
+        </ColumnInfo>
+      </Dataset>
+      <!-- Mã chung DISP_RSN (폐기사유): 01 유통기한 경과, 02 파손, 03 변질, 04 리콜, 05 품질불량, 99 기타 -->
+      <Dataset id="ds_rsn">
+        <ColumnInfo>
+          <Column id="CD" type="STRING" size="2"/>
+          <Column id="CD_NM" type="STRING" size="30"/>
+        </ColumnInfo>
+      </Dataset>
+    </Objects>
+    <Bind>
+      <BindItem id="item0" compid="edt_remark" propid="value" datasetid="ds_master" columnid="REMARK"/>
+    </Bind>
+    <Script type="xscript5.1"><![CDATA[
+include "lib::common.xjs";
+
+this.fv_editRow = -1;   // dòng đang sửa trong div_line
+
+this.form_onload = function (obj, e)
+{
+    var f = this.div_line.form;
+    f.cbo_lineRsn.set_innerdataset(this.ds_rsn);
+    f.btn_lineOk.addEventHandler("onclick", this.btn_lineOk_onclick, this);
+    f.btn_lineDel.addEventHandler("onclick", this.btn_lineDel_onclick, this);
+    f.btn_lineClose.addEventHandler("onclick", this.btn_lineClose_onclick, this);
+
+    this.gfn_loadCode("DISP_RSN", "ds_rsn", "fn_afterCode");
+};
+
+this.fn_afterCode = function (svcId, errorCode, errorMsg)
+{
+    if (errorCode < 0) return;
+    this.cbo_rsn.set_index(0);   // mặc định 01 유통기한 경과
+
+    var no = this.gfn_getGv("gv_disposalNo");
+    if (this.gfn_isNull(no)) {
+        this.sta_title.set_text("폐기등록");
+        this.fn_sum();
+        this.edt_scan.setFocus();
+    } else {
+        this.sta_title.set_text("폐기수정 " + no);
+        this.gfn_transaction("load", "disposal/selectDetail.do", "", "ds_master=ds_master ds_detail=ds_detail",
+                             "DISPOSAL_NO=" + nexacro.wrapQuote(no), "fn_callback");
+    }
+};
+
+//------------------------------------------------------------------------------
+// 스캔 / 추가
+//------------------------------------------------------------------------------
+this.edt_scan_onkeyup = function (obj, e)
+{
+    if (e.keycode == 13) this.fn_scan();   // scanner gửi Enter sau barcode
+};
+
+this.btn_add_onclick = function (obj, e)
+{
+    this.fn_scan();
+};
+
+this.fn_scan = function ()
+{
+    var code = String(this.gfn_nvl(this.edt_scan.value, "")).trim();
+    this.edt_scan.set_value("");
+    if (code == "") return;
+
+    // 규칙: 같은 상품을 다시 스캔하면 수량 +1 (không tạo dòng mới)
+    var row = this.ds_detail.findRow("ITEM_CD", code);
+    if (row >= 0) {
+        this.ds_detail.setColumn(row, "DISP_QTY", this.ds_detail.getColumn(row, "DISP_QTY") + 1);
+        this.fn_calcRow(row);
+        this.fn_sum();
+        this.edt_scan.setFocus();
+        return;
+    }
+    this.gfn_transaction("item", "disposal/selectItem.do", "", "ds_item=ds_item",
+                         "ITEM_CD=" + nexacro.wrapQuote(code), "fn_callback");
+};
+
+this.fn_addItem = function ()
+{
+    var avail = this.ds_item.getColumn(0, "AVAIL_QTY");
+    // 규칙: 가용재고 0 이하 상품은 경고 후 사용자가 선택 (chỉ cảnh báo, không chặn)
+    if (avail <= 0 && !this.gfn_confirm("MSG_STOCK_WARN", [this.ds_item.getColumn(0, "ITEM_NM"), avail])) {
+        return;
+    }
+    var row = this.ds_detail.addRow();   // rowtype = insert
+    this.ds_detail.setColumn(row, "ITEM_CD", this.ds_item.getColumn(0, "ITEM_CD"));
+    this.ds_detail.setColumn(row, "ITEM_NM", this.ds_item.getColumn(0, "ITEM_NM"));
+    this.ds_detail.setColumn(row, "DISP_QTY", 1);
+    this.ds_detail.setColumn(row, "REASON_CD", this.cbo_rsn.value);
+    this.ds_detail.setColumn(row, "REASON_NM", this.cbo_rsn.text);
+    this.ds_detail.setColumn(row, "COST_PRC", this.ds_item.getColumn(0, "COST_PRC"));
+    this.ds_detail.setColumn(row, "AVAIL_QTY", avail);
+    this.fn_calcRow(row);
+    this.fn_sum();
+};
+
+// Tiền của 1 dòng tính ở client để hiển thị (server tính lại khi lưu)
+this.fn_calcRow = function (row)
+{
+    this.ds_detail.setColumn(row, "COST_AMT",
+        this.ds_detail.getColumn(row, "DISP_QTY") * this.ds_detail.getColumn(row, "COST_PRC"));
+};
+
+this.fn_sum = function ()
+{
+    var qty = 0, amt = 0;
+    for (var i = 0; i < this.ds_detail.rowcount; i++) {
+        qty += this.ds_detail.getColumn(i, "DISP_QTY");
+        amt += this.ds_detail.getColumn(i, "COST_AMT");
+    }
+    this.sta_total.set_text(this.ds_detail.rowcount + "건 · " + qty + "개 · 원가 " + this.gfn_fmtAmt(amt) + "원");
+};
+
+//------------------------------------------------------------------------------
+// Sửa / xóa 1 dòng
+//------------------------------------------------------------------------------
+this.grd_detail_oncellclick = function (obj, e)
+{
+    this.fv_editRow = e.row;
+    var f = this.div_line.form;
+    f.sta_item.set_text(this.ds_detail.getColumn(e.row, "ITEM_NM"));
+    f.msk_qty.set_value(this.ds_detail.getColumn(e.row, "DISP_QTY"));
+    f.cbo_lineRsn.set_value(this.ds_detail.getColumn(e.row, "REASON_CD"));
+    this.div_line.set_visible(true);
+};
+
+this.btn_lineOk_onclick = function (obj, e)
+{
+    var f = this.div_line.form;
+    var qty = parseInt(f.msk_qty.value, 10);
+    if (isNaN(qty) || qty < 1 || qty > 9999) {
+        this.gfn_alert("MSG_QTY_RANGE", [this.fv_editRow + 1]);
+        return;
+    }
+    // setColumn trên dòng đã có từ server → rowtype chuyển thành update
+    this.ds_detail.setColumn(this.fv_editRow, "DISP_QTY", qty);
+    this.ds_detail.setColumn(this.fv_editRow, "REASON_CD", f.cbo_lineRsn.value);
+    this.ds_detail.setColumn(this.fv_editRow, "REASON_NM", f.cbo_lineRsn.text);
+    this.fn_calcRow(this.fv_editRow);
+    this.fn_sum();
+    this.div_line.set_visible(false);
+};
+
+this.btn_lineDel_onclick = function (obj, e)
+{
+    // deleteRow: dòng từ server được giữ lại dạng "delete" để gửi lên bằng ds_detail:U
+    this.ds_detail.deleteRow(this.fv_editRow);
+    this.fn_sum();
+    this.div_line.set_visible(false);
+};
+
+this.btn_lineClose_onclick = function (obj, e)
+{
+    this.div_line.set_visible(false);
+};
+
+//------------------------------------------------------------------------------
+// 저장
+//------------------------------------------------------------------------------
+this.btn_save_onclick = function (obj, e)
+{
+    if (!this.fn_validate()) return;
+    if (!this.gfn_confirm("MSG_CONFIRM_SAVE")) return;
+    this.gfn_transaction("save", "disposal/save.do", "ds_master=ds_master ds_detail=ds_detail:U",
+                         "ds_master=ds_master ds_detail=ds_detail", "", "fn_callback");
+};
+
+this.fn_validate = function ()
+{
+    if (this.ds_detail.rowcount == 0) {
+        this.gfn_alert("MSG_NO_ITEM");
+        return false;
+    }
+    for (var i = 0; i < this.ds_detail.rowcount; i++) {
+        var qty = this.ds_detail.getColumn(i, "DISP_QTY");
+        if (qty < 1 || qty > 9999) {
+            this.gfn_alert("MSG_QTY_RANGE", [i + 1]);
+            return false;
+        }
+        if (this.gfn_isNull(this.ds_detail.getColumn(i, "REASON_CD"))) {
+            this.gfn_alert("MSG_REASON_REQUIRED", [i + 1]);
+            return false;
+        }
+    }
+    // 규칙: 비고 100자 이내
+    var remark = this.gfn_nvl(this.ds_master.getColumn(0, "REMARK"), "");
+    if (remark.length > 100) {
+        this.gfn_alert("MSG_REMARK_LENGTH");
+        return false;
+    }
+    return true;
+};
+
+this.fn_callback = function (svcId, errorCode, errorMsg)
+{
+    if (errorCode < 0) return;
+    if (svcId == "load") {
+        this.fn_sum();
+        this.edt_scan.setFocus();
+    } else if (svcId == "item") {
+        this.fn_addItem();
+        this.edt_scan.setFocus();
+    } else if (svcId == "save") {
+        this.gfn_alert("MSG_SAVED");
+        this.gfn_setGv("gv_disposalNo", this.ds_master.getColumn(0, "DISPOSAL_NO"));
+        this.gfn_go("frm_disposal_detail.xfdl");
+    }
+};
+
+this.btn_back_onclick = function (obj, e)
+{
+    this.gfn_go(this.gfn_isNull(this.gfn_getGv("gv_disposalNo")) ? "frm_disposal_list.xfdl"
+                                                                  : "frm_disposal_detail.xfdl");
+};
+]]></Script>
+  </Form>
+</FDL>

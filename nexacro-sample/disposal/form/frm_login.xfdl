@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 로그인 (đăng nhập)  [MẪU MINH HOẠ – chưa chạy thử trong Nexacro Studio] -->
+<FDL version="2.1">
+  <Form id="frm_login" width="480" height="800" titletext="로그인" onload="form_onload">
+    <Layouts>
+      <Layout width="480" height="800">
+        <Static id="sta_title" taborder="0" text="점포 폐기관리" left="20" top="120" width="440" height="50"
+                font="bold 24px/normal &quot;Malgun Gothic&quot;" textAlign="center"/>
+        <Static id="sta_id" taborder="1" text="아이디" left="40" top="230" width="100" height="44"/>
+        <Edit id="edt_id" taborder="2" left="140" top="230" width="300" height="44"/>
+        <Static id="sta_pw" taborder="3" text="비밀번호" left="40" top="290" width="100" height="44"/>
+        <Edit id="edt_pw" taborder="4" left="140" top="290" width="300" height="44" password="true"
+              onkeyup="edt_pw_onkeyup"/>
+        <Button id="btn_login" taborder="5" text="로그인" left="40" top="370" width="400" height="56"
+                onclick="btn_login_onclick"/>
+      </Layout>
+    </Layouts>
+    <Objects>
+      <Dataset id="ds_login">
+        <ColumnInfo>
+          <Column id="USER_ID" type="STRING" size="20"/>
+          <Column id="PASSWORD" type="STRING" size="100"/>
+        </ColumnInfo>
+        <Rows>
+          <Row/>
+        </Rows>
+      </Dataset>
+      <Dataset id="ds_user">
+        <ColumnInfo>
+          <Column id="USER_ID" type="STRING" size="20"/>
+          <Column id="USER_ROLE" type="STRING" size="10"/>
+          <Column id="STORE_CD" type="STRING" size="10"/>
+          <Column id="BIZ_DT" type="STRING" size="8"/>
+        </ColumnInfo>
+      </Dataset>
+    </Objects>
+    <Bind>
+      <BindItem id="item0" compid="edt_id" propid="value" datasetid="ds_login" columnid="USER_ID"/>
+      <BindItem id="item1" compid="edt_pw" propid="value" datasetid="ds_login" columnid="PASSWORD"/>
+    </Bind>
+    <Script type="xscript5.1"><![CDATA[
+include "lib::common.xjs";
+
+this.form_onload = function (obj, e)
+{
+    this.edt_id.setFocus();
+};
+
+this.edt_pw_onkeyup = function (obj, e)
+{
+    if (e.keycode == 13) this.fn_login();
+};
+
+this.btn_login_onclick = function (obj, e)
+{
+    this.fn_login();
+};
+
+this.fn_login = function ()
+{
+    if (this.gfn_isNull(this.ds_login.getColumn(0, "USER_ID"))
+        || this.gfn_isNull(this.ds_login.getColumn(0, "PASSWORD"))) {
+        this.gfn_alert("MSG_LOGIN_REQUIRED");
+        return;
+    }
+    // Server tạo session (cookie JSESSIONID); runtime tự gửi cookie ở các transaction sau
+    this.gfn_transaction("login", "common/login.do", "ds_login=ds_login", "ds_user=ds_user", "", "fn_callback");
+};
+
+this.fn_callback = function (svcId, errorCode, errorMsg)
+{
+    if (errorCode < 0) {
+        this.ds_login.setColumn(0, "PASSWORD", "");
+        return;
+    }
+    // Lưu thông tin đăng nhập vào biến toàn cục: mọi form sau đọc từ đây
+    this.gfn_setGv("gv_userId", this.ds_user.getColumn(0, "USER_ID"));
+    this.gfn_setGv("gv_userRole", this.ds_user.getColumn(0, "USER_ROLE"));
+    this.gfn_setGv("gv_storeCd", this.ds_user.getColumn(0, "STORE_CD"));
+    this.gfn_setGv("gv_bizDt", this.ds_user.getColumn(0, "BIZ_DT"));
+    this.gfn_go("frm_disposal_list.xfdl");
+};
+]]></Script>
+  </Form>
+</FDL>

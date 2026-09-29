@@ -1,0 +1,288 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  폐기상세 (chi tiết phiếu hủy)  – Task 17 "Detail View / Confirm Button / Status Validation"
+                                 + Task 18 (server trừ tồn khi 확정)
+  [MẪU MINH HOẠ – chưa chạy thử trong Nexacro Studio]
+  Server: disposal/selectDetail.do · confirm.do · cancelConfirm.do · cancel.do
+-->
+<FDL version="2.1">
+  <Form id="frm_disposal_detail" width="480" height="800" titletext="폐기상세" onload="form_onload">
+    <Layouts>
+      <Layout width="480" height="800">
+        <!-- (A) Header -->
+        <Button id="btn_list" taborder="0" text="◀ 목록" left="10" top="10" width="90" height="40"
+                onclick="btn_list_onclick"/>
+        <Static id="sta_no" taborder="1" left="110" top="10" width="250" height="40"
+                font="bold 16px/normal &quot;Malgun Gothic&quot;"/>
+        <Static id="sta_stat" taborder="2" left="360" top="10" width="110" height="40" textAlign="right"/>
+        <TextArea id="txa_info" taborder="3" left="10" top="56" width="460" height="120" readonly="true"/>
+        <!-- Lý do chưa xác nhận được (script tự tính) -->
+        <Static id="sta_warn" taborder="4" text="" left="10" top="180" width="460" height="30" color="red" visible="false"/>
+
+        <!-- (B) Dòng hàng: đỏ = thiếu tồn khả dụng (SHORT_YN do script tính) -->
+        <Grid id="grd_detail" taborder="5" binddataset="ds_detail" left="10" top="214" right="10" bottom="200"
+              autofittype="col">
+          <Formats>
+            <Format id="default">
+              <Columns>
+                <Column size="300"/>
+                <Column size="160"/>
+              </Columns>
+              <Rows>
+                <Row size="32"/>
+                <Row size="28"/>
+              </Rows>
+              <Band id="body">
+                <Cell colspan="2" text="expr:LINE_NO + '. ' + ITEM_NM" font="bold 14px/normal &quot;Malgun Gothic&quot;"/>
+                <Cell row="1" text="expr:ITEM_CD + '  ' + REASON_NM"/>
+                <Cell row="1" col="1" textAlign="right"
+                      text="expr:'폐기 ' + DISP_QTY + ' / 가용 ' + AVAIL_QTY"
+                      color="expr:SHORT_YN=='Y' ? 'red' : 'black'"/>
+              </Band>
+            </Format>
+          </Formats>
+        </Grid>
+        <Static id="sta_total" taborder="6" left="10" bottom="160" width="460" height="34"
+                font="bold 14px/normal &quot;Malgun Gothic&quot;"/>
+
+        <!-- (C) Nút: hiện / ẩn do script fn_setButtons quyết định -->
+        <Button id="btn_edit" taborder="7" text="수정" left="10" bottom="108" width="225" height="48"
+                visible="false" onclick="btn_edit_onclick"/>
+        <Button id="btn_cancel" taborder="8" text="취소" left="245" bottom="108" width="225" height="48"
+                visible="false" onclick="btn_cancel_onclick"/>
+        <Button id="btn_confirm" taborder="9" text="폐기확정" left="10" bottom="56" width="460" height="48"
+                visible="false" onclick="btn_confirm_onclick"/>
+        <Button id="btn_cfmCancel" taborder="10" text="확정취소" left="10" bottom="4" width="460" height="48"
+                visible="false" onclick="btn_cfmCancel_onclick"/>
+
+        <!-- (D) Nhập lý do (dùng chung cho 취소 và 확정취소) -->
+        <Div id="div_rsn" taborder="11" left="20" top="300" width="440" height="200" visible="false"
+             background="#FFFFFF" border="1px solid #999999">
+          <Layouts>
+            <Layout>
+              <Static id="sta_rsnTitle" taborder="0" text="사유" left="10" top="10" width="420" height="30"/>
+              <Edit id="edt_rsn" taborder="1" left="10" top="50" width="420" height="44" maxlength="100"/>
+              <Button id="btn_rsnOk" taborder="2" text="확인" left="10" top="120" width="200" height="48"/>
+              <Button id="btn_rsnClose" taborder="3" text="닫기" left="230" top="120" width="200" height="48"/>
+            </Layout>
+          </Layouts>
+        </Div>
+      </Layout>
+    </Layouts>
+    <Objects>
+      <Dataset id="ds_master">
+        <ColumnInfo>
+          <Column id="DISPOSAL_NO" type="STRING" size="20"/>
+          <Column id="STORE_CD" type="STRING" size="10"/>
+          <Column id="BIZ_DT" type="STRING" size="8"/>
+          <Column id="STAT_CD" type="STRING" size="2"/>
+          <Column id="STAT_NM" type="STRING" size="20"/>
+          <Column id="REMARK" type="STRING" size="100"/>
+          <Column id="REG_ID" type="STRING" size="20"/>
+          <Column id="REG_DTM" type="STRING" size="14"/>
+          <Column id="UPD_ID" type="STRING" size="20"/>
+          <Column id="UPD_DTM" type="STRING" size="14"/>
+          <Column id="CFM_ID" type="STRING" size="20"/>
+          <Column id="CFM_DTM" type="STRING" size="14"/>
+          <Column id="CNCL_ID" type="STRING" size="20"/>
+          <Column id="CNCL_DTM" type="STRING" size="14"/>
+          <Column id="CNCL_RSN" type="STRING" size="100"/>
+          <Column id="CFM_CNCL_ID" type="STRING" size="20"/>
+          <Column id="CFM_CNCL_DTM" type="STRING" size="14"/>
+          <Column id="CFM_CNCL_RSN" type="STRING" size="100"/>
+          <Column id="TOT_QTY" type="INT" size="10"/>
+          <Column id="TOT_COST_AMT" type="INT" size="15"/>
+          <Column id="TOT_SALE_AMT" type="INT" size="15"/>
+          <Column id="CLOSE_YN" type="STRING" size="1"/>
+          <Column id="VER" type="INT" size="10"/>
+        </ColumnInfo>
+      </Dataset>
+      <!-- useclientlayout: giữ cột SHORT_YN của client khi nhận dữ liệu từ server -->
+      <Dataset id="ds_detail" useclientlayout="true">
+        <ColumnInfo>
+          <Column id="LINE_NO" type="INT" size="5"/>
+          <Column id="ITEM_CD" type="STRING" size="20"/>
+          <Column id="ITEM_NM" type="STRING" size="100"/>
+          <Column id="DISP_QTY" type="INT" size="10"/>
+          <Column id="REASON_CD" type="STRING" size="2"/>
+          <Column id="REASON_NM" type="STRING" size="30"/>
+          <Column id="COST_PRC" type="INT" size="15"/>
+          <Column id="SALE_PRC" type="INT" size="15"/>
+          <Column id="COST_AMT" type="INT" size="15"/>
+          <Column id="SALE_AMT" type="INT" size="15"/>
+          <Column id="STOCK_QTY" type="INT" size="10"/>
+          <Column id="AVAIL_QTY" type="INT" size="10"/>
+          <Column id="SHORT_YN" type="STRING" size="1"/>
+        </ColumnInfo>
+      </Dataset>
+    </Objects>
+    <Script type="xscript5.1"><![CDATA[
+include "lib::common.xjs";
+
+this.fv_hasShort = false;    // có dòng thiếu tồn khả dụng
+this.fv_rsnAction = "";      // "cancel" | "cfmCancel": nút 확인 của div_rsn làm gì
+
+this.form_onload = function (obj, e)
+{
+    this.div_rsn.form.btn_rsnOk.addEventHandler("onclick", this.btn_rsnOk_onclick, this);
+    this.div_rsn.form.btn_rsnClose.addEventHandler("onclick", this.btn_rsnClose_onclick, this);
+    this.fn_search();
+};
+
+this.fn_search = function ()
+{
+    var no = this.gfn_getGv("gv_disposalNo");
+    this.gfn_transaction("search", "disposal/selectDetail.do", "", "ds_master=ds_master ds_detail=ds_detail",
+                         "DISPOSAL_NO=" + nexacro.wrapQuote(no), "fn_callback");
+};
+
+this.fn_callback = function (svcId, errorCode, errorMsg)
+{
+    if (errorCode < 0) {
+        // -2 (người khác đã sửa), -5 (thiếu tồn)…: tải lại để thấy dữ liệu mới nhất
+        if (svcId != "search") this.fn_search();
+        return;
+    }
+    if (svcId == "confirm")   this.gfn_alert("MSG_CONFIRMED");
+    if (svcId == "cancel")    this.gfn_alert("MSG_CANCELLED");
+    if (svcId == "cfmCancel") this.gfn_alert("MSG_CFM_CANCELLED");
+    this.fn_render();
+};
+
+/* Hiển thị sau mỗi lần nhận dữ liệu */
+this.fn_render = function ()
+{
+    var m = this.ds_master;
+    this.sta_no.set_text(m.getColumn(0, "DISPOSAL_NO"));
+    this.sta_stat.set_text(m.getColumn(0, "STAT_NM") + " (" + m.getColumn(0, "STAT_CD") + ")");
+
+    var info = "영업일자: " + m.getColumn(0, "BIZ_DT") + (m.getColumn(0, "CLOSE_YN") == "Y" ? " (마감)" : "")
+             + "\n등록: " + m.getColumn(0, "REG_ID") + " " + this.gfn_fmtDtm(m.getColumn(0, "REG_DTM"));
+    if (!this.gfn_isNull(m.getColumn(0, "CFM_ID")))
+        info += "\n확정: " + m.getColumn(0, "CFM_ID") + " " + this.gfn_fmtDtm(m.getColumn(0, "CFM_DTM"));
+    if (!this.gfn_isNull(m.getColumn(0, "CFM_CNCL_ID")))
+        info += "\n확정취소: " + m.getColumn(0, "CFM_CNCL_ID") + " " + m.getColumn(0, "CFM_CNCL_RSN");
+    if (!this.gfn_isNull(m.getColumn(0, "CNCL_ID")))
+        info += "\n취소: " + m.getColumn(0, "CNCL_ID") + " " + m.getColumn(0, "CNCL_RSN");
+    if (!this.gfn_isNull(m.getColumn(0, "REMARK")))
+        info += "\n비고: " + m.getColumn(0, "REMARK");
+    this.txa_info.set_value(info);
+
+    this.sta_total.set_text(this.ds_detail.rowcount + "건 · " + m.getColumn(0, "TOT_QTY") + "개 · 원가 "
+                            + this.gfn_fmtAmt(m.getColumn(0, "TOT_COST_AMT")) + "원");
+    this.fn_checkStock();
+    this.fn_setButtons();
+};
+
+/* 규칙: 등록 상태일 때 폐기수량 > 가용재고 이면 빨간색 + 확정 불가 */
+this.fn_checkStock = function ()
+{
+    this.fv_hasShort = false;
+    var isReg = this.ds_master.getColumn(0, "STAT_CD") == "10";
+    this.ds_detail.set_enableevent(false);
+    for (var i = 0; i < this.ds_detail.rowcount; i++) {
+        var shortYn = isReg && this.ds_detail.getColumn(i, "DISP_QTY") > this.ds_detail.getColumn(i, "AVAIL_QTY");
+        this.ds_detail.setColumn(i, "SHORT_YN", shortYn ? "Y" : "N");
+        if (shortYn) this.fv_hasShort = true;
+    }
+    this.ds_detail.set_enableevent(true);
+    this.sta_warn.set_text(this.gfn_getMsg("MSG_SHORT_STOCK"));
+    this.sta_warn.set_visible(this.fv_hasShort);
+};
+
+/*
+ * 버튼 제어 (bật / tắt nút) – toàn bộ quy tắc quyền + trạng thái nằm ở đây, KHÔNG có ở server trả về
+ */
+this.fn_setButtons = function ()
+{
+    var stat    = this.ds_master.getColumn(0, "STAT_CD");
+    var closed  = this.ds_master.getColumn(0, "CLOSE_YN") == "Y";
+    var isMgr   = this.gfn_isManager();
+    var isOwner = this.ds_master.getColumn(0, "REG_ID") == this.gfn_getGv("gv_userId");
+
+    // 등록(10) + 미마감 + (본인 or 점장) → 수정 / 취소
+    this.btn_edit.set_visible(stat == "10" && !closed && (isOwner || isMgr));
+    this.btn_cancel.set_visible(stat == "10" && !closed && (isOwner || isMgr));
+
+    // 등록(10) + 미마감 + 점장 → 확정 (thiếu tồn thì tắt)
+    this.btn_confirm.set_visible(stat == "10" && !closed && isMgr);
+    this.btn_confirm.set_enable(!this.fv_hasShort);
+
+    // 확정(20) + 미마감 + 점장 → 확정취소
+    this.btn_cfmCancel.set_visible(stat == "20" && !closed && isMgr);
+};
+
+this.btn_confirm_onclick = function (obj, e)
+{
+    var m = this.ds_master;
+    // 규칙: 당일 전표만 확정 (chỉ phiếu có 영업일자 = hôm nay)
+    if (m.getColumn(0, "BIZ_DT") != this.gfn_getGv("gv_bizDt")) {
+        this.gfn_alert("MSG_ONLY_TODAY");
+        return;
+    }
+    if (this.fv_hasShort) {
+        this.gfn_alert("MSG_SHORT_STOCK");
+        return;
+    }
+    var amt = m.getColumn(0, "TOT_COST_AMT");
+    if (!this.gfn_confirm("MSG_CONFIRM_DISP", [this.ds_detail.rowcount, this.gfn_fmtAmt(amt)])) return;
+    // 규칙: 원가 10만원 이상은 한 번 더 확인
+    if (amt >= 100000 && !this.gfn_confirm("MSG_CONFIRM_BIG", [this.gfn_fmtAmt(amt)])) return;
+
+    this.gfn_transaction("confirm", "disposal/confirm.do", "", "ds_master=ds_master ds_detail=ds_detail",
+                         "DISPOSAL_NO=" + nexacro.wrapQuote(m.getColumn(0, "DISPOSAL_NO"))
+                         + " VER=" + m.getColumn(0, "VER"), "fn_callback");
+};
+
+this.btn_edit_onclick = function (obj, e)
+{
+    this.gfn_go("frm_disposal_reg.xfdl");   // gv_disposalNo vẫn giữ số phiếu đang xem
+};
+
+this.btn_cancel_onclick = function (obj, e)
+{
+    this.fn_openRsn("cancel", "취소사유");
+};
+
+this.btn_cfmCancel_onclick = function (obj, e)
+{
+    this.fn_openRsn("cfmCancel", "확정취소 사유");
+};
+
+this.fn_openRsn = function (action, title)
+{
+    this.fv_rsnAction = action;
+    this.div_rsn.form.sta_rsnTitle.set_text(title);
+    this.div_rsn.form.edt_rsn.set_value("");
+    this.div_rsn.set_visible(true);
+    this.div_rsn.form.edt_rsn.setFocus();
+};
+
+this.btn_rsnOk_onclick = function (obj, e)
+{
+    var rsn = this.div_rsn.form.edt_rsn.value;
+    if (this.gfn_isNull(rsn)) {
+        this.gfn_alert("MSG_RSN_REQUIRED");
+        return;
+    }
+    this.div_rsn.set_visible(false);
+    var m = this.ds_master;
+    var args = "DISPOSAL_NO=" + nexacro.wrapQuote(m.getColumn(0, "DISPOSAL_NO"))
+             + " VER=" + m.getColumn(0, "VER")
+             + " RSN=" + nexacro.wrapQuote(rsn);
+    var url = this.fv_rsnAction == "cancel" ? "disposal/cancel.do" : "disposal/cancelConfirm.do";
+    this.gfn_transaction(this.fv_rsnAction, url, "", "ds_master=ds_master ds_detail=ds_detail", args, "fn_callback");
+};
+
+this.btn_rsnClose_onclick = function (obj, e)
+{
+    this.div_rsn.set_visible(false);
+};
+
+this.btn_list_onclick = function (obj, e)
+{
+    this.gfn_go("frm_disposal_list.xfdl");
+};
+]]></Script>
+  </Form>
+</FDL>

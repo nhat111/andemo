@@ -11,6 +11,7 @@
 | [NEXACRO_TO_ANDROID.md](NEXACRO_TO_ANDROID.md) | Tra nhanh: khái niệm Nexacro nào tương ứng với gì trên Android |
 | [NEXACRO_XAPI_TO_JSON.md](NEXACRO_XAPI_TO_JSON.md) | Cách cho Android gọi server X-API (XML Dataset) bằng JSON |
 | [NEXACRO_MIGRATION_LAB.md](NEXACRO_MIGRATION_LAB.md) | Bài mẫu + 8 bài tập chuyển 1 form Nexacro sang Android |
+| [../nexacro-sample/disposal/README.md](../nexacro-sample/disposal/README.md) | Bộ form Nexacro mobile hoàn chỉnh (4 form + `gfn_` + server X-API chạy được) để luyện đọc code thật và rút quy tắc |
 | [ANDROID_LEARNING_PLAN.md](ANDROID_LEARNING_PLAN.md) | 14 buổi học Android qua project PDA (chạy nền, thông báo, scanner…) |
 
 ---
@@ -237,7 +238,7 @@ Sau 6 tuần, nếu dự án cần thêm: chạy nền, thông báo đẩy, WebS
 
 ### B4. Bài kiểm tra cuối lộ trình
 
-Tự chuyển **1 form Nexacro** (file mẫu `nexacro-sample/frm_product_search.xfdl`, hoặc 1 form thật khi đã có) theo đúng quy trình A6:
+Tự chuyển **1 chức năng Nexacro** theo đúng quy trình A6: bộ form `nexacro-sample/disposal/` (có bài tập và đáp án bảng quy tắc), form đơn giản `nexacro-sample/frm_product_search.xfdl`, hoặc form thật khi đã có:
 
 - [ ] Điền bảng phân tích + bảng quy tắc
 - [ ] Gọi server qua gateway hoặc API JSON

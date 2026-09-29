@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  폐기조회 (tra cứu phiếu hủy)  – Task 17 "Disposal Inquiry Screen"
+  [MẪU MINH HOẠ – chưa chạy thử trong Nexacro Studio]
+  Server: POST svc::disposal/selectList.do   in: ds_cond   out: ds_list
+-->
+<FDL version="2.1">
+  <Form id="frm_disposal_list" width="480" height="800" titletext="폐기조회" onload="form_onload">
+    <Layouts>
+      <Layout width="480" height="800">
+        <!-- (A) 조회조건 -->
+        <Static id="sta_stat" taborder="0" text="상태" left="10" top="10" width="70" height="40"/>
+        <Combo id="cbo_stat" taborder="1" left="80" top="10" width="180" height="40"
+               innerdataset="ds_stat" codecolumn="CD" datacolumn="CD_NM"/>
+        <Button id="btn_search" taborder="2" text="조회" left="370" top="10" width="100" height="40"
+                onclick="btn_search_onclick"/>
+        <Static id="sta_dt" taborder="3" text="영업일자" left="10" top="58" width="70" height="40"/>
+        <Calendar id="cal_from" taborder="4" left="80" top="58" width="180" height="40" dateformat="yyyy-MM-dd"/>
+        <Static id="sta_tilde" taborder="5" text="~" left="262" top="58" width="16" height="40"/>
+        <Calendar id="cal_to" taborder="6" left="280" top="58" width="190" height="40" dateformat="yyyy-MM-dd"/>
+
+        <!-- (B) 건수 -->
+        <Static id="sta_cnt" taborder="7" text="" left="10" top="106" width="460" height="28"/>
+
+        <!-- (C) 목록: 1 phiếu = 2 dòng (mobile) -->
+        <Grid id="grd_list" taborder="8" binddataset="ds_list" left="10" top="138" right="10" bottom="76"
+              autofittype="col" oncellclick="grd_list_oncellclick">
+          <Formats>
+            <Format id="default">
+              <Columns>
+                <Column size="300"/>
+                <Column size="160"/>
+              </Columns>
+              <Rows>
+                <Row size="34"/>
+                <Row size="28"/>
+              </Rows>
+              <Band id="body">
+                <Cell text="bind:DISPOSAL_NO" font="bold 15px/normal &quot;Malgun Gothic&quot;"/>
+                <Cell col="1" text="bind:STAT_NM" textAlign="right"
+                      color="expr:STAT_CD=='10' ? '#E65100' : (STAT_CD=='20' ? '#2E7D32' : 'gray')"/>
+                <Cell row="1" text="expr:BIZ_DT + '  ' + REG_ID + '  ' + LINE_CNT + '건 / ' + TOT_QTY + '개'"/>
+                <Cell row="1" col="1" text="bind:TOT_COST_AMT" displaytype="number" textAlign="right"/>
+              </Band>
+            </Format>
+          </Formats>
+        </Grid>
+
+        <!-- (D) 등록 -->
+        <Button id="btn_new" taborder="9" text="+ 폐기등록" left="10" bottom="10" right="10" height="56"
+                onclick="btn_new_onclick"/>
+      </Layout>
+    </Layouts>
+    <Objects>
+      <Dataset id="ds_cond">
+        <ColumnInfo>
+          <Column id="STAT_CD" type="STRING" size="2"/>
+          <Column id="FROM_DT" type="STRING" size="8"/>
+          <Column id="TO_DT" type="STRING" size="8"/>
+        </ColumnInfo>
+        <Rows>
+          <Row/>
+        </Rows>
+      </Dataset>
+      <!-- Mã chung DISP_STAT tải từ server + thêm dòng "전체" -->
+      <Dataset id="ds_stat">
+        <ColumnInfo>
+          <Column id="CD" type="STRING" size="2"/>
+          <Column id="CD_NM" type="STRING" size="20"/>
+        </ColumnInfo>
+      </Dataset>
+      <Dataset id="ds_list">
+        <ColumnInfo>
+          <Column id="DISPOSAL_NO" type="STRING" size="20"/>
+          <Column id="BIZ_DT" type="STRING" size="8"/>
+          <Column id="STAT_CD" type="STRING" size="2"/>
+          <Column id="STAT_NM" type="STRING" size="20"/>
+          <Column id="REG_ID" type="STRING" size="20"/>
+          <Column id="REG_DTM" type="STRING" size="14"/>
+          <Column id="LINE_CNT" type="INT" size="10"/>
+          <Column id="TOT_QTY" type="INT" size="10"/>
+          <Column id="TOT_COST_AMT" type="INT" size="15"/>
+          <Column id="REMARK" type="STRING" size="100"/>
+        </ColumnInfo>
+      </Dataset>
+    </Objects>
+    <Bind>
+      <BindItem id="item0" compid="cbo_stat" propid="value" datasetid="ds_cond" columnid="STAT_CD"/>
+      <BindItem id="item1" compid="cal_from" propid="value" datasetid="ds_cond" columnid="FROM_DT"/>
+      <BindItem id="item2" compid="cal_to" propid="value" datasetid="ds_cond" columnid="TO_DT"/>
+    </Bind>
+    <Script type="xscript5.1"><![CDATA[
+include "lib::common.xjs";
+
+/* Mở form: mặc định trạng thái 등록 (10), khoảng ngày = 7 ngày gần nhất tới 영업일자 hiện tại */
+this.form_onload = function (obj, e)
+{
+    var bizDt = this.gfn_getGv("gv_bizDt");
+    this.ds_cond.setColumn(0, "STAT_CD", "10");
+    this.ds_cond.setColumn(0, "FROM_DT", this.fn_addDays(bizDt, -7));
+    this.ds_cond.setColumn(0, "TO_DT", bizDt);
+    this.gfn_loadCode("DISP_STAT", "ds_stat", "fn_afterCode");
+};
+
+this.fn_afterCode = function (svcId, errorCode, errorMsg)
+{
+    if (errorCode < 0) return;
+    var row = this.ds_stat.insertRow(0);
+    this.ds_stat.setColumn(row, "CD", "");
+    this.ds_stat.setColumn(row, "CD_NM", "전체");
+    this.fn_search();
+};
+
+this.btn_search_onclick = function (obj, e)
+{
+    this.fn_search();
+};
+
+this.fn_search = function ()
+{
+    var fromDt = this.ds_cond.getColumn(0, "FROM_DT");
+    var toDt = this.ds_cond.getColumn(0, "TO_DT");
+    // Quy tắc: từ ngày không được sau đến ngày
+    if (!this.gfn_isNull(fromDt) && !this.gfn_isNull(toDt) && fromDt > toDt) {
+        this.gfn_alert("MSG_DATE_RANGE");
+        return;
+    }
+    this.gfn_transaction("search", "disposal/selectList.do", "ds_cond=ds_cond", "ds_list=ds_list", "", "fn_callback");
+};
+
+this.fn_callback = function (svcId, errorCode, errorMsg)
+{
+    if (errorCode < 0) return;
+    if (svcId == "search") {
+        this.sta_cnt.set_text("총 " + this.ds_list.rowcount + "건");
+    }
+};
+
+/* Chọn 1 phiếu → màn chi tiết. Truyền số phiếu qua biến toàn cục (kiểu Nexacro mobile hay dùng) */
+this.grd_list_oncellclick = function (obj, e)
+{
+    this.gfn_setGv("gv_disposalNo", this.ds_list.getColumn(e.row, "DISPOSAL_NO"));
+    this.gfn_go("frm_disposal_detail.xfdl");
+};
+
+this.btn_new_onclick = function (obj, e)
+{
+    this.gfn_setGv("gv_disposalNo", "");
+    this.gfn_go("frm_disposal_reg.xfdl");
+};
+
+/* "20260929" + n ngày → "yyyyMMdd" */
+this.fn_addDays = function (yyyymmdd, n)
+{
+    var d = new Date(parseInt(yyyymmdd.substr(0, 4), 10), parseInt(yyyymmdd.substr(4, 2), 10) - 1,
+                     parseInt(yyyymmdd.substr(6, 2), 10));
+    d.setDate(d.getDate() + n);
+    var mm = d.getMonth() + 1, dd = d.getDate();
+    return "" + d.getFullYear() + (mm < 10 ? "0" : "") + mm + (dd < 10 ? "0" : "") + dd;
+};
+]]></Script>
+  </Form>
+</FDL>
