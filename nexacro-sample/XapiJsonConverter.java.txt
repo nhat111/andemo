@@ -1,5 +1,5 @@
 // Helper chuyển X-API (PlatformData / DataSet) → JSON, dùng NGAY TRONG backend Nexacro thật của dự án
-// (nơi đã có thư viện X-API). Cách B trong docs/NEXACRO_XAPI_TO_JSON.md.
+// (nơi đã có thư viện X-API). Cách B trong docs/nexacro-migration/NEXACRO_XAPI_TO_JSON.md.
 //
 // File .txt để không bị biên dịch trong repo này (không có thư viện X-API).
 // Tên lớp / hàm đã đối chiếu với Javadoc X-API Nexacro 17 (package com.nexacro17.xapi.data):

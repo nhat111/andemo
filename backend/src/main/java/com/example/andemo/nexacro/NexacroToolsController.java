@@ -11,7 +11,7 @@ import java.util.Map;
 
 /**
  * Công cụ thử chuyển đổi: dán 1 response XML thật của server X-API để xem JSON app sẽ nhận,
- * hoặc ngược lại. Cần đăng nhập. Xem docs/NEXACRO_XAPI_TO_JSON.md mục 5.
+ * hoặc ngược lại. Cần đăng nhập. Xem docs/nexacro-migration/NEXACRO_XAPI_TO_JSON.md mục 5.
  */
 @RestController
 @RequestMapping("/api/nx-tools")

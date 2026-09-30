@@ -3,7 +3,7 @@
   Form Nexacro MẪU để luyện migrate (không phải mã nguồn dự án thật).
   Đã rút gọn: bỏ bớt thuộc tính style / layout mà Nexacro Studio tự sinh.
   Bản Android tương ứng: android/app/src/main/java/com/example/andemo/migration/ProductSearchActivity.java
-  Đối chiếu từng phần: docs/NEXACRO_MIGRATION_LAB.md, mục 3.
+  Đối chiếu từng phần: docs/nexacro-migration/MIGRATION_LAB.md, mục 3.
 -->
 <FDL version="2.1">
   <Form id="frm_product_search" width="480" height="800" titletext="Tra cứu sản phẩm" onload="form_onload">
@@ -41,9 +41,10 @@
               <Band id="body">
                 <Cell text="bind:barcode"/>
                 <Cell col="1" text="bind:name"/>
-                <!-- Hết hàng thì chữ đỏ -->
+                <!-- Hết hàng thì chữ đỏ. Nexacro 17: chọn class theo dữ liệu, class định nghĩa trong
+                     nexacro-sample/disposal/_resource_/_xcss_/disposal.xcss (cell_short) -->
                 <Cell col="2" text="bind:stockQuantity" displaytype="number"
-                      color="expr:stockQuantity == 0 ? 'red' : 'black'"/>
+                      cssclass="expr:stockQuantity == 0 ? 'cell_short' : ''"/>
               </Band>
             </Format>
           </Formats>

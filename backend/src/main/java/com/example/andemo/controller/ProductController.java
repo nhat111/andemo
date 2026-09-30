@@ -11,7 +11,7 @@ import java.util.Optional;
 
 /**
  * API sản phẩm: tìm theo barcode (US-05 Product Image Lookup) và tra cứu theo từ khoá
- * (bài mẫu migrate Nexacro, docs/NEXACRO_MIGRATION_LAB.md).
+ * (bài mẫu migrate Nexacro, docs/nexacro-migration/MIGRATION_LAB.md).
  * Dữ liệu mock trong ProductCatalog – thực tế sẽ lấy từ ERP/POS.
  */
 @RestController

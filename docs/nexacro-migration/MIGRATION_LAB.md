@@ -1,7 +1,7 @@
 # Lab: học Android qua việc migrate màn hình Nexacro
 
 > Nhánh: `claude/android-nexacro-migration` (tách từ `claude/pda-finder-fcm`, giữ nguyên toàn bộ phần PDA Finder để tham khảo).
-> Đi kèm: [NEXACRO_TO_ANDROID.md](NEXACRO_TO_ANDROID.md) (bảng đối chiếu khái niệm), [ANDROID_LEARNING_PLAN.md](ANDROID_LEARNING_PLAN.md) (plan học 14 buổi).
+> Đi kèm: [NEXACRO_TO_ANDROID.md](NEXACRO_TO_ANDROID.md) (bảng đối chiếu khái niệm), [ANDROID_LEARNING_PLAN.md](../ANDROID_LEARNING_PLAN.md) (plan học 14 buổi).
 > Cập nhật: 2026-09-29
 
 ---
@@ -58,7 +58,7 @@ curl -G -H "Authorization: Bearer $TOKEN" --data-urlencode "keyword=sữa" http:
 | A | `Static` + `Edit edt_keyword` + `Button btn_search` | `EditText edtKeyword` + `Button btnSearch` trong `activity_product_search.xml` | Toạ độ `left/top/width` → `LinearLayout` tự xếp, không đặt toạ độ tuyệt đối |
 | B | `Static sta_count` | `TextView tvCount` + `ProgressBar progress` | Android nên hiện trạng thái đang tải |
 | C | `Grid grd_list binddataset="ds_list"` | `RecyclerView rvProducts` + `ProductAdapter` + `item_product.xml` | 3 cột ngang → dạng thẻ cho màn PDA hẹp |
-| C | `Cell color="expr:stockQuantity == 0 ? 'red' : 'black'"` | `onBindViewHolder`: `setTextColor(qty == 0 ? RED : DKGRAY)` | Luôn gán cả 2 nhánh vì ViewHolder bị tái sử dụng |
+| C | `Cell cssclass="expr:stockQuantity == 0 ? 'cell_short' : ''"` (class trong `.xcss`) | `onBindViewHolder`: `setTextColor(qty == 0 ? RED : DKGRAY)` | Luôn gán cả 2 nhánh vì ViewHolder bị tái sử dụng |
 | D | `Dataset ds_search` (1 dòng) | Tham số `@Query("keyword")` trong `ProductService.search` | |
 | E | `Dataset ds_list` (nhiều dòng) | `List<ProductDto>` (`model/ProductDto.java`) | Tên field Java = tên cột = tên key JSON |
 | F | `BindItem edt_keyword ↔ ds_search.keyword` | `edtKeyword.getText().toString()` lúc bấm Tìm | Không có bind tự động |
@@ -75,7 +75,7 @@ Phía server: so sánh `nexacro-sample/ProductSearchXapiController.java.txt` v�
 
 ## 4. Bài tập
 
-Làm theo thứ tự; mỗi bài dựa trên bài trước. Cột "Buổi học" trỏ tới [ANDROID_LEARNING_PLAN.md](ANDROID_LEARNING_PLAN.md).
+Làm theo thứ tự; mỗi bài dựa trên bài trước. Cột "Buổi học" trỏ tới [ANDROID_LEARNING_PLAN.md](../ANDROID_LEARNING_PLAN.md).
 
 ### Bài 1: Làm quen bài mẫu
 - **Nexacro:** đọc hiểu Form, Grid, transaction.

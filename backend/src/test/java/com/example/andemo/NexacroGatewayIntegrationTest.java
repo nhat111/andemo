@@ -17,7 +17,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * Demo chuyển đổi X-API (XML Dataset) → JSON: server Nexacro giả lập (/nexacro/*.do)
- * và cổng JSON cho app (/api/nx/**). Xem docs/NEXACRO_XAPI_TO_JSON.md.
+ * và cổng JSON cho app (/api/nx/**). Xem docs/nexacro-migration/NEXACRO_XAPI_TO_JSON.md.
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class NexacroGatewayIntegrationTest {

@@ -1,7 +1,7 @@
 # Task 17–18: Hủy hàng (폐기) theo luồng bán lẻ Hàn Quốc
 
 > Nhánh: `claude/android-nexacro-migration`. Cập nhật: 2026-09-29.
-> Bản Nexacro mobile "cũ" của cùng chức năng (để luyện đọc code và migrate): [nexacro-sample/disposal/README.md](../nexacro-sample/disposal/README.md).
+> Bản Nexacro mobile "cũ" của cùng chức năng (để luyện đọc code và migrate): [nexacro-sample/disposal/README.md](../../nexacro-sample/disposal/README.md).
 > Chưa có spec, nên làm theo **luồng 폐기 thường gặp ở chuỗi bán lẻ Hàn Quốc** (cửa hàng tiện lợi CU / GS25 / 세븐일레븐, siêu thị). Khi có spec thật, đối chiếu lại các giả định ở mục 6 và câu hỏi ở mục 7.
 
 ---
@@ -211,7 +211,7 @@ curl -s -H "Authorization: Bearer $U" http://localhost:8080/api/inventory/880111
 | Q6 | Có 폐기지원 (본부 hỗ trợ chi phí hủy hàng tươi) không? Nếu có, tính theo tỉ lệ nào, nằm ở màn nào? | Thêm cột tiền |
 | Q7 | Phiếu hủy / 수불 có phải gửi sang ERP / 본부 không, gửi lúc 확정 hay lúc 마감? | A9, interface |
 | Q8 | 전표번호 theo quy tắc nào? | Sinh số |
-| Q9 | Màn này làm trên app PDA, web Nexacro, hay cả hai? Web Nexacro dùng chung API này (cách B) hay qua gateway (cách A)? | Kiến trúc, `NEXACRO_XAPI_TO_JSON.md` |
+| Q9 | Màn này làm trên app PDA, web Nexacro, hay cả hai? Web Nexacro dùng chung API này (cách B) hay qua gateway (cách A)? | Kiến trúc, [NEXACRO_XAPI_TO_JSON.md](../nexacro-migration/NEXACRO_XAPI_TO_JSON.md) |
 | Q10 | Có cần in / xuất phiếu hủy, báo cáo 폐기현황 theo ngày / tháng / 사유 không? | Màn báo cáo |
 
 ---

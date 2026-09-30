@@ -29,7 +29,7 @@ import retrofit2.Response;
 
 /**
  * Bài mẫu migrate: nexacro-sample/frm_product_search.xfdl → Activity.
- * Chữ (A)…(L) khớp với chú thích trong file .xfdl; đối chiếu đầy đủ: docs/NEXACRO_MIGRATION_LAB.md.
+ * Chữ (A)…(L) khớp với chú thích trong file .xfdl; đối chiếu đầy đủ: docs/nexacro-migration/MIGRATION_LAB.md.
  */
 public class ProductSearchActivity extends AppCompatActivity {
 

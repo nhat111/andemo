@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.Locale;
 
 /**
- * API 폐기 (hủy hàng) + tồn kho. Xem docs/DISPOSAL_TASK_17_18.md.
+ * API 폐기 (hủy hàng) + tồn kho. Xem docs/task-17-18-disposal/README.md.
  *
  * Quyền: 점원 (USER) đăng ký / sửa / hủy phiếu của mình; 점장 (ADMIN) xác nhận, hủy xác nhận, chốt sổ.
  */

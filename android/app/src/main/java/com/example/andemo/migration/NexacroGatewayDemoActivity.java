@@ -21,7 +21,7 @@ import retrofit2.Response;
 
 /**
  * Demo: app Android gọi service Nexacro cũ (X-API, XML Dataset) mà server không phải sửa,
- * nhờ cổng chuyển đổi JSON /api/nx/** của backend. Xem docs/NEXACRO_XAPI_TO_JSON.md.
+ * nhờ cổng chuyển đổi JSON /api/nx/** của backend. Xem docs/nexacro-migration/NEXACRO_XAPI_TO_JSON.md.
  */
 public class NexacroGatewayDemoActivity extends AppCompatActivity {
 

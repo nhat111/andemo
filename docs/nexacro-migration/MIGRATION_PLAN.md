@@ -1,6 +1,6 @@
-# Kế hoạch migrate Nexacro mobile → Android (Java) và lộ trình học
+# Kế hoạch migrate Nexacro 17 mobile → Android (Java)
 
-> Nhánh: `claude/android-nexacro-migration`. Cập nhật: 2026-09-29.
+> Nhánh: `claude/android-nexacro-migration`. Cập nhật: 2026-09-30. Dự án dùng **Nexacro 17**.
 > Tài liệu chung cho cả dự án, **không gắn với task cụ thể nào**. Phân tích từng task nằm ở file riêng.
 > Viết khi chưa vào dự án. Những chỗ ghi "cần khảo sát" phải kiểm tra lại với code và hệ thống thật.
 
@@ -8,11 +8,12 @@
 
 | File | Dùng khi |
 |---|---|
+| [LEARNING_PLAN.md](LEARNING_PLAN.md) | **Lộ trình học Android (Java) 6 tuần** theo đúng những gì việc migrate cần |
 | [NEXACRO_TO_ANDROID.md](NEXACRO_TO_ANDROID.md) | Tra nhanh: khái niệm Nexacro nào tương ứng với gì trên Android |
 | [NEXACRO_XAPI_TO_JSON.md](NEXACRO_XAPI_TO_JSON.md) | Cách cho Android gọi server X-API (XML Dataset) bằng JSON |
-| [NEXACRO_MIGRATION_LAB.md](NEXACRO_MIGRATION_LAB.md) | Bài mẫu + 8 bài tập chuyển 1 form Nexacro sang Android |
-| [../nexacro-sample/disposal/README.md](../nexacro-sample/disposal/README.md) | Bộ form Nexacro mobile hoàn chỉnh (4 form + `gfn_` + server X-API chạy được) để luyện đọc code thật và rút quy tắc |
-| [ANDROID_LEARNING_PLAN.md](ANDROID_LEARNING_PLAN.md) | 14 buổi học Android qua project PDA (chạy nền, thông báo, scanner…) |
+| [MIGRATION_LAB.md](MIGRATION_LAB.md) | Bài mẫu + 8 bài tập chuyển 1 form Nexacro sang Android |
+| [../../nexacro-sample/disposal/README.md](../../nexacro-sample/disposal/README.md) | Bộ form Nexacro mobile hoàn chỉnh (4 form + `gfn_` + server X-API chạy được) để luyện đọc code thật và rút quy tắc |
+| [ANDROID_LEARNING_PLAN.md](../ANDROID_LEARNING_PLAN.md) | 14 buổi học Android qua project PDA (chạy nền, thông báo, scanner…) |
 
 ---
 
@@ -97,7 +98,7 @@ Tương ứng với những gì `Application` + `gfn_*` đang làm cho mọi for
 |---|---|---|
 | `TypeDefinition` services (`svc::`) | `ApiClient` (Retrofit), `BuildConfig` URL theo môi trường dev / test / prod | Có sẵn mẫu: `api/ApiClient.java`, `apiBaseUrl` trong `gradle.properties` |
 | `transaction` + `fn_callback` chung | Lớp gọi server chung: loading, mã lỗi, hết phiên, mất mạng | Mẫu: `NexacroGatewayApi` + `NxResponse`, `ApiErrorDto` |
-| Login, `gv_userId`, `gv_storeCd` | Màn login + lưu phiên (`SharedPreferences`), interceptor gắn header / cookie | Mẫu token: `PreferenceManager`, `TokenAuthenticator` |
+| Login, `gv_userId`, `gv_storeCd` | Màn login + lưu phiên (`SharedPreferences`), interceptor gắn header / cookie | Token: `PreferenceManager`, `TokenAuthenticator`. Nếu phải gọi thẳng `*.do` cũ dùng session (như `nexacro-sample/disposal`): OkHttp `CookieJar` giữ `JSESSIONID`, xử lý `ErrorCode -99` → login lại |
 | `gds_code` (mã chung) | Tải 1 lần sau login, cache trong bộ nhớ (+ Room nếu cần offline) | |
 | `gfn_alert` / `gfn_confirm` / thông báo | Lớp tiện ích dialog / Toast, bảng thông báo theo mã | |
 | Kiểm tra quyền, menu theo user | Màn menu dựng theo quyền server trả về | Server quyết định quyền; app chỉ hiển thị |
@@ -204,58 +205,6 @@ Có XML rồi:
 
 ---
 
-## Phần B. Lộ trình học Android (Java) cho dev Java / Nexacro
+## Phần B. Lộ trình học
 
-### B1. Cách học
-
-- Học **song song với công việc**: tuần 1–2 trùng với giai đoạn khảo sát, tuần 3 trở đi áp dụng ngay vào khung app / màn thí điểm.
-- Mỗi tuần: đọc ít, **làm nhiều**. Bài tập dùng code có sẵn trong repo này.
-- Luôn tự hỏi: "Trong Nexacro cái này là gì?" rồi tra [NEXACRO_TO_ANDROID.md](NEXACRO_TO_ANDROID.md).
-- Đã quen Java: bỏ qua cú pháp, tập trung vào **vòng đời**, **luồng (thread)**, **giao diện**.
-
-### B2. Khác biệt lớn nhất cần hiểu trước
-
-| Nexacro mobile | Android | Hệ quả |
-|---|---|---|
-| Form sống tới khi đóng | Activity bị tạo lại khi xoay màn hình, bị hệ thống kill khi ở background | Phải lưu trạng thái (ViewModel, `onSaveInstanceState`) |
-| `transaction` async có callback, không lo luồng | Không được gọi mạng trên luồng giao diện; cập nhật view phải trên luồng giao diện | Dùng `enqueue` của Retrofit; kiểm tra màn còn sống trong callback |
-| Dataset bind thẳng vào Grid | Dữ liệu là `List<Object>`, Adapter tự vẽ | Tự gọi `notify…` khi dữ liệu đổi |
-| Runtime lo quyền, thiết bị | App phải khai báo và xin quyền (camera, thông báo…) | Manifest + xin quyền lúc chạy |
-| Tải form mới từ server | Build APK, cài lại | Quy trình phát hành, quản lý phiên bản |
-
-### B3. Lộ trình 6 tuần
-
-| Tuần | Chủ đề | Học | Tương ứng Nexacro | Bài tập trong repo | Xong khi |
-|---|---|---|---|---|---|
-| **1** | Nền tảng | Android Studio, Gradle, Manifest, resource; Activity, vòng đời, Intent; layout XML (LinearLayout, ConstraintLayout) | Application, Form, `go()` / `open()` | ANDROID_LEARNING_PLAN buổi 1–3; chạy app, đặt breakpoint ở `onCreate` / `onResume` | Tự thêm 1 màn mới có nút mở màn khác và truyền dữ liệu qua Intent |
-| **2** | Gọi server | Retrofit, OkHttp, Gson; `enqueue`, luồng giao diện; xử lý lỗi HTTP; interceptor / token | `transaction`, `fn_callback`, `ErrorCode` | ANDROID_LEARNING_PLAN buổi 4; LAB bài mẫu + **bài 1**; đọc `ApiClient`, `TokenAuthenticator` | Gọi được 1 API mới, hiện lỗi server đúng thông báo, mất mạng không crash |
-| **3** | Danh sách và nhập liệu | RecyclerView + Adapter; Spinner; dialog; kiểm tra dữ liệu nhập | Grid, Combo, Edit, `gfn_alert` / `gfn_confirm` | LAB **bài 2, 3, 5** | Màn có Grid lọc bằng Combo, form nhập kiểm tra đủ lỗi 1 lần |
-| **4** | Nhiều màn, trạng thái | Popup trả kết quả (`ActivityResultLauncher`); ViewModel + LiveData; xoay màn hình | `showModal`, `close(ret)`, biến form | LAB **bài 4, 8** | Xoay màn hình không mất dữ liệu, không gọi lại API |
-| **5** | Thiết bị PDA | Quyền lúc chạy; scanner (intent hãng, keyboard wedge, camera); BroadcastReceiver | Đối tượng thiết bị / plugin scanner | ANDROID_LEARNING_PLAN buổi 5, 13; LAB **bài 6**; đọc `QrScanActivity` | Quét barcode bằng camera trên máy ảo và bằng scanner trên PDA thật |
-| **6** | Dữ liệu lớn, cục bộ, nối với X-API | Phân trang; SharedPreferences, Room; gateway X-API → JSON | Dataset lớn, lưu cục bộ, `*.do` | LAB **bài 7**; ANDROID_LEARNING_PLAN buổi 10; NEXACRO_XAPI_TO_JSON (chạy 4 ví dụ, màn "Demo X-API → JSON") | Cuộn mượt 500 dòng; gọi 1 service `*.do` qua gateway và hiển thị bằng model Java |
-
-Sau 6 tuần, nếu dự án cần thêm: chạy nền, thông báo đẩy, WebSocket (ANDROID_LEARNING_PLAN buổi 6–12).
-
-### B4. Bài kiểm tra cuối lộ trình
-
-Tự chuyển **1 chức năng Nexacro** theo đúng quy trình A6: bộ form `nexacro-sample/disposal/` (có bài tập và đáp án bảng quy tắc), form đơn giản `nexacro-sample/frm_product_search.xfdl`, hoặc form thật khi đã có:
-
-- [ ] Điền bảng phân tích + bảng quy tắc
-- [ ] Gọi server qua gateway hoặc API JSON
-- [ ] Màn Android có danh sách, lọc, chi tiết, quét barcode
-- [ ] Qua checklist Definition of Done (trừ phần so với app cũ nếu dùng form mẫu)
-
-### B5. Tài liệu tham khảo
-
-| Chủ đề | Nguồn |
-|---|---|
-| Android cơ bản | https://developer.android.com/guide |
-| Vòng đời Activity | https://developer.android.com/guide/components/activities/activity-lifecycle |
-| RecyclerView | https://developer.android.com/develop/ui/views/layout/recyclerview |
-| ViewModel | https://developer.android.com/topic/libraries/architecture/viewmodel |
-| Room | https://developer.android.com/training/data-storage/room |
-| Retrofit | https://square.github.io/retrofit/ |
-| Nexacro: định dạng XML Dataset | http://docs.tobesoft.com/advanced_development_guide_nexacro_17_en_kr/bf38022de252cfc6 |
-| Nexacro: X-API | https://docs.tobesoft.com/getting_started_nexacro_n_en/225bff549bb2aad9 |
-
-Tài liệu Android chính thức hiện ưu tiên Kotlin và Jetpack Compose; ví dụ Java vẫn có ở phần lớn các trang (chọn tab "Java"). Dự án dùng Java + layout XML, gần cách nghĩ "form + component" của Nexacro hơn; học Kotlin / Compose sau nếu dự án chuyển hướng.
+Đã tách thành file riêng: **[LEARNING_PLAN.md](LEARNING_PLAN.md)** (6 tuần, từng buổi, bài tập dùng code trong repo, bài cuối là migrate chức năng hủy hàng từ bộ form Nexacro 17 mẫu).

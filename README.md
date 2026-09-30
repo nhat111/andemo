@@ -39,18 +39,22 @@ API: `http://localhost:8080/api/auth/login`
 
 ## Tài liệu
 
-- `docs/LOCAL_SETUP_GUIDE.md`: **hướng dẫn setup và test trên máy local** (mock server, web quản lý, máy ảo / máy thật)
-- `docs/FCM_SETUP.md`: setup Firebase và test nhận lệnh qua FCM (so sánh với polling / WebSocket)
-- `docs/ANDROID_LEARNING_PLAN.md`: plan học Android dựa trên project này
-- `docs/NEXACRO_MIGRATION_LAB.md`: **lab học Android qua migrate Nexacro** (bài mẫu + bài tập), nhánh `claude/android-nexacro-migration`
-- `docs/NEXACRO_MOBILE_MIGRATION_PLAN.md`: **kế hoạch migrate Nexacro mobile → Android (Java) + lộ trình học 6 tuần**
-- `nexacro-sample/disposal/README.md`: **bản Nexacro mobile "cũ" của task 17–18** (form .xfdl + gfn_ + server X-API giả lập) để luyện đọc và migrate
-- `docs/DISPOSAL_TASK_17_18.md`: task 17–18 hủy hàng (폐기) theo luồng bán lẻ Hàn Quốc: 등록 → 확정 → 확정취소, 수불, 마감 (demo backend + Android)
-- `docs/NEXACRO_XAPI_TO_JSON.md`: chuyển response X-API (XML Dataset) sang JSON cho Android, có demo chạy được
-- `docs/NEXACRO_TO_ANDROID.md`: đối chiếu Nexacro → Android (Form, Dataset, Grid, transaction…) để migrate màn hình
-- `docs/ANDROID_FIX_TRACKER.md`: danh sách bug Android cần fix
-- `docs/PDA_FINDER_ALERT_REQUIREMENTS.md`: requirement PDA Finder
-- `docs/PDA_FINDER_MECHANISM_OPTIONS.md`: phân tích các phương án nhận lệnh (FCM / Polling / WebSocket / MQTT)
+**Migrate Nexacro 17 mobile → Android (Java)**: thư mục [`docs/nexacro-migration/`](docs/nexacro-migration/README.md)
+- `MIGRATION_PLAN.md`: kế hoạch migrate (giai đoạn, khảo sát, khung app, quy trình từng màn, rủi ro)
+- `LEARNING_PLAN.md`: **lộ trình học Android 6 tuần** theo nhu cầu migrate
+- `NEXACRO_TO_ANDROID.md`, `NEXACRO_XAPI_TO_JSON.md`, `MIGRATION_LAB.md`: tra cứu đối chiếu, X-API ↔ JSON, bài tập
+
+**Task 17–18: hủy hàng (폐기)**: thư mục [`docs/task-17-18-disposal/`](docs/task-17-18-disposal/README.md)
+- Phân tích luồng bán lẻ Hàn Quốc (등록 → 확정 → 확정취소, 수불, 마감), API, giả định, câu hỏi BA; demo backend + Android
+- Bản Nexacro 17 "cũ" của cùng chức năng: `nexacro-sample/disposal/README.md`
+
+**PDA Finder và project chung** (`docs/`)
+- `LOCAL_SETUP_GUIDE.md`: **hướng dẫn setup và test trên máy local** (mock server, web quản lý, máy ảo / máy thật)
+- `FCM_SETUP.md`: setup Firebase và test nhận lệnh qua FCM (so sánh với polling / WebSocket)
+- `ANDROID_LEARNING_PLAN.md`: plan học Android 14 buổi dựa trên project PDA
+- `ANDROID_FIX_TRACKER.md`: danh sách bug Android cần fix
+- `PDA_FINDER_ALERT_REQUIREMENTS.md`: requirement PDA Finder
+- `PDA_FINDER_MECHANISM_OPTIONS.md`: phân tích các phương án nhận lệnh (FCM / Polling / WebSocket / MQTT)
 
 ## Tính năng
 

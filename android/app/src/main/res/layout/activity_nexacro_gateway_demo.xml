@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Demo gọi service Nexacro cũ (X-API) qua cổng JSON: docs/NEXACRO_XAPI_TO_JSON.md -->
+<!-- Demo gọi service Nexacro cũ (X-API) qua cổng JSON: docs/nexacro-migration/NEXACRO_XAPI_TO_JSON.md -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"

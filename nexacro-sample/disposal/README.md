@@ -5,7 +5,7 @@
 > - **Phía server (X-API giả lập): chạy được, có test** (`LegacyDisposalXapiTest`, 5 test).
 > - **Phía client (.xfdl, .xjs, .xcss): viết tay theo cú pháp Nexacro 17**, đã đối chiếu với project mẫu chính thức của TOBESOFT và tài liệu (mục 7), **nhưng CHƯA mở thử trong Nexacro Studio**. Mở lên có thể phải chỉnh vài thuộc tính giao diện.
 >
-> Bản Android đã làm sẵn nằm ở `android/.../disposal/` và `docs/DISPOSAL_TASK_17_18.md`: coi như **đáp án**, đừng mở trước khi tự làm bài tập ở mục 5.
+> Bản Android đã làm sẵn nằm ở `android/.../disposal/` và `docs/task-17-18-disposal/README.md`: coi như **đáp án**, đừng mở trước khi tự làm bài tập ở mục 5.
 
 ---
 
@@ -152,7 +152,7 @@ Kết quả thật của bước 2 (rút gọn):
 </Dataset>
 ```
 
-Muốn xem JSON tương ứng: dán XML vào `POST /api/nx-tools/xml-to-json` (docs/NEXACRO_XAPI_TO_JSON.md mục 5).
+Muốn xem JSON tương ứng: dán XML vào `POST /api/nx-tools/xml-to-json` (docs/nexacro-migration/NEXACRO_XAPI_TO_JSON.md mục 5).
 
 Gọi qua gateway `/api/nx/**` **không dùng được** cho các URL này: gateway không mang cookie session (đúng vấn đề K2 trong kế hoạch migrate). Đây là 1 điểm bro cần xử lý khi migrate.
 
@@ -160,7 +160,7 @@ Gọi qua gateway `/api/nx/**` **không dùng được** cho các URL này: gate
 
 ## 5. Bài tập migrate
 
-Làm theo quy trình A6 trong [docs/NEXACRO_MOBILE_MIGRATION_PLAN.md](../../docs/NEXACRO_MOBILE_MIGRATION_PLAN.md).
+Làm theo quy trình A6 trong [docs/nexacro-migration/MIGRATION_PLAN.md](../../docs/nexacro-migration/MIGRATION_PLAN.md).
 
 **Bước 1: Đọc theo thứ tự**
 1. `lib/common.xjs`: hiểu `gfn_transaction` / `gfn_callback` (mọi lời gọi server đi qua đây), `gfn_go`, biến `gv_*`.

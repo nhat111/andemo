@@ -17,7 +17,7 @@ import retrofit2.http.PUT;
 import retrofit2.http.Path;
 import retrofit2.http.Query;
 
-/** 폐기 (hủy hàng): 등록 → 수정 / 취소 → 확정 → 확정취소. Xem docs/DISPOSAL_TASK_17_18.md. */
+/** 폐기 (hủy hàng): 등록 → 수정 / 취소 → 확정 → 확정취소. Xem docs/task-17-18-disposal/README.md. */
 public interface DisposalApi {
 
     /** status: REGISTERED / CONFIRMED / CANCELLED (hoặc 10 / 20 / 90), null = tất cả */

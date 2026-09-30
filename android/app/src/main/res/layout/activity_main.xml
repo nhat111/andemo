@@ -34,7 +34,7 @@
         android:text="Tìm bạn quanh đây"
         android:layout_marginBottom="8dp" />
 
-    <!-- Bài mẫu migrate Nexacro: docs/NEXACRO_MIGRATION_LAB.md -->
+    <!-- Bài mẫu migrate Nexacro: docs/nexacro-migration/MIGRATION_LAB.md -->
     <Button
         android:id="@+id/btnProductSearch"
         android:layout_width="match_parent"
@@ -49,7 +49,7 @@
         android:text="Demo X-API → JSON"
         android:layout_marginBottom="8dp" />
 
-    <!-- Task 17/18: docs/DISPOSAL_TASK_17_18.md -->
+    <!-- Task 17/18: docs/task-17-18-disposal/README.md -->
     <Button
         android:id="@+id/btnDisposal"
         android:layout_width="match_parent"

@@ -2,7 +2,7 @@
 
 > Dành cho dev đã quen Nexacro + Java backend, chuẩn bị migrate màn hình Nexacro sang app Android native.
 > Ví dụ Android dùng Java, Retrofit, layout XML, giống project `andemo`.
-> Cập nhật: 2026-09-29. Tài liệu chung, chưa dựa trên mã nguồn Nexacro cụ thể của dự án; khi có file `.xfdl` thật sẽ bổ sung mapping chi tiết.
+> Cập nhật: 2026-09-30. Dự án dùng **Nexacro 17 (mobile)**; cú pháp Nexacro trong tài liệu theo bản 17. Chưa dựa trên mã nguồn thật của dự án; khi có file `.xfdl` thật sẽ bổ sung.
 
 ---
 
@@ -41,9 +41,13 @@
 | Div có `url` (form con) | `Fragment` hoặc `<include layout=...>` | Fragment khi form con có logic riêng |
 | Tab / Tabpage | `TabLayout` + `ViewPager2` + Fragment | |
 | Popup (`showModal`, `nexacro.open`) | `AlertDialog`, `DialogFragment`, hoặc Activity mở bằng `ActivityResultLauncher` | Giá trị trả về khi `this.close(ret)` → `setResult()` + `finish()` |
+| **Mobile:** 1 ChildFrame, đổi form bằng `this.go("frm::…")`, truyền dữ liệu qua `gv_*` | Mỗi form → 1 Activity; `startActivity(Intent.putExtra(…))` | Không dùng biến toàn cục để truyền dữ liệu: Android có thể kill app, biến static mất |
+| **Mobile:** "popup" bằng Div ẩn / hiện trong form (`div.set_visible(true)`) | `AlertDialog` với `setView(...)`, hoặc `BottomSheetDialog` | Ví dụ: ô nhập lý do trong `nexacro-sample/disposal/form/frm_disposal_detail.xfdl` |
 | PopupDiv | `PopupWindow` / `BottomSheetDialog` | |
 | Grid | `RecyclerView` + `Adapter` + `ViewHolder` | Xem mục 4.2. Grid nhiều cột trên PDA nên đổi thành dạng "thẻ" (mỗi dòng 2–3 dòng chữ) |
 | Grid format nhiều band (head/body/summ) | Header: view riêng phía trên; summary: `TextView` phía dưới | |
+| Cell đổi màu theo dữ liệu: `cssclass="expr:…"` + class trong `.xcss` | Trong `onBindViewHolder`: `setTextColor(...)` theo dữ liệu | Luôn gán cả 2 nhánh (ViewHolder bị tái sử dụng) |
+| Dataset `useclientlayout="true"` + cột client tự tính (ví dụ `SHORT_YN`) | Field tính toán trong model, hoặc tính khi bind | Quy tắc tính nằm trong script: phải chép sang, hoặc đưa về server |
 | Static | `TextView` | |
 | Edit / TextArea | `EditText` (bọc `TextInputLayout` nếu dùng Material) | `inputType` = number, text, password… |
 | MaskEdit | `EditText` + `inputType` + `TextWatcher` định dạng | |
@@ -159,7 +163,7 @@ this.fn_callback = function (svcID, errorCode, errorMsg) {
 | Out-Dataset | Kiểu trả về `Call<T>` (JSON → object Java) |
 | `strArgument` (`a=b c=d`) | `@Query` / field trong `@Body` |
 | `errorCode`, `errorMsg` | HTTP status (`res.code()`), body lỗi; `onFailure` khi lỗi mạng |
-| Session / cookie | JWT trong header `Authorization`, đã có sẵn: `ApiClient` + `TokenAuthenticator` tự làm mới token |
+| Session / cookie (JSESSIONID sau `login.do`) | API mới: JWT trong header `Authorization` (`ApiClient` + `TokenAuthenticator`). Gọi thẳng `*.do` cũ: OkHttp `CookieJar` giữ cookie, `ErrorCode -99` → login lại |
 | `bAsync = false` (đồng bộ) | **Không làm trên main thread.** Nếu cần tuần tự: gọi API tiếp theo trong `onResponse` của API trước |
 
 ---

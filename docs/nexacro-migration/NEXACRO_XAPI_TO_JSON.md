@@ -1,6 +1,6 @@
 # Chuyển response X-API (XML Dataset) sang JSON cho Android
 
-> Nhánh: `claude/android-nexacro-migration`. Đi kèm [NEXACRO_MIGRATION_LAB.md](NEXACRO_MIGRATION_LAB.md), [NEXACRO_TO_ANDROID.md](NEXACRO_TO_ANDROID.md).
+> Nhánh: `claude/android-nexacro-migration`. Đi kèm [MIGRATION_LAB.md](MIGRATION_LAB.md), [NEXACRO_TO_ANDROID.md](NEXACRO_TO_ANDROID.md).
 > Cập nhật: 2026-09-29. Demo chạy được và có test (backend 52/52), đã đối chiếu với tài liệu chính thức của TOBESOFT (mục 6).
 
 ---
@@ -278,7 +278,11 @@ Nhớ **bỏ dữ liệu thật / nhạy cảm** trước khi dán XML vào côn
 | X-API có kiểu nội dung JSON không | Cùng Javadoc trên | Không thấy: chỉ XML, SSV, Binary |
 | Cấu trúc file `.xfdl` (Grid / Format / Band / Cell, Dataset `type="STRING"`) | [nexacro-spring/nexacro-sample-egov](https://github.com/nexacro-spring/nexacro-sample-egov) | Khớp với `frm_product_search.xfdl` |
 
-**Chưa kiểm chứng:** X-API bản Nexacro N (package có thể khác `com.nexacro17.xapi`), và việc Nexacro Studio mở được đúng `frm_product_search.xfdl` (mình không có Studio).
+Dự án dùng **Nexacro 17**, nên helper `XapiJsonConverter.java.txt` (package `com.nexacro17.xapi.data`) áp dụng trực tiếp cho cách B.
+
+**Chưa kiểm chứng:** bản vá X-API cụ thể của dự án, và việc Nexacro Studio mở được đúng các form mẫu (không có Studio).
+
+**Lưu ý session:** gateway `/api/nx/**` không mang cookie. Server cũ dùng session (như `LegacyDisposalController`, trả `ErrorCode -99` khi chưa login) thì gateway phải đăng nhập hộ / giữ session theo user, hoặc chọn cách B.
 
 ---
 
