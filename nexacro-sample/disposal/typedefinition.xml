@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<TypeDefinition version="2.3">
+  <Modules>
+    <Module url="CompBase.json"/>
+    <Module url="ComComp.json"/>
+    <Module url="Grid.json"/>
+  </Modules>
+  <!-- Chỉ các component bộ form này dùng -->
+  <Components>
+    <Component type="JavaScript" id="Button" classname="nexacro.Button"/>
+    <Component type="JavaScript" id="Combo" classname="nexacro.Combo"/>
+    <Component type="JavaScript" id="Edit" classname="nexacro.Edit"/>
+    <Component type="JavaScript" id="TextArea" classname="nexacro.TextArea"/>
+    <Component type="JavaScript" id="Static" classname="nexacro.Static"/>
+    <Component type="JavaScript" id="Div" classname="nexacro.Div"/>
+    <Component type="JavaScript" id="Grid" classname="nexacro.Grid"/>
+    <Component type="JavaScript" id="Calendar" classname="nexacro.Calendar"/>
+    <Component type="JavaScript" id="Dataset" classname="nexacro.NormalDataset"/>
+  </Components>
+  <Services>
+    <!-- Theme mặc định: thư mục _resource_/_theme_/default do Studio sinh (không có trong repo) -->
+    <Service prefixid="theme" type="resource" url="./_resource_/_theme_/" version="0" communicationversion="0" include_subdir="true"/>
+    <Service prefixid="xcssrc" type="resource" url="./_resource_/_xcss_/" include_subdir="false"/>
+    <Service prefixid="frm" type="form" cachelevel="session" url="./form/" version="0" communicationversion="0" include_subdir="false"/>
+    <Service prefixid="lib" type="form" cachelevel="session" url="./lib/" version="0" communicationversion="0" include_subdir="false"/>
+    <!-- Server X-API giả lập (backend nhánh này). Máy ảo Android: http://10.0.2.2:8080/nexacro/ -->
+    <Service prefixid="svc" type="JSP" cachelevel="none" url="http://localhost:8080/nexacro/" version="0" communicationversion="0" include_subdir="false"/>
+  </Services>
+</TypeDefinition>

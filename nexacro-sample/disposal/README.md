@@ -3,9 +3,9 @@
 > Đây là **bản mô phỏng hệ thống Nexacro 17 mobile cũ** cho task 17–18, dùng để luyện đúng việc sẽ làm ở dự án thật:
 > đọc form Nexacro → rút quy tắc → chuyển sang Android (Java).
 > - **Phía server (X-API giả lập): chạy được, có test** (`LegacyDisposalXapiTest`, 5 test).
-> - **Phía client (.xfdl, .xjs, .xcss): viết tay theo cú pháp Nexacro 17**, đã đối chiếu với project mẫu chính thức của TOBESOFT và tài liệu (mục 7), **nhưng CHƯA mở thử trong Nexacro Studio**. Mở lên có thể phải chỉnh vài thuộc tính giao diện.
+> - **Phía client (.xfdl, .xjs, .xcss): viết tay theo cú pháp Nexacro 17**, đã đối chiếu với project mẫu chính thức của TOBESOFT và tài liệu (mục 8), **nhưng CHƯA mở thử trong Nexacro Studio**. Mở lên có thể phải chỉnh vài thuộc tính giao diện.
 >
-> Bản Android đã làm sẵn nằm ở `android/.../disposal/` và `docs/task-17-18-disposal/README.md`: coi như **đáp án**, đừng mở trước khi tự làm bài tập ở mục 5.
+> Bản Android đã làm sẵn nằm ở `android/.../disposal/` và `docs/task-17-18-disposal/README.md`: coi như **đáp án**, đừng mở trước khi tự làm bài tập ở mục 6.
 
 ---
 
@@ -13,6 +13,10 @@
 
 ```
 nexacro-sample/disposal/
+├─ disposal.xprj              file project: mở bằng Studio 17 (File › Open Project)
+├─ disposal.xadl              Application: MainFrame 480×800, ChildFrame mở frm_login, nạp disposal.xcss
+├─ typedefinition.xml         component + service (frm, lib, xcssrc, svc → server)
+├─ environment.xml            Screen mobile (phone), theme mặc định
 ├─ appvariables.xml           biến toàn cục gv_* (định dạng Nexacro 17)
 ├─ _resource_/_xcss_/
 │  └─ disposal.xcss           màu chữ Grid theo điều kiện (Cell cssclass="expr:…")
@@ -39,48 +43,50 @@ frm_login ──► frm_disposal_list ──(chọn phiếu)──► frm_dispos
 
 ---
 
-## 2. Mở bằng Nexacro Studio 17
+## 2. Luồng hủy hàng đầy đủ trong bộ mẫu
 
-Cách an toàn nhất: **tạo project mới bằng wizard của Studio** (để Studio tự sinh theme, `typedefinition.xml`, `environment.xml`), rồi chép các file ở đây vào và bổ sung cấu hình dưới đây.
+| # | Bước nghiệp vụ | Ai | Form | Hàm script | Transaction (`svc::…`) | Server kiểm tra | Tồn kho |
+|---|---|---|---|---|---|---|---|
+| 1 | Đăng nhập | 점원 / 점장 | `frm_login` | `fn_login` → `fn_callback` (lưu `gv_*`) | `common/login.do` | Sai tài khoản → -1 | – |
+| 2 | 폐기조회: tra cứu phiếu theo trạng thái, ngày | Mọi người | `frm_disposal_list` | `form_onload` → `fn_search` | `common/selectCode.do` (DISP_STAT), `disposal/selectList.do` | Hết phiên → -99 | – |
+| 3 | 폐기등록: quét hàng, chọn lý do, lưu | 점원 | `frm_disposal_reg` | `fn_scan` → `fn_addItem`, `fn_validate`, `btn_save_onclick` | `selectCode.do` (DISP_RSN), `disposal/selectItem.do`, `disposal/save.do` (`ds_detail:U`, toàn dòng insert) | Dòng trùng, SL, lý do, ngày đã 마감 | Không đổi |
+| 4 | 폐기상세: xem phiếu, thiếu tồn tô đỏ | Mọi người | `frm_disposal_detail` | `fn_search` → `fn_render` → `fn_checkStock`, `fn_setButtons` | `disposal/selectDetail.do` | – | – |
+| 5 | 폐기수정: sửa SL / lý do, thêm / xóa dòng | Người đăng ký / 점장 | `frm_disposal_reg` (có `gv_disposalNo`) | `grd_detail_oncellclick`, `btn_lineOk_onclick`, `btn_lineDel_onclick` | `selectDetail.do`, `save.do` (`ds_detail:U`: insert / update / delete) | Trạng thái 10, quyền, VER, 마감 | Không đổi |
+| 6 | 취소: hủy phiếu chưa xác nhận | Người đăng ký / 점장 | `frm_disposal_detail` | `btn_cancel_onclick` → `fn_openRsn` → `btn_rsnOk_onclick` | `disposal/cancel.do` (DISPOSAL_NO, VER, RSN) | Trạng thái 10, lý do bắt buộc | Không đổi |
+| 7 | **확정: xác nhận → trừ tồn** (Task 17 + 18) | 점장 | `frm_disposal_detail` | `btn_confirm_onclick` (kiểm tra hôm nay, thiếu tồn, hỏi lại) | `disposal/confirm.do` (DISPOSAL_NO, VER) | Trạng thái 10, 점장, VER, 마감, đủ 가용재고 (-5) | **Trừ**, ghi 수불 |
+| 8 | 확정취소: đảo lại trước 마감 | 점장 | `frm_disposal_detail` | `btn_cfmCancel_onclick` → `btn_rsnOk_onclick` | `disposal/cancelConfirm.do` (DISPOSAL_NO, VER, RSN) | Trạng thái 20, 점장, 마감 (-4), lý do | **Cộng lại**, ghi 수불 ngược dấu |
 
-**1. Chép file**
+Trạng thái phiếu: `10 등록 → 20 확정 → (확정취소) → 10`, hoặc `10 → 90 취소`. Chi tiết nghiệp vụ: [docs/task-17-18-disposal/README.md](../../docs/task-17-18-disposal/README.md).
+
+---
+
+## 3. Mở bằng Nexacro Studio 17
+
+**Cách 1: mở thẳng project này**
+
+1. Chạy backend nhánh này (server `http://localhost:8080/nexacro/`).
+2. Studio 17 › File › Open Project › chọn `nexacro-sample/disposal/disposal.xprj`.
+3. **Theme:** repo không kèm theme của TOBESOFT. Nếu Studio báo thiếu `theme::default`: tạo 1 project mới bất kỳ bằng wizard, chép thư mục `_resource_/_theme_/default` của project đó sang `nexacro-sample/disposal/_resource_/_theme_/default`.
+4. Generate + Quick View (hoặc chạy trên máy ảo / PDA có Nexacro runtime). Login `user` / `123456` hoặc `admin` / `123456`.
+
+**Cách 2: ghép vào project do wizard tạo** (nếu cách 1 báo lỗi cấu hình do khác bản vá Studio)
 
 | Từ | Vào project |
 |---|---|
 | `form/*.xfdl` | thư mục `form/` |
 | `lib/common.xjs` | thư mục `lib/` |
 | `_resource_/_xcss_/disposal.xcss` | `_resource_/_xcss_/` |
-| `appvariables.xml` | thay file cùng tên (hoặc thêm 5 biến `gv_*` trong Studio: Project Explorer › AppVariables) |
+| `appvariables.xml` | thay file cùng tên (hoặc thêm 5 biến `gv_*`: Project Explorer › AppVariables) |
+| Các `<Service>` `frm`, `lib`, `xcssrc`, `svc` trong `typedefinition.xml` | TypeDefinition › Services (nút `+` ở User Service) |
+| `formurl="frm::frm_login.xfdl"` và `<Style url="xcssrc::disposal.xcss"/>` trong `disposal.xadl` | Application (`.xadl`) của project wizard |
 
-**2. TypeDefinition › Services** (thêm vào `<Services>` của `typedefinition.xml`, hoặc dùng nút `+` ở User Service):
+Loại service theo tài liệu TypeDefinition của Nexacro 17: `form` quản lý cả `*.xfdl` và `*.xjs`; `JSP` là service gọi server (dùng được cho URL `*.do` của Spring). Máy ảo Android gọi server trên máy tính: đổi `svc` thành `http://10.0.2.2:8080/nexacro/`.
 
-```xml
-<Service prefixid="frm" type="form" cachelevel="session" url="./form/" version="0" communicationversion="0" include_subdir="false"/>
-<Service prefixid="lib" type="form" cachelevel="session" url="./lib/" version="0" communicationversion="0" include_subdir="false"/>
-<Service prefixid="xcssrc" type="resource" url="./_resource_/_xcss_/" include_subdir="false"/>
-<!-- Server: backend nhánh này. Máy ảo Android: http://10.0.2.2:8080/nexacro/ -->
-<Service prefixid="svc" type="JSP" cachelevel="none" url="http://localhost:8080/nexacro/" version="0" communicationversion="0" include_subdir="false"/>
-```
-
-Loại service lấy theo tài liệu TypeDefinition của Nexacro 17: `form` quản lý cả `*.xfdl` và `*.xjs`; `JSP` là service gọi server (dùng được cho URL `*.do` của Spring).
-
-**3. Application (`.xadl`)**: form đầu tiên là màn login, và nạp file xcss:
-
-```xml
-<MainFrame id="mainframe" showtitlebar="false" showstatusbar="false" width="480" height="800">
-  <ChildFrame id="ChildFrame00" formurl="frm::frm_login.xfdl" showtitlebar="false"/>
-</MainFrame>
-...
-<Style url="xcssrc::disposal.xcss"/>
-```
-
-**4. Environment**: màn hình mobile, ví dụ `<Screen id="Screen_M" type="phone"/>` (hoặc giữ Screen wizard đã tạo cho mobile).
-
-Chuyển form dùng `this.go("frm::…")` trong `gfn_go` (có trong project mẫu Nexacro 17). Nếu dự án dùng cách khác (`set_formurl`, menu, frameset…) thì sửa 1 chỗ trong `common.xjs`.
+Các file project (`.xprj`, `.xadl`, `typedefinition.xml`, `environment.xml`) viết theo cấu trúc project mẫu Nexacro 17 của TOBESOFT, **chưa mở thử bằng Studio**.
 
 ---
 
-## 3. Danh sách transaction (hợp đồng với server)
+## 4. Danh sách transaction (hợp đồng với server)
 
 Mọi URL: `POST {svc}/…`, body XML Dataset. Lỗi: `ErrorCode < 0`, `ErrorMsg` (tiếng Hàn + tiếng Việt).
 
@@ -109,7 +115,7 @@ Quy ước dữ liệu (kiểu hệ thống Hàn Quốc): cột CHỮ_HOA, ngày
 
 ---
 
-## 4. Chạy thử phía server không cần Studio
+## 5. Chạy thử phía server không cần Studio
 
 Chạy backend nhánh này, rồi gọi bằng curl **y như runtime Nexacro gọi**: XML + giữ cookie.
 
@@ -158,7 +164,7 @@ Gọi qua gateway `/api/nx/**` **không dùng được** cho các URL này: gate
 
 ---
 
-## 5. Bài tập migrate
+## 6. Bài tập migrate
 
 Làm theo quy trình A6 trong [docs/nexacro-migration/MIGRATION_PLAN.md](../../docs/nexacro-migration/MIGRATION_PLAN.md).
 
@@ -185,7 +191,7 @@ Làm theo quy trình A6 trong [docs/nexacro-migration/MIGRATION_PLAN.md](../../d
 
 ---
 
-## 6. Đáp án bảng quy tắc (xem sau khi tự làm)
+## 7. Đáp án bảng quy tắc (xem sau khi tự làm)
 
 <details>
 <summary>Mở đáp án</summary>
@@ -222,7 +228,7 @@ Trả lời câu hỏi bước 4:
 
 ---
 
-## 7. Đối chiếu với Nexacro 17
+## 8. Đối chiếu với Nexacro 17
 
 Nguồn: project mẫu chính thức [TOBESOFT-DOCS/sample_nexacroplatform_17](https://github.com/TOBESOFT-DOCS/sample_nexacroplatform_17) (315 form) và tài liệu TOBESOFT.
 

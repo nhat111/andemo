@@ -63,8 +63,8 @@
 
 | Buổi | Học | Làm | Xong khi |
 |---|---|---|---|
-| 1 | Cấu trúc project Nexacro 17: TypeDefinition (services `frm`, `lib`, `svc`), `appvariables.xml` (`gv_*`), file `.xfdl` gồm `Layouts` / `Objects` (Dataset) / `Bind` / `Script` | Đọc `nexacro-sample/disposal/README.md` mục 1–3, `appvariables.xml`, `lib/common.xjs` | Giải thích được `gfn_transaction` → `gfn_callback` → callback của form; `-99` dẫn về đâu |
-| 2 | Dataset: `ColumnInfo`, `getColumn` / `setColumn`, `rowcount`, rowtype (normal / insert / update / delete), `ds:U`; `transaction(svcId, url, in, out, args, callback)` | Đọc `frm_login.xfdl`, `frm_disposal_list.xfdl`. Chạy backend, làm theo README mục 4 (login + tra cứu bằng curl, có / không có cookie) | Tự viết được lệnh curl gọi `selectDetail.do` cho 1 phiếu và đọc hiểu XML trả về |
+| 1 | Cấu trúc project Nexacro 17: TypeDefinition (services `frm`, `lib`, `svc`), `appvariables.xml` (`gv_*`), file `.xfdl` gồm `Layouts` / `Objects` (Dataset) / `Bind` / `Script` | Đọc `nexacro-sample/disposal/README.md` mục 1–4 (cấu trúc, luồng đầy đủ, cấu hình project, danh sách transaction), `disposal.xadl`, `typedefinition.xml`, `appvariables.xml`, `lib/common.xjs` | Giải thích được `gfn_transaction` → `gfn_callback` → callback của form; `-99` dẫn về đâu |
+| 2 | Dataset: `ColumnInfo`, `getColumn` / `setColumn`, `rowcount`, rowtype (normal / insert / update / delete), `ds:U`; `transaction(svcId, url, in, out, args, callback)` | Đọc `frm_login.xfdl`, `frm_disposal_list.xfdl`. Chạy backend, làm theo README mục 5 (login + tra cứu bằng curl, có / không có cookie) | Tự viết được lệnh curl gọi `selectDetail.do` cho 1 phiếu và đọc hiểu XML trả về |
 | 3 | Project Android: Gradle, build variant (`polling` / `websocket` / `fcm`), `AndroidManifest.xml`, `res/layout`, `res/values`, `BuildConfig` | Mở `android/app/build.gradle`, `AndroidManifest.xml`; Run app, login, bấm các nút ở màn chính | Chỉ ra được: màn nào khai báo ở đâu, URL server lấy từ đâu |
 | 4 | Activity và vòng đời: `onCreate` → `onStart` → `onResume` → `onPause` → `onStop` → `onDestroy`; xoay màn hình = tạo lại Activity | Đặt breakpoint / `Log.d` ở các hàm vòng đời của `migration/ProductSearchActivity`; xoay màn hình, bấm Home, quay lại | Giải thích được vì sao xoay màn hình thì `onCreate` chạy lại và API bị gọi lại |
 | 5 | Intent, `putExtra` / `getStringExtra` (thay cho `gv_*` + `go()`); layout XML (`LinearLayout`, `ConstraintLayout`) | Tạo `migration/HelloActivity`: 2 ô nhập + nút → mở `HelloResultActivity` hiển thị dữ liệu vừa nhập; khai báo trong Manifest; thêm nút ở `activity_main.xml` | Chạy được; giải thích vì sao Android không truyền dữ liệu qua biến toàn cục như `gv_disposalNo` |
@@ -141,7 +141,7 @@
 
 **Vì sao:** làm đúng quy trình A6 trên 1 chức năng trọn vẹn: đọc code cũ → rút quy tắc → chuyển sang Android → so sánh.
 
-Vật liệu: `nexacro-sample/disposal/` (README mục 5, 6). Đáp án Android: `android/.../disposal/` + [../task-17-18-disposal/README.md](../task-17-18-disposal/README.md). **Không mở đáp án trước buổi 29.**
+Vật liệu: `nexacro-sample/disposal/` (README mục 2 luồng đầy đủ, mục 6 bài tập, mục 7 đáp án). Đáp án Android: `android/.../disposal/` + [../task-17-18-disposal/README.md](../task-17-18-disposal/README.md). **Không mở đáp án trước buổi 29.**
 
 | Buổi | Làm | Xong khi |
 |---|---|---|

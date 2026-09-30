@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ADL version="2.0">
+  <Application id="disposal" screenid="Screen_M">
+    <Layout>
+      <!-- Mobile: 1 ChildFrame, các form thay nhau bằng this.go("frm::…") (gfn_go trong lib/common.xjs) -->
+      <MainFrame id="mainframe" showtitlebar="false" showstatusbar="false" width="480" height="800">
+        <ChildFrame id="ChildFrame00" formurl="frm::frm_login.xfdl" showtitlebar="false" showtitleicon="false"/>
+      </MainFrame>
+    </Layout>
+    <Style url="xcssrc::disposal.xcss"/>
+  </Application>
+</ADL>
