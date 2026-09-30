@@ -177,6 +177,9 @@ public class DisposalDetailActivity extends AppCompatActivity {
         setButtonsEnabled(true);
     }
 
+    /** R10: phiếu có giá vốn từ mức này phải xác nhận thêm 1 lần (bản Nexacro: MSG_CONFIRM_BIG) */
+    private static final long BIG_AMOUNT = 100_000;
+
     private void askConfirm() {
         new AlertDialog.Builder(this)
                 .setTitle("Xác nhận hủy hàng (확정)")
@@ -184,11 +187,31 @@ public class DisposalDetailActivity extends AppCompatActivity {
                         + current.getItems().size() + " mặt hàng, SL " + current.getTotalQty()
                         + ", giá vốn " + DisposalUi.won(current.getTotalCostAmount())
                         + " sẽ bị TRỪ khỏi tồn kho.\nHủy xác nhận được tới khi chốt sổ (마감).")
-                .setPositiveButton("Xác nhận", (dialog, which) -> run(
-                        api.confirm(disposalNo, new DisposalActionRequest(current.getVersion(), null)),
-                        "Đã xác nhận, tồn kho đã được trừ"))
+                .setPositiveButton("Xác nhận", (dialog, which) -> {
+                    if (current.getTotalCostAmount() >= BIG_AMOUNT) {
+                        askConfirmBig();
+                    } else {
+                        doConfirm();
+                    }
+                })
                 .setNegativeButton("Không", null)
                 .show();
+    }
+
+    /** R10: hỏi lần 2 với phiếu giá trị lớn */
+    private void askConfirmBig() {
+        new AlertDialog.Builder(this)
+                .setTitle("Phiếu hủy giá trị lớn (고액 폐기)")
+                .setMessage("Giá vốn " + DisposalUi.won(current.getTotalCostAmount())
+                        + ". Bạn chắc chắn muốn xác nhận?")
+                .setPositiveButton("Chắc chắn", (dialog, which) -> doConfirm())
+                .setNegativeButton("Không", null)
+                .show();
+    }
+
+    private void doConfirm() {
+        run(api.confirm(disposalNo, new DisposalActionRequest(current.getVersion(), null)),
+                "Đã xác nhận, tồn kho đã được trừ");
     }
 
     /** Hủy phiếu / hủy xác nhận: bắt buộc nhập lý do (취소사유) */

@@ -27,6 +27,8 @@ public class DisposalService {
     /** Demo 1 cửa hàng. Hệ thống thật: lấy 점포코드 theo user đăng nhập. */
     public static final String STORE_CODE = "S001";
     private static final long MAX_QTY_PER_LINE = 9_999;
+    /** R5: ghi chú (비고) tối đa 100 ký tự (= độ dài cột ở hệ thống cũ) */
+    private static final int MAX_REMARK_LENGTH = 100;
     private static final DateTimeFormatter YYYYMMDD = DateTimeFormatter.BASIC_ISO_DATE;
 
     private final DisposalRequestRepository disposalRepository;
@@ -40,6 +42,11 @@ public class DisposalService {
 
     @Transactional(readOnly = true)
     public List<DisposalDtos.Summary> list(DisposalStatus status, LocalDate from, LocalDate to) {
+        // R1: từ ngày ≤ đến ngày
+        if (from != null && to != null && from.isAfter(to)) {
+            throw new DisposalException(HttpStatus.BAD_REQUEST, "VALIDATION",
+                    "Từ ngày phải ≤ đến ngày (시작일이 종료일보다 늦습니다)");
+        }
         return disposalRepository.search(status, from, to).stream()
                 .map(d -> new DisposalDtos.Summary(d.getDisposalNo(), d.getStoreCode(), d.getBusinessDate(),
                         d.getStatus(), d.getStatus().getCode(), d.getStatus().getKoreanName(), d.getRemark(),
@@ -66,7 +73,7 @@ public class DisposalService {
         d.setDisposalNo(nextDisposalNo(businessDate));
         d.setStoreCode(STORE_CODE);
         d.setBusinessDate(businessDate);
-        d.setRemark(trim(request.remark()));
+        d.setRemark(validRemark(request.remark()));
         d.setRegisteredBy(username);
         d.setRegisteredAt(Instant.now());
         for (DisposalDtos.LineInput line : request.items()) {
@@ -93,7 +100,7 @@ public class DisposalService {
         for (DisposalDtos.LineInput line : request.items()) {
             d.addItem(items.get(line.itemCode().trim()), line.qty(), line.reasonCode());
         }
-        d.setRemark(trim(request.remark()));
+        d.setRemark(validRemark(request.remark()));
         d.setUpdatedBy(username);
         d.setUpdatedAt(Instant.now());
         disposalRepository.saveAndFlush(d);
@@ -127,6 +134,7 @@ public class DisposalService {
 
         // Task 17 – Disposal Status Validation
         requireStatus(d, DisposalStatus.REGISTERED, "xác nhận");
+        requireToday(d);
         requireVersion(d, request == null ? null : request.version());
         ensureNotClosed(d.getBusinessDate());
 
@@ -255,6 +263,26 @@ public class DisposalService {
                             + "), không " + action + " được. Chỉ phiếu " + expected.getKoreanName()
                             + " (" + expected.getCode() + ") mới " + action + " được.");
         }
+    }
+
+    private static final String NOT_TODAY_MESSAGE =
+            "Chỉ xác nhận phiếu của 영업일자 hôm nay (당일 전표만 확정 가능)";
+
+    /** R9: chỉ xác nhận phiếu của ngày kinh doanh hiện tại (hệ thống cũ kiểm tra ở client, nay đưa về server) */
+    private void requireToday(DisposalRequest d) {
+        if (!d.getBusinessDate().equals(calendar.today())) {
+            throw new DisposalException(HttpStatus.CONFLICT, "NOT_TODAY", NOT_TODAY_MESSAGE);
+        }
+    }
+
+    /** R5: trim + giới hạn độ dài ghi chú */
+    private static String validRemark(String remark) {
+        String r = trim(remark);
+        if (r != null && r.length() > MAX_REMARK_LENGTH) {
+            throw new DisposalException(HttpStatus.BAD_REQUEST, "VALIDATION",
+                    "Ghi chú tối đa " + MAX_REMARK_LENGTH + " ký tự (비고는 100자 이내)");
+        }
+        return r;
     }
 
     private static void requireVersion(DisposalRequest d, Long expected) {
@@ -405,6 +433,8 @@ public class DisposalService {
         if (registered) {
             if (closed) {
                 issues.add("영업일자 " + d.getBusinessDate() + " đã chốt sổ (마감)");
+            } else if (!d.getBusinessDate().equals(calendar.today())) {
+                issues.add(NOT_TODAY_MESSAGE);
             }
             issues.addAll(shortages(required, inventory));
         }

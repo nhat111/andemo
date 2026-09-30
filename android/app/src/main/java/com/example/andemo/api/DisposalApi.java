@@ -20,9 +20,14 @@ import retrofit2.http.Query;
 /** 폐기 (hủy hàng): 등록 → 수정 / 취소 → 확정 → 확정취소. Xem docs/task-17-18-disposal/README.md. */
 public interface DisposalApi {
 
-    /** status: REGISTERED / CONFIRMED / CANCELLED (hoặc 10 / 20 / 90), null = tất cả */
+    /**
+     * status: REGISTERED / CONFIRMED / CANCELLED (hoặc 10 / 20 / 90), null = tất cả.
+     * from / to: 영업일자 yyyy-MM-dd, null = không giới hạn (Retrofit bỏ qua tham số null).
+     */
     @GET("api/disposals")
-    Call<List<DisposalSummaryDto>> list(@Query("status") String status);
+    Call<List<DisposalSummaryDto>> list(@Query("status") String status,
+                                        @Query("from") String from,
+                                        @Query("to") String to);
 
     @GET("api/disposals/{disposalNo}")
     Call<DisposalDetailDto> detail(@Path("disposalNo") String disposalNo);

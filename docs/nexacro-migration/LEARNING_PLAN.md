@@ -3,6 +3,7 @@
 > Dành cho: dev Java đã lâu chưa code Android, sắp tham gia dự án chuyển app **Nexacro 17 mobile** sang **Android native (Java)**.
 > Nhánh: `claude/android-nexacro-migration`. Cập nhật: 2026-09-30.
 > Lộ trình được rút ra từ việc rà soát [MIGRATION_PLAN.md](MIGRATION_PLAN.md): mỗi kỹ năng ở đây đều cần cho một bước migrate cụ thể.
+> Chỉ có 2 tuần? Dùng bản rút gọn [LEARNING_PLAN_2_WEEKS.md](LEARNING_PLAN_2_WEEKS.md) (đọc hiểu code có sẵn + sửa nhỏ).
 
 ---
 
@@ -146,8 +147,8 @@ Vật liệu: `nexacro-sample/disposal/` (README mục 2 luồng đầy đủ, m
 | Buổi | Làm | Xong khi |
 |---|---|---|
 | 26 | Bước 1–2: đọc 4 form theo thứ tự, điền **bảng phân tích màn** (mẫu A6) cho từng form | 4 bảng phân tích |
-| 27 | Bước 3: lập **bảng quy tắc** của cả chức năng; mỗi quy tắc ghi server có kiểm tra lại không (đọc `LegacyDisposalController`, `DisposalService`) | Tìm được ít nhất 3 quy tắc **chỉ có ở client** |
-| 28 | Chọn 1 quy tắc chỉ-có-ở-client (ví dụ "ghi chú ≤ 100 ký tự" hoặc "chỉ xác nhận phiếu hôm nay"): đưa về **server** (`DisposalService` + test) và **app** (báo sớm) | Test backend mới pass; app báo đúng |
+| 27 | Bước 3: lập **bảng quy tắc** của cả chức năng; mỗi quy tắc ghi server có kiểm tra lại không (đọc `LegacyDisposalController`, `DisposalService`) | Tìm được các quy tắc **chỉ có ở client** trong bản Nexacro (đáp án: README mục 7 có 5 quy tắc) |
+| 28 | Tự đặt thêm 1 quy tắc mới (ví dụ "SL hủy mỗi dòng ≤ 50% tồn thực tế" hoặc "phiếu có lý do 리콜 phải có ghi chú"): viết vào **server** (`DisposalService` + test) và **app** (báo sớm). Xem cách R5, R9 đã được đưa về server (`validRemark`, `requireToday`) để làm theo | Test backend mới pass; app báo đúng |
 | 29 | Bước 4: trả lời 5 câu hỏi trong README; chạy cùng dữ liệu qua `*.do` (curl) và API JSON / app; mở **đáp án**, so với bảng của mình | Ghi lại chỗ khác nhau giữa bảng của mình và đáp án, và vì sao |
 | 30 | Đi qua checklist **Definition of Done** (A6); viết 1 trang tóm tắt: đã chuyển gì, quy tắc nào đưa về server, còn rủi ro gì | Có bản tóm tắt để trình bày với team |
 

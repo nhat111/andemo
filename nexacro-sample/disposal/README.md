@@ -5,7 +5,7 @@
 > - **Phía server (X-API giả lập): chạy được, có test** (`LegacyDisposalXapiTest`, 5 test).
 > - **Phía client (.xfdl, .xjs, .xcss): viết tay theo cú pháp Nexacro 17**, đã đối chiếu với project mẫu chính thức của TOBESOFT và tài liệu (mục 8), **nhưng CHƯA mở thử trong Nexacro Studio**. Mở lên có thể phải chỉnh vài thuộc tính giao diện.
 >
-> Bản Android đã làm sẵn nằm ở `android/.../disposal/` và `docs/task-17-18-disposal/README.md`: coi như **đáp án**, đừng mở trước khi tự làm bài tập ở mục 6.
+> **Bản Android đã migrate đầy đủ** (gồm cả các quy tắc chỉ có ở script Nexacro) nằm ở `android/.../disposal/` + `backend/.../disposal/`, phân tích ở `docs/task-17-18-disposal/README.md`. Học nhanh: đọc song song 2 bản theo mục 7. Học kỹ: tự làm bài tập mục 6 trước rồi mới xem.
 
 ---
 
@@ -110,6 +110,7 @@ Mọi URL: `POST {svc}/…`, body XML Dataset. Lỗi: `ErrorCode < 0`, `ErrorMsg
 | -3 | Không có quyền (không phải 점장) |
 | -4 | 영업일자 đã 마감 |
 | -5 | Thiếu 가용재고 |
+| -6 | Không phải phiếu của 영업일자 hôm nay (R9) |
 
 Quy ước dữ liệu (kiểu hệ thống Hàn Quốc): cột CHỮ_HOA, ngày `yyyyMMdd`, giờ `yyyyMMddHHmmss` (giờ Hàn), trạng thái `10 / 20 / 90`, lý do `01 / 02 / 03 / 04 / 05 / 99` (bảng mã chung `DISP_RSN`), cờ `Y / N`.
 
@@ -196,33 +197,35 @@ Làm theo quy trình A6 trong [docs/nexacro-migration/MIGRATION_PLAN.md](../../d
 <details>
 <summary>Mở đáp án</summary>
 
-| # | Quy tắc | Ở đâu (Nexacro) | Server kiểm tra lại? | Bản Android (đáp án) |
-|---|---|---|---|---|
-| R1 | Từ ngày ≤ đến ngày | `frm_disposal_list.fn_search` | Không (chỉ lọc) | Chưa có lọc ngày trên app: **thiếu nếu thêm bộ lọc ngày** |
-| R2 | Quét trùng món → +1 số lượng | `frm_disposal_reg.fn_scan` | Có (từ chối dòng trùng) | Có (`DisposalEditActivity.addScanned`) |
-| R3 | Tồn khả dụng ≤ 0 lúc quét → hỏi có thêm không | `frm_disposal_reg.fn_addItem` | Không (chặn ở 확정) | Chỉ Toast cảnh báo, không hỏi: **khác hành vi** |
-| R4 | Số lượng 1–9999, bắt buộc lý do, ít nhất 1 dòng | `fn_validate`, `btn_lineOk_onclick` | Có | Có (app + server) |
-| R5 | **Ghi chú ≤ 100 ký tự** | `fn_validate` | **Không** | **Thiếu**: server nhận mọi độ dài, DB thật có thể lỗi khi vượt cột |
-| R6 | Sửa / hủy: trạng thái 10, chưa 마감, người đăng ký hoặc 점장 | `fn_setButtons` | Có | Có (server trả `actions`) |
-| R7 | Xác nhận: trạng thái 10, chưa 마감, 점장 | `fn_setButtons` | Có | Có |
-| R8 | Thiếu tồn khả dụng → tô đỏ, tắt nút xác nhận | `fn_checkStock` | Có (-5) | Có |
-| R9 | **Chỉ xác nhận phiếu của hôm nay** (`BIZ_DT == gv_bizDt`) | `btn_confirm_onclick` | **Không** (server cho xác nhận phiếu ngày trước chưa 마감) | **Thiếu**: app Android xác nhận được phiếu hôm qua nếu chưa 마감 |
-| R10 | **Giá vốn ≥ 100.000원 → hỏi lại lần 2** | `btn_confirm_onclick` | Không (chỉ giao diện) | **Thiếu** |
-| R11 | Hủy xác nhận: trạng thái 20, chưa 마감, 점장 | `fn_setButtons` | Có | Có |
-| R12 | Hủy / hủy xác nhận bắt buộc lý do | `btn_rsnOk_onclick` | Có | Có |
-| R13 | Hết phiên → về màn login | `gfn_callback` (-99) | – | Có cơ chế khác (JWT tự làm mới) |
+Cột "Chỉ ở client?" là tình trạng **của hệ thống Nexacro gốc** (trước migrate). Hai cột sau là **kết quả migrate** trong repo.
 
-**Bài học:** R5, R9, R10 là quy tắc **chỉ có ở client**. Migrate mà chỉ đọc server sẽ sót. Cần hỏi nghiệp vụ:
-- R9 là quy tắc thật hay chỉ là thói quen code? Nếu thật thì phải **đưa về server**, để mọi app đều tuân theo.
-- R5 phải có ở server, vì độ dài cột DB là giới hạn thật.
-- R10 chỉ là giao diện: giữ ở app.
+| # | Quy tắc | Ở đâu (Nexacro) | Chỉ ở client? | Server (sau migrate) | Android (sau migrate) |
+|---|---|---|---|---|---|
+| R1 | Từ ngày ≤ đến ngày | `frm_disposal_list.fn_search` | **Có** | `DisposalService.list` → 400 | Chọn khoảng ngày bằng Spinner (`DisposalListActivity.koreaDate`), luôn hợp lệ |
+| R2 | Quét trùng món → +1 số lượng | `frm_disposal_reg.fn_scan` | Không | Từ chối dòng trùng (`validateLines`) | `DisposalEditActivity.addScanned` |
+| R3 | Tồn khả dụng ≤ 0 lúc quét → hỏi có thêm không | `frm_disposal_reg.fn_addItem` | **Có** (chỉ giao diện) | Chặn ở 확정 (-5 / 422) | Hộp thoại "Vẫn thêm?" (`DisposalEditActivity`, sau `api.item`) |
+| R4 | Số lượng 1–9999, bắt buộc lý do, ít nhất 1 dòng | `fn_validate`, `btn_lineOk_onclick` | Không | `validateLines` | `editLine`, `save` |
+| R5 | **Ghi chú ≤ 100 ký tự** | `fn_validate` | **Có** | **Đưa về server**: `validRemark` → 400 | `maxLength="100"` + kiểm tra trong `save` |
+| R6 | Sửa / hủy: trạng thái 10, chưa 마감, người đăng ký hoặc 점장 | `fn_setButtons` | Không | `requireStatus`, `requireOwnerOrAdmin`, `ensureNotClosed` | Nút theo `actions` server trả |
+| R7 | Xác nhận: trạng thái 10, chưa 마감, 점장 | `fn_setButtons` | Không | `confirm` + controller | Nút theo `actions` |
+| R8 | Thiếu tồn khả dụng → tô đỏ, tắt nút xác nhận | `fn_checkStock` | Không | `shortages` → 422 | Dòng đỏ, nút tắt khi có `issues` |
+| R9 | **Chỉ xác nhận phiếu của hôm nay** (`BIZ_DT == gv_bizDt`) | `btn_confirm_onclick` | **Có** | **Đưa về server**: `requireToday` → 409 `NOT_TODAY` (X-API: -6); thêm vào `issues` | Nút tắt + hiện lý do (từ `issues`) |
+| R10 | **Giá vốn ≥ 100.000원 → hỏi lại lần 2** | `btn_confirm_onclick` | **Có** (chỉ giao diện) | Không cần | `DisposalDetailActivity.askConfirmBig` |
+| R11 | Hủy xác nhận: trạng thái 20, chưa 마감, 점장 | `fn_setButtons` | Không | `cancelConfirm` | Nút theo `actions` |
+| R12 | Hủy / hủy xác nhận bắt buộc lý do | `btn_rsnOk_onclick` | Không | `requireReason` → 400 | Hộp thoại bắt nhập lý do |
+| R13 | Hết phiên → về màn login | `gfn_callback` (-99) | – | – | JWT tự làm mới (`TokenAuthenticator`) |
+
+**Bài học:** R1, R3, R5, R9, R10 ban đầu **chỉ có ở client**. Migrate mà chỉ đọc server sẽ sót. Cách đã xử lý:
+- Quy tắc dữ liệu thật (R5 độ dài cột, R9 nghiệp vụ, R1 điều kiện hợp lệ) → **đưa về server** (`DisposalService`). Vì server `*.do` cũ cũng dùng chung service này, giờ app Nexacro cũ và app Android tuân theo cùng một quy tắc.
+- Quy tắc chỉ là giao diện (R3, R10) → **giữ ở app**.
+- Ở dự án thật, R9 phải **hỏi nghiệp vụ** trước khi đưa về server: đó là quy tắc thật hay chỉ là thói quen code?
 
 Trả lời câu hỏi bước 4:
 1. Server (`save.do`) lấy các dòng hiện có, áp `insert` / `update` / `delete` theo `ITEM_CD` (dòng update dùng `OrgRow` để biết mã cũ), rồi lưu cả danh sách. Android đơn giản hơn: gửi **toàn bộ danh sách dòng** (`PUT /api/disposals/{no}`).
 2. Do script `fn_checkStock` tự tính sau khi nhận dữ liệu. Không có `useclientlayout`, cột của Dataset bị thay bằng cột server gửi về, nên `SHORT_YN` biến mất.
 3. (a) Android giữ cookie (`CookieJar` của OkHttp) và gọi login.do như app cũ, dùng gateway XML ↔ JSON phía client hoặc server. (b) Gateway phía server đăng nhập hộ / chuyển phiên theo user JWT. (c) Viết API JSON mới gọi lại service (cách B), dùng JWT. Bản đáp án chọn (c).
 4. Truyền qua `Intent.putExtra` khi mở Activity; không dùng biến toàn cục (Android có thể kill app, biến static mất).
-5. R5, R9, R10 (xem trên).
+5. R1, R3, R5, R9, R10 (xem trên). Nếu bỏ sót: lưu được ghi chú dài làm lỗi cột DB (R5), xác nhận nhầm phiếu ngày cũ làm lệch 수불 ngày hôm nay (R9)…
 
 </details>
 

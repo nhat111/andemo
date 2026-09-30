@@ -1,5 +1,7 @@
 package com.example.andemo;
 
+import com.example.andemo.disposal.DisposalRequestRepository;
+import com.example.andemo.disposal.StoreClosingRepository;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -40,6 +42,12 @@ class DisposalIntegrationTest {
 
     @Autowired
     private TestRestTemplate rest;
+
+    @Autowired
+    private DisposalRequestRepository disposalRepository;
+
+    @Autowired
+    private StoreClosingRepository closingRepository;
 
     private String admin;
     private String user;
@@ -281,6 +289,43 @@ class DisposalIntegrationTest {
         assertThat(item.get("costPrice").asLong()).isEqualTo(3_500);
         assertThat(get("/api/inventory/000", user).getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
         assertThat(get("/api/disposals", null).getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+    }
+
+    // ================= Quy tắc chuyển từ script Nexacro về server (R1, R5, R9) =================
+
+    @Test
+    void r1_dateRangeMustBeOrdered() {
+        ResponseEntity<JsonNode> res = get("/api/disposals?from=" + TODAY + "&to=" + TODAY.minusDays(1), user);
+        assertThat(res.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+    }
+
+    @Test
+    void r5_remarkLongerThan100IsRejected() {
+        ResponseEntity<JsonNode> res = post("/api/disposals", Map.of("remark", "x".repeat(101),
+                "items", List.of(line(KIMBAP, 1, "EXPIRED"))), user);
+        assertThat(res.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(res.getBody().get("message").asText()).contains("100");
+        assertThat(post("/api/disposals", Map.of("remark", "x".repeat(100),
+                "items", List.of(line(KIMBAP, 1, "EXPIRED"))), user).getStatusCode()).isEqualTo(HttpStatus.CREATED);
+    }
+
+    @Test
+    void r9_onlyTodaysSlipCanBeConfirmed() {
+        // Mở lại hôm qua (chốt sổ tới hôm kia) và chuyển phiếu D2 sang hôm qua: chưa 마감 nhưng không phải hôm nay
+        var closing = closingRepository.findById("S001").orElseThrow();
+        closing.setLastClosedDate(TODAY.minusDays(2));
+        closingRepository.save(closing);
+        var d2 = disposalRepository.findById(D2).orElseThrow();
+        d2.setBusinessDate(TODAY.minusDays(1));
+        disposalRepository.save(d2);
+
+        JsonNode detail = get("/api/disposals/" + D2, admin).getBody();
+        assertThat(detail.get("issues").toString()).contains("hôm nay");
+
+        ResponseEntity<JsonNode> res = post("/api/disposals/" + D2 + "/confirm", Map.of(), admin);
+        assertThat(res.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
+        assertThat(res.getBody().get("code").asText()).isEqualTo("NOT_TODAY");
+        assertThat(onHand(WATER)).isEqualTo(120);
     }
 
     // ================= helpers =================

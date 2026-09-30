@@ -94,7 +94,7 @@ Tiêu đề chức năng gồm cả **đăng ký / tra cứu / sửa / hủy**, 
 | **18 – Available Qty** | 가용재고 = 현재고 − giữ chỗ. Kiểm tra hết các dòng rồi mới trừ; 1 dòng thiếu → không trừ gì, báo đủ mọi dòng thiếu. Lúc đăng ký chỉ cảnh báo (tô đỏ), chặn ở bước 확정 | `DisposalService.shortages` → 422 | `insufficientAvailableQtyRejectsWholeSlip` |
 | Đăng ký / sửa / hủy (tiêu đề chức năng) | Quét barcode trên PDA (camera hoặc scanner keyboard wedge + Enter), quét trùng thì +1, chạm dòng sửa SL / 사유, giữ lâu xóa. Kiểm tra mọi dòng 1 lần (trùng, không có hàng, SL ≤ 0, thiếu 사유) | `POST/PUT /api/disposals`, `POST …/cancel` · `DisposalEditActivity` | `registerCreatesNextSlipNumberWithPriceSnapshot`, `registerValidatesEveryLineAtOnce`, `ownerCanEditRegisteredSlipOthersCannot` |
 
-Backend: package `backend/.../disposal/`. Test: `DisposalIntegrationTest` (13 test). Toàn bộ backend: 65/65.
+Backend: package `backend/.../disposal/`. Test: `DisposalIntegrationTest` (16 test). Toàn bộ backend: 73/73.
 
 ### Dữ liệu
 
@@ -132,7 +132,24 @@ Lỗi: `{"code", "message", "details": [...]}`
 | 409 | `INVALID_STATUS` | Trạng thái không cho phép thao tác |
 | 409 | `STALE_DATA` | Version cũ, hoặc người khác vừa thao tác cùng lúc |
 | 409 | `CLOSED_PERIOD` | 영업일자 đã 마감 |
+| 409 | `NOT_TODAY` | Xác nhận phiếu không thuộc 영업일자 hôm nay (quy tắc R9) |
 | 422 | `INSUFFICIENT_QTY` | Thiếu 가용재고 |
+
+---
+
+### Quy tắc lấy từ bản Nexacro "cũ"
+
+Khi đối chiếu với bộ form Nexacro 17 mô phỏng hệ thống gốc (`nexacro-sample/disposal/`), có 5 quy tắc chỉ nằm trong script client. Đã migrate như sau:
+
+| # | Quy tắc | Server | Android | Test |
+|---|---|---|---|---|
+| R1 | Từ ngày ≤ đến ngày khi tra cứu | `list` → 400 | Spinner khoảng ngày | `r1_dateRangeMustBeOrdered` |
+| R3 | Hết tồn khả dụng lúc quét → hỏi có thêm không | (chặn ở 확정) | Hộp thoại trong `DisposalEditActivity` | – |
+| R5 | Ghi chú ≤ 100 ký tự | `validRemark` → 400 | `maxLength` + kiểm tra khi lưu | `r5_remarkLongerThan100IsRejected` |
+| R9 | Chỉ xác nhận phiếu của 영업일자 hôm nay | `requireToday` → 409 `NOT_TODAY`, thêm vào `issues` | Nút tắt + hiện lý do | `r9_onlyTodaysSlipCanBeConfirmed` |
+| R10 | Giá vốn ≥ 100.000원 → hỏi lại lần 2 | – | `askConfirmBig` | – |
+
+Bảng đầy đủ 13 quy tắc: `nexacro-sample/disposal/README.md` mục 7.
 
 ---
 

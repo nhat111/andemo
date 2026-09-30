@@ -72,8 +72,9 @@
         android:id="@+id/edtRemark"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="Ghi chú (비고)"
+        android:hint="Ghi chú (비고, tối đa 100 ký tự)"
         android:inputType="text"
+        android:maxLength="100"
         android:maxLines="2" />
 
     <ProgressBar

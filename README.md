@@ -41,7 +41,8 @@ API: `http://localhost:8080/api/auth/login`
 
 **Migrate Nexacro 17 mobile → Android (Java)**: thư mục [`docs/nexacro-migration/`](docs/nexacro-migration/README.md)
 - `MIGRATION_PLAN.md`: kế hoạch migrate (giai đoạn, khảo sát, khung app, quy trình từng màn, rủi ro)
-- `LEARNING_PLAN.md`: **lộ trình học Android 6 tuần** theo nhu cầu migrate
+- `LEARNING_PLAN_2_WEEKS.md`: **lộ trình 2 tuần đọc hiểu code** (hủy hàng: Nexacro 17 ↔ Android)
+- `LEARNING_PLAN.md`: lộ trình đầy đủ 6 tuần theo nhu cầu migrate
 - `NEXACRO_TO_ANDROID.md`, `NEXACRO_XAPI_TO_JSON.md`, `MIGRATION_LAB.md`: tra cứu đối chiếu, X-API ↔ JSON, bài tập
 
 **Task 17–18: hủy hàng (폐기)**: thư mục [`docs/task-17-18-disposal/`](docs/task-17-18-disposal/README.md)

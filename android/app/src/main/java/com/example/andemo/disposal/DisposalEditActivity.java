@@ -229,13 +229,16 @@ public class DisposalEditActivity extends AppCompatActivity {
                             Toast.LENGTH_LONG).show();
                     return;
                 }
-                lines.add(new EditLine(item.getItemCode(), item.getItemName(), 1, reason.getCode(),
-                        reason.toString(), item.getAvailableQty(), item.getCostPrice()));
-                adapter.notifyItemInserted(lines.size() - 1);
-                updateSummary();
+                // R3: hết tồn khả dụng thì hỏi người dùng (vẫn cho thêm; server chặn lúc 확정 nếu còn thiếu)
                 if (item.getAvailableQty() <= 0) {
-                    Toast.makeText(DisposalEditActivity.this, "Cảnh báo: tồn khả dụng của món này là "
-                            + item.getAvailableQty(), Toast.LENGTH_LONG).show();
+                    new AlertDialog.Builder(DisposalEditActivity.this)
+                            .setTitle(item.getItemName())
+                            .setMessage("Tồn khả dụng là " + item.getAvailableQty() + ". Vẫn thêm vào phiếu hủy?")
+                            .setPositiveButton("Thêm", (d, w) -> addLine(item, reason))
+                            .setNegativeButton("Không", null)
+                            .show();
+                } else {
+                    addLine(item, reason);
                 }
             }
 
@@ -247,6 +250,13 @@ public class DisposalEditActivity extends AppCompatActivity {
                 }
             }
         });
+    }
+
+    private void addLine(InventoryItemDto item, DisposalReasonDto reason) {
+        lines.add(new EditLine(item.getItemCode(), item.getItemName(), 1, reason.getCode(),
+                reason.toString(), item.getAvailableQty(), item.getCostPrice()));
+        adapter.notifyItemInserted(lines.size() - 1);
+        updateSummary();
     }
 
     /** Hộp thoại sửa số lượng + lý do của 1 dòng */
@@ -326,6 +336,11 @@ public class DisposalEditActivity extends AppCompatActivity {
             return;
         }
         String remark = edtRemark.getText().toString().trim();
+        // R5: server cũng kiểm tra lại; maxLength trong layout đã chặn khi gõ
+        if (remark.length() > 100) {
+            edtRemark.setError("Tối đa 100 ký tự");
+            return;
+        }
         DisposalSaveRequest body = new DisposalSaveRequest(version, remark.isEmpty() ? null : remark);
         for (EditLine l : lines) {
             body.addLine(l.itemCode, l.qty, l.reasonCode);

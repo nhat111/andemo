@@ -314,6 +314,7 @@ public class LegacyDisposalController {
             case "STALE_DATA" -> -2;
             case "FORBIDDEN" -> -3;
             case "CLOSED_PERIOD" -> -4;
+            case "NOT_TODAY" -> -6;
             case "INSUFFICIENT_QTY" -> -5;
             default -> -1;
         };

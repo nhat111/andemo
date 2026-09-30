@@ -31,6 +31,26 @@
             android:visibility="gone" />
     </LinearLayout>
 
+    <!-- R1: khoảng 영업일자 (bản Nexacro: Calendar từ ~ đến) -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Thời gian: " />
+
+        <Spinner
+            android:id="@+id/spPeriod"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1" />
+    </LinearLayout>
+
     <TextView
         android:id="@+id/tvCount"
         android:layout_width="match_parent"
