@@ -47,6 +47,8 @@ set "JAVA_HOME=D:\Tools\Android Studio\jbr"
 devcheck\run.bat
 ```
 
+`run.bat` chạy 2 phần: **1. `ProjectCheck`** soát manifest / layout / id (xem [CHECKLISTS.md](CHECKLISTS.md)), **2. `DisposalRulesCheck`** test quy tắc (mục này).
+
 ### Bước 3: đọc kết quả
 
 ```

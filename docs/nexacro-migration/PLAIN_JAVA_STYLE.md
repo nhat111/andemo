@@ -108,17 +108,20 @@ Từ **Android Gradle Plugin 8** (`android.nonFinalResIds=true` mặc định), 
 
 ## 3. Danh sách: ListView + adapter tự viết (BaseAdapter + ViewHolder)
 
-Code thật của khách thường là `ListView` + **custom adapter** `extends BaseAdapter`. Repo có 2 adapter mẫu:
+Code thật của khách thường là `ListView` + **custom adapter** `extends BaseAdapter`. Repo có 3 lớp mẫu:
 
 | Adapter | Dùng ở | Có gì |
 |---|---|---|
-| `plain/PlainDisposalListAdapter.java` + `item_plain_disposal.xml` | Danh sách phiếu | ViewHolder, tô màu trạng thái |
-| `plain/PlainDisposalLineAdapter.java` + `item_plain_line.xml` | Dòng hàng trong chi tiết | ViewHolder, chữ đỏ khi thiếu tồn, **nút "Tồn" trong từng dòng** báo về Activity qua interface |
+| `plain/PlainDisposalLineAdapter.java` + `item_plain_line.xml` | Dòng hàng trong chi tiết | **Viết tay đủ mọi bước** (đọc để hiểu): ViewHolder, chữ đỏ khi thiếu tồn, **nút "Tồn" trong từng dòng** báo về Activity qua interface |
+| `plain/HashMapListAdapter.java` | Khung dùng chung | Gom sẵn các bước lặp lại (4 hàm, `convertView`, ViewHolder) |
+| `plain/PlainDisposalListAdapter.java` + `item_plain_disposal.xml` | Danh sách phiếu | Dựng trên khung: chỉ còn chọn layout + `bind`, tô màu trạng thái |
+
+Đảm bảo không sót bước (khung, tool soát `ProjectCheck`, checklist): [CHECKLISTS.md](CHECKLISTS.md).
 
 ### 3.1 Khung 4 hàm của BaseAdapter
 
 ```java
-public class PlainDisposalListAdapter extends BaseAdapter {
+public class PlainDisposalLineAdapter extends BaseAdapter {
     private final List<HashMap<String, String>> rows;   // Activity giữ, adapter chỉ đọc
 
     public int getCount()               { return rows.size(); }        // số dòng
@@ -138,22 +141,22 @@ public class PlainDisposalListAdapter extends BaseAdapter {
 public View getView(int position, View convertView, ViewGroup parent) {
     ViewHolder h;
     if (convertView == null) {                      // lần đầu: tạo view từ XML
-        convertView = inflater.inflate(R.layout.item_plain_disposal, parent, false);
+        convertView = inflater.inflate(R.layout.item_plain_line, parent, false);
         h = new ViewHolder();
-        h.txtNo = convertView.findViewById(R.id.txtNo);
+        h.txtName = convertView.findViewById(R.id.txtName);
         ...
         convertView.setTag(h);                      // cất holder vào view
     } else {
         h = (ViewHolder) convertView.getTag();      // view cũ cuộn ra khỏi màn hình được đưa lại
     }
     HashMap<String, String> r = rows.get(position);
-    h.txtNo.setText(r.get("disposalNo"));
-    h.txtStatus.setTextColor(statusColor(r.get("status")));
+    h.txtName.setText(r.get("itemName"));
+    h.txtQty.setTextColor(shortage ? Color.RED : Color.DKGRAY);
     return convertView;
 }
 ```
 
-ListView chỉ tạo đủ view cho số dòng nhìn thấy, cuộn thì **dùng lại** view cũ (`convertView`). ViewHolder giữ sẵn các TextView để khỏi `findViewById` mỗi lần cuộn. Ý tưởng này giống hệt `RecyclerView.ViewHolder` (`onCreateViewHolder` ≈ nhánh `convertView == null`, `onBindViewHolder` ≈ phần gán dữ liệu).
+Phần này `HashMapListAdapter.getView` đã làm sẵn; adapter dựng trên khung chỉ viết phần gán dữ liệu (`bind`). ListView chỉ tạo đủ view cho số dòng nhìn thấy, cuộn thì **dùng lại** view cũ (`convertView`). ViewHolder giữ sẵn các TextView để khỏi `findViewById` mỗi lần cuộn. Ý tưởng này giống hệt `RecyclerView.ViewHolder` (`onCreateViewHolder` ≈ nhánh `convertView == null`, `onBindViewHolder` ≈ phần gán dữ liệu).
 
 ### 3.3 Nút trong dòng (setTag(position) + interface)
 
