@@ -1,5 +1,7 @@
 # Kiểu code "Java thuần" (giống code của khách) ↔ kiểu Retrofit
 
+> 📚 [Mục lục tài liệu](README.md) · Lộ trình: [2 tuần](LEARNING_PLAN_2_WEEKS.md) · Làm 1 màn: [công thức](HOW_TO_CODE_A_SCREEN.md)
+
 Code Android của khách không dùng Retrofit / Gson / RecyclerView mà dùng:
 
 - gọi API bằng **thread + `HttpURLConnection`**, đọc JSON bằng `org.json`;
@@ -116,7 +118,7 @@ Code thật của khách thường là `ListView` + **custom adapter** `extends 
 | `plain/HashMapListAdapter.java` | Khung dùng chung | Gom sẵn các bước lặp lại (4 hàm, `convertView`, ViewHolder) |
 | `plain/PlainDisposalListAdapter.java` + `item_plain_disposal.xml` | Danh sách phiếu | Dựng trên khung: chỉ còn chọn layout + `bind`, tô màu trạng thái |
 
-Đảm bảo không sót bước (khung, tool soát `ProjectCheck`, checklist): [CHECKLISTS.md](CHECKLISTS.md).
+Đảm bảo không sót bước (khung, tool soát `ProjectCheck`, checklist): [WORK_WITHOUT_BUILD.md](WORK_WITHOUT_BUILD.md).
 
 ### 3.1 Khung 4 hàm của BaseAdapter
 

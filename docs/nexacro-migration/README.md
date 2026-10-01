@@ -1,30 +1,54 @@
-# Migrate Nexacro 17 mobile → Android (Java)
+# Mục lục tài liệu: migrate Nexacro 17 mobile → Android (Java)
 
-Tài liệu chung cho việc chuyển app Nexacro 17 mobile sang Android native, **không gắn với task cụ thể**.
-Phân tích từng task nằm ở thư mục riêng (ví dụ [../task-17-18-disposal/](../task-17-18-disposal/README.md)).
+Mọi file đều có dòng **📚 Mục lục tài liệu** ở đầu để quay lại đây. Chỉ cần nhớ file này.
 
-## Đọc theo thứ tự
+## Bắt đầu từ đây
 
-| # | File | Nội dung | Khi nào đọc |
-|---|---|---|---|
-| 1 | [MIGRATION_PLAN.md](MIGRATION_PLAN.md) | Kế hoạch: hiện tại / đích, chỗ khó, 6 giai đoạn, checklist khảo sát, khung app, quy trình migrate 1 màn, bắt traffic, rủi ro | Đầu tiên, để thấy bức tranh chung |
-| 2a | [LEARNING_PLAN_2_WEEKS.md](LEARNING_PLAN_2_WEEKS.md) | **Lộ trình 2 tuần: đọc hiểu code có sẵn + sửa nhỏ** (chức năng hủy hàng bản Nexacro ↔ Android), bảng tra nhanh, mẹo đọc code | Khi chỉ có ít thời gian trước khi vào dự án |
-| 2b | [LEARNING_PLAN.md](LEARNING_PLAN.md) | Lộ trình đầy đủ 6 tuần × 5 buổi, tự làm bài tập, bài cuối tự migrate chức năng hủy hàng | Khi muốn học sâu / sau khi vào dự án |
-| 3 | [NEXACRO_TO_ANDROID.md](NEXACRO_TO_ANDROID.md) | Bảng đối chiếu: Form, Dataset, Grid, Combo, popup, `transaction`, session… → Android | Tra cứu khi đọc code Nexacro / viết code Android |
-| 4 | [NEXACRO_XAPI_TO_JSON.md](NEXACRO_XAPI_TO_JSON.md) | Cho Android nói chuyện với server X-API: gateway (cách A), controller JSON (cách B), công cụ XML → JSON | Tuần 2 của lộ trình; khi thiết kế lớp gọi server |
-| 4b | [PLAIN_JAVA_STYLE.md](PLAIN_JAVA_STYLE.md) | Kiểu code của khách: thread + `HttpURLConnection` + `org.json`, view trong `HashMap` + 1 `OnClickListener`; so với Retrofit, các lỗi hay gặp | Ngày 4–6 của lộ trình 2 tuần; trước khi viết code trong dự án |
-| 4c | [TEST_WITH_MAIN.md](TEST_WITH_MAIN.md) | Test logic bằng hàm `main` khi Gradle / JUnit / emulator không chạy được (VDI không internet): `rules/DisposalRules` + `devcheck/run.bat` | Ngày 6 của lộ trình 2 tuần; mỗi khi viết quy tắc mới |
-| 4d | [CHECKLISTS.md](CHECKLISTS.md) | Không sót bước: khung `HashMapListAdapter`, tool `ProjectCheck` (soát manifest / layout / id không cần Gradle), checklist thêm danh sách / màn / API | Mỗi khi thêm màn hoặc danh sách; trước khi mang sang máy build |
-| 5 | [MIGRATION_LAB.md](MIGRATION_LAB.md) | Bài mẫu (tra cứu sản phẩm) + 8 bài tập chuyển 1 form Nexacro | Tuần 2–5 của lộ trình |
+| Đang ở giai đoạn | Đọc | Rồi |
+|---|---|---|
+| **Học** (2 tuần trước khi vào dự án) | [LEARNING_PLAN_2_WEEKS.md](LEARNING_PLAN_2_WEEKS.md): làm theo từng ngày, trong mỗi ngày đã có link tới đúng file cần đọc | Hết 2 tuần → giai đoạn Làm |
+| **Làm** (tự migrate 1 màn) | [HOW_TO_CODE_A_SCREEN.md](HOW_TO_CODE_A_SCREEN.md): 8 bước, khung code copy được, cuối cùng mới nhờ AI review | Kẹt bước nào → bảng "Kẹt thì tra ở đâu" cuối file đó |
+| **Lập kế hoạch** (lead / đầu dự án) | [MIGRATION_PLAN.md](MIGRATION_PLAN.md) | |
 
-## Vật liệu thực hành
+## Tìm theo câu hỏi
+
+| Câu hỏi | File |
+|---|---|
+| Hôm nay học gì? | [LEARNING_PLAN_2_WEEKS.md](LEARNING_PLAN_2_WEEKS.md) |
+| Code 1 màn mới theo các bước nào? Khung code ở đâu? | [HOW_TO_CODE_A_SCREEN.md](HOW_TO_CODE_A_SCREEN.md) |
+| Code của khách (thread + `HttpURLConnection`, view trong HashMap, custom adapter) viết thế nào, lỗi hay gặp? | [PLAIN_JAVA_STYLE.md](PLAIN_JAVA_STYLE.md) |
+| Code đỏ / không build / không có emulator trong VDI thì kiểm tra bằng gì? Checklist không sót bước? | [WORK_WITHOUT_BUILD.md](WORK_WITHOUT_BUILD.md) |
+| Dataset / Grid / Combo / `transaction` / popup của Nexacro tương ứng gì trên Android? | [NEXACRO_TO_ANDROID.md](NEXACRO_TO_ANDROID.md) |
+| Server chỉ trả XML X-API, Android cần JSON? | [NEXACRO_XAPI_TO_JSON.md](NEXACRO_XAPI_TO_JSON.md) |
+| Nghiệp vụ hủy hàng (등록 → 확정 → 확정취소, 수불, 마감), API, giả định? | [../task-17-18-disposal/README.md](../task-17-18-disposal/README.md) |
+| Bản Nexacro 17 "cũ" của hủy hàng + 13 quy tắc và chỗ đã migrate? | [../../nexacro-sample/disposal/README.md](../../nexacro-sample/disposal/README.md) |
+| Muốn bài tập luyện thêm? | [MIGRATION_LAB.md](MIGRATION_LAB.md) |
+| Muốn học sâu 6 tuần? | [LEARNING_PLAN.md](LEARNING_PLAN.md) |
+
+## Tất cả file
+
+| Nhóm | File | Nội dung |
+|---|---|---|
+| Lộ trình | [LEARNING_PLAN_2_WEEKS.md](LEARNING_PLAN_2_WEEKS.md) | **Chính.** 10 ngày: đọc code có sẵn + chạy + sửa nhỏ |
+| | [LEARNING_PLAN.md](LEARNING_PLAN.md) | 6 tuần, tự làm bài tập (sau khi vào dự án) |
+| Làm việc | [HOW_TO_CODE_A_SCREEN.md](HOW_TO_CODE_A_SCREEN.md) | **Chính.** Công thức migrate 1 màn + khung code + review |
+| | [PLAIN_JAVA_STYLE.md](PLAIN_JAVA_STYLE.md) | Kiểu code của khách ↔ Retrofit, adapter, lỗi hay gặp |
+| | [WORK_WITHOUT_BUILD.md](WORK_WITHOUT_BUILD.md) | VDI: adapter khung, `ProjectCheck`, checklist, test bằng `main` |
+| Tra cứu | [NEXACRO_TO_ANDROID.md](NEXACRO_TO_ANDROID.md) | Bảng đối chiếu khái niệm Nexacro → Android |
+| | [NEXACRO_XAPI_TO_JSON.md](NEXACRO_XAPI_TO_JSON.md) | X-API (XML) ↔ JSON: gateway, controller JSON, công cụ |
+| Luyện tập | [MIGRATION_LAB.md](MIGRATION_LAB.md) | Bài mẫu tra cứu sản phẩm + 8 bài tập |
+| Kế hoạch | [MIGRATION_PLAN.md](MIGRATION_PLAN.md) | Giai đoạn, khảo sát, khung app, quy trình 1 màn, VDI, rủi ro |
+| Task | [../task-17-18-disposal/README.md](../task-17-18-disposal/README.md) | Task 17–18 hủy hàng: luồng, API, quy tắc |
+| Mã mẫu | [../../nexacro-sample/disposal/README.md](../../nexacro-sample/disposal/README.md) | Bản Nexacro 17 cũ của hủy hàng |
+
+## Code đi kèm
 
 | Ở đâu | Là gì |
 |---|---|
-| `nexacro-sample/frm_product_search.xfdl` | Form Nexacro 17 mẫu đơn giản (bài mẫu của LAB) |
-| `nexacro-sample/disposal/` | Bộ form Nexacro 17 mobile hoàn chỉnh + `gfn_` + server X-API giả lập chạy được (bài cuối của lộ trình) |
-| `nexacro-sample/XapiJsonConverter.java.txt` | Helper X-API (`com.nexacro17.xapi`) → JSON cho cách B |
-| `backend/.../nexacro/` | Gateway `/api/nx/**`, công cụ `/api/nx-tools/**`, server X-API giả lập |
-| `android/devcheck/` | `run.bat` / `run.sh`: `ProjectCheck` (soát project) + `DisposalRulesCheck` (test quy tắc bằng `main`), không cần Gradle |
-| `android/.../plain/` | Chức năng hủy hàng viết theo kiểu của khách (Java thuần, không Retrofit) |
-| `android/.../migration/` | Code Android của bài mẫu và màn demo X-API → JSON |
+| `android/.../plain/` | **Kiểu code của khách**: `HttpTask`, `JsonRows`, `HashMapListAdapter`, màn danh sách / chi tiết hủy hàng |
+| `android/.../rules/` | Quy tắc Java thuần (test được bằng `main`) |
+| `android/devcheck/` | `run.bat` / `run.sh`: `ProjectCheck` + test quy tắc, không cần Gradle |
+| `android/.../disposal/` | Cùng chức năng, kiểu Retrofit + RecyclerView (để so sánh) |
+| `android/.../migration/` | Bài mẫu của LAB, màn demo X-API → JSON |
+| `nexacro-sample/` | Form Nexacro 17: bài mẫu `frm_product_search.xfdl`, bộ hủy hàng `disposal/`, helper `XapiJsonConverter.java.txt` |
+| `backend/.../disposal/`, `backend/.../nexacro/` | API hủy hàng, server X-API giả lập, gateway `/api/nx/**` |

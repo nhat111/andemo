@@ -7,7 +7,7 @@ import java.util.Locale;
  * không import android.*, org.json, Retrofit… và không dùng java.time (minSdk 24).
  *
  * Nhờ vậy test được bằng 1 hàm main, không cần Gradle / emulator:
- * android/devcheck/DisposalRulesCheck.java (cách chạy: docs/nexacro-migration/TEST_WITH_MAIN.md).
+ * android/devcheck/DisposalRulesCheck.java (cách chạy: docs/nexacro-migration/WORK_WITHOUT_BUILD.md mục 4–6).
  */
 public final class DisposalRules {
 

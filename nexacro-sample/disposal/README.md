@@ -1,5 +1,7 @@
 # 폐기 (hủy hàng) bản Nexacro 17 mobile: mã nguồn "cũ" để luyện đọc và migrate
 
+> 📚 [Mục lục tài liệu](../../docs/nexacro-migration/README.md) · Lộ trình: [2 tuần](../../docs/nexacro-migration/LEARNING_PLAN_2_WEEKS.md) · Làm 1 màn: [công thức](../../docs/nexacro-migration/HOW_TO_CODE_A_SCREEN.md)
+
 > Đây là **bản mô phỏng hệ thống Nexacro 17 mobile cũ** cho task 17–18, dùng để luyện đúng việc sẽ làm ở dự án thật:
 > đọc form Nexacro → rút quy tắc → chuyển sang Android (Java).
 > - **Phía server (X-API giả lập): chạy được, có test** (`LegacyDisposalXapiTest`, 5 test).

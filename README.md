@@ -39,23 +39,17 @@ API: `http://localhost:8080/api/auth/login`
 
 ## Tài liệu
 
-**Migrate Nexacro 17 mobile → Android (Java)**: thư mục [`docs/nexacro-migration/`](docs/nexacro-migration/README.md)
-- `MIGRATION_PLAN.md`: kế hoạch migrate (giai đoạn, khảo sát, khung app, quy trình từng màn, rủi ro)
-- `LEARNING_PLAN_2_WEEKS.md`: **lộ trình 2 tuần đọc hiểu code** (hủy hàng: Nexacro 17 ↔ Android)
-- `LEARNING_PLAN.md`: lộ trình đầy đủ 6 tuần theo nhu cầu migrate
-- `NEXACRO_TO_ANDROID.md`, `NEXACRO_XAPI_TO_JSON.md`, `MIGRATION_LAB.md`: tra cứu đối chiếu, X-API ↔ JSON, bài tập
-
-**Task 17–18: hủy hàng (폐기)**: thư mục [`docs/task-17-18-disposal/`](docs/task-17-18-disposal/README.md)
-- Phân tích luồng bán lẻ Hàn Quốc (등록 → 확정 → 확정취소, 수불, 마감), API, giả định, câu hỏi BA; demo backend + Android
-- Bản Nexacro 17 "cũ" của cùng chức năng: `nexacro-sample/disposal/README.md`
+**Migrate Nexacro 17 mobile → Android (Java)**: bắt đầu ở [**Mục lục tài liệu**](docs/nexacro-migration/README.md) (mọi file migrate / học / task hủy hàng đều link từ đó).
+- Đang học: [lộ trình 2 tuần](docs/nexacro-migration/LEARNING_PLAN_2_WEEKS.md)
+- Đang làm 1 màn: [công thức 8 bước + khung code](docs/nexacro-migration/HOW_TO_CODE_A_SCREEN.md)
 
 **PDA Finder và project chung** (`docs/`)
-- `LOCAL_SETUP_GUIDE.md`: **hướng dẫn setup và test trên máy local** (mock server, web quản lý, máy ảo / máy thật)
-- `FCM_SETUP.md`: setup Firebase và test nhận lệnh qua FCM (so sánh với polling / WebSocket)
-- `ANDROID_LEARNING_PLAN.md`: plan học Android 14 buổi dựa trên project PDA
-- `ANDROID_FIX_TRACKER.md`: danh sách bug Android cần fix
-- `PDA_FINDER_ALERT_REQUIREMENTS.md`: requirement PDA Finder
-- `PDA_FINDER_MECHANISM_OPTIONS.md`: phân tích các phương án nhận lệnh (FCM / Polling / WebSocket / MQTT)
+- [LOCAL_SETUP_GUIDE.md](docs/LOCAL_SETUP_GUIDE.md): **setup và test trên máy local** (mock server, web quản lý, máy ảo / máy thật)
+- [FCM_SETUP.md](docs/FCM_SETUP.md): setup Firebase và test nhận lệnh qua FCM
+- [DEPLOY_RENDER.md](docs/DEPLOY_RENDER.md): deploy backend lên Render
+- [ANDROID_LEARNING_PLAN.md](docs/ANDROID_LEARNING_PLAN.md): 14 buổi học Android qua project PDA
+- [ANDROID_FIX_TRACKER.md](docs/ANDROID_FIX_TRACKER.md): bug Android cần fix
+- Thiết kế: [PDA_FINDER_ALERT_REQUIREMENTS.md](docs/PDA_FINDER_ALERT_REQUIREMENTS.md), [PDA_FINDER_MECHANISM_OPTIONS.md](docs/PDA_FINDER_MECHANISM_OPTIONS.md), [PDA_POLLING_DESIGN.md](docs/PDA_POLLING_DESIGN.md), [PDA_WEBSOCKET_DESIGN.md](docs/PDA_WEBSOCKET_DESIGN.md)
 
 ## Tính năng
 

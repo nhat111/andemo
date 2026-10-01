@@ -1,5 +1,7 @@
 # Đối chiếu Nexacro → Android (Java)
 
+> 📚 [Mục lục tài liệu](README.md) · Lộ trình: [2 tuần](LEARNING_PLAN_2_WEEKS.md) · Làm 1 màn: [công thức](HOW_TO_CODE_A_SCREEN.md)
+
 > Dành cho dev đã quen Nexacro + Java backend, chuẩn bị migrate màn hình Nexacro sang app Android native.
 > Ví dụ Android dùng Java, Retrofit, layout XML, giống project `andemo`.
 > Cập nhật: 2026-09-30. Dự án dùng **Nexacro 17 (mobile)**; cú pháp Nexacro trong tài liệu theo bản 17. Chưa dựa trên mã nguồn thật của dự án; khi có file `.xfdl` thật sẽ bổ sung.

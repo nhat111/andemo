@@ -24,7 +24,7 @@ import java.util.stream.Stream;
  *   java devcheck/ProjectCheck.java đường\dẫn\module\src\main
  *
  * ERROR = chắc chắn hỏng (build lỗi hoặc crash khi chạy). WARN = nên xem lại.
- * Có ERROR → mã thoát 1. Hướng dẫn: docs/nexacro-migration/CHECKLISTS.md
+ * Có ERROR → mã thoát 1. Hướng dẫn: docs/nexacro-migration/WORK_WITHOUT_BUILD.md mục 2
  */
 public class ProjectCheck {
 

@@ -1,5 +1,7 @@
 # Lộ trình học Android (Java) để migrate Nexacro 17 mobile
 
+> 📚 [Mục lục tài liệu](README.md) · Lộ trình: [2 tuần](LEARNING_PLAN_2_WEEKS.md) · Làm 1 màn: [công thức](HOW_TO_CODE_A_SCREEN.md)
+
 > Dành cho: dev Java đã lâu chưa code Android, sắp tham gia dự án chuyển app **Nexacro 17 mobile** sang **Android native (Java)**.
 > Nhánh: `claude/android-nexacro-migration`. Cập nhật: 2026-09-30.
 > Lộ trình được rút ra từ việc rà soát [MIGRATION_PLAN.md](MIGRATION_PLAN.md): mỗi kỹ năng ở đây đều cần cho một bước migrate cụ thể.

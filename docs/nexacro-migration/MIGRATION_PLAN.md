@@ -1,19 +1,12 @@
 # Kế hoạch migrate Nexacro 17 mobile → Android (Java)
 
+> 📚 [Mục lục tài liệu](README.md) · Lộ trình: [2 tuần](LEARNING_PLAN_2_WEEKS.md) · Làm 1 màn: [công thức](HOW_TO_CODE_A_SCREEN.md)
+
 > Nhánh: `claude/android-nexacro-migration`. Cập nhật: 2026-09-30. Dự án dùng **Nexacro 17**.
 > Tài liệu chung cho cả dự án, **không gắn với task cụ thể nào**. Phân tích từng task nằm ở file riêng.
 > Viết khi chưa vào dự án. Những chỗ ghi "cần khảo sát" phải kiểm tra lại với code và hệ thống thật.
 
-**Tài liệu đi kèm**
-
-| File | Dùng khi |
-|---|---|
-| [LEARNING_PLAN.md](LEARNING_PLAN.md) | **Lộ trình học Android (Java) 6 tuần** theo đúng những gì việc migrate cần |
-| [NEXACRO_TO_ANDROID.md](NEXACRO_TO_ANDROID.md) | Tra nhanh: khái niệm Nexacro nào tương ứng với gì trên Android |
-| [NEXACRO_XAPI_TO_JSON.md](NEXACRO_XAPI_TO_JSON.md) | Cách cho Android gọi server X-API (XML Dataset) bằng JSON |
-| [MIGRATION_LAB.md](MIGRATION_LAB.md) | Bài mẫu + 8 bài tập chuyển 1 form Nexacro sang Android |
-| [../../nexacro-sample/disposal/README.md](../../nexacro-sample/disposal/README.md) | Bộ form Nexacro mobile hoàn chỉnh (4 form + `gfn_` + server X-API chạy được) để luyện đọc code thật và rút quy tắc |
-| [ANDROID_LEARNING_PLAN.md](../ANDROID_LEARNING_PLAN.md) | 14 buổi học Android qua project PDA (chạy nền, thông báo, scanner…) |
+**Tài liệu đi kèm:** danh sách đầy đủ ở [Mục lục](README.md). Thêm cho phần PDA (chạy nền, thông báo, scanner): [ANDROID_LEARNING_PLAN.md](../ANDROID_LEARNING_PLAN.md).
 
 ---
 

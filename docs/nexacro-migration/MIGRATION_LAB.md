@@ -1,7 +1,9 @@
 # Lab: học Android qua việc migrate màn hình Nexacro
 
+> 📚 [Mục lục tài liệu](README.md) · Lộ trình: [2 tuần](LEARNING_PLAN_2_WEEKS.md) · Làm 1 màn: [công thức](HOW_TO_CODE_A_SCREEN.md)
+
 > Nhánh: `claude/android-nexacro-migration` (tách từ `claude/pda-finder-fcm`, giữ nguyên toàn bộ phần PDA Finder để tham khảo).
-> Đi kèm: [NEXACRO_TO_ANDROID.md](NEXACRO_TO_ANDROID.md) (bảng đối chiếu khái niệm), [ANDROID_LEARNING_PLAN.md](../ANDROID_LEARNING_PLAN.md) (plan học 14 buổi).
+> Đi kèm: [NEXACRO_TO_ANDROID.md](NEXACRO_TO_ANDROID.md) (bảng đối chiếu khái niệm), [ANDROID_LEARNING_PLAN.md](../ANDROID_LEARNING_PLAN.md) (plan học 14 buổi). Làm bài theo đúng các bước của [HOW_TO_CODE_A_SCREEN.md](HOW_TO_CODE_A_SCREEN.md).
 > Cập nhật: 2026-09-29
 
 ---

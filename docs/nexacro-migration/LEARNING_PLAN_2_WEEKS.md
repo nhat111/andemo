@@ -1,5 +1,7 @@
 # Lộ trình 2 tuần: đọc hiểu code để dùng được Android
 
+> 📚 [Mục lục tài liệu](README.md) · Học xong → làm 1 màn: [công thức](HOW_TO_CODE_A_SCREEN.md)
+
 > Dành cho: có **2 tuần** làm quen trước khi vào dự án migrate Nexacro 17 mobile → Android (Java).
 > Cách học: **đọc code có sẵn + chạy + sửa nhỏ**, không dựng lại từ đầu. Mỗi ngày ~2 giờ, 10 ngày làm việc.
 > Muốn học sâu hơn sau này: [LEARNING_PLAN.md](LEARNING_PLAN.md) (6 tuần).
@@ -37,7 +39,7 @@ Bảng đối chiếu 13 quy tắc giữa 2 bản: `nexacro-sample/disposal/READ
 
 ### Ngày 2: Đọc bản Nexacro
 
-- **Đọc:** `nexacro-sample/disposal/README.md` mục 1–4 (cấu trúc, **luồng đầy đủ**, transaction); `lib/common.xjs`; `form/frm_login.xfdl`; `form/frm_disposal_list.xfdl`.
+- **Đọc:** [nexacro-sample/disposal/README.md](../../nexacro-sample/disposal/README.md) mục 1–4 (cấu trúc, **luồng đầy đủ**, transaction); `lib/common.xjs`; `form/frm_login.xfdl`; `form/frm_disposal_list.xfdl`.
 - **Chạy:** README mục 5: login + tra cứu bằng curl (có cookie và không có cookie).
 - **Sửa nhỏ:** tự viết lệnh curl gọi `disposal/selectDetail.do` cho phiếu `S001-<hôm nay>-0001`.
 - **Tự kiểm tra:** `gfn_transaction` → `gfn_callback` → hàm callback của form chạy thế nào? `-99` dẫn về đâu? `ds_detail:U` gửi những dòng nào?
@@ -65,7 +67,7 @@ Code của khách gọi API bằng **thread + `HttpURLConnection`**, không Retr
 
 - **Đọc cặp (kiểu khách):** `frm_disposal_list.xfdl` ↔ `plain/PlainDisposalListActivity.java` + `PlainDisposalListAdapter.java` + `activity_plain_disposal_list.xml` + `item_plain_disposal.xml`.
 - **Đọc cặp (Retrofit):** `disposal/DisposalListActivity.java` + `DisposalListAdapter.java` + `res/layout/activity_disposal_list.xml` + `item_disposal.xml`.
-- **Học kiểu khách:** view cất trong `HashMap<String, View>`, 1 `onClick(View)` chung phân nhánh bằng `if / else` theo `R.id` (AGP 8 không cho `switch`); `ListView` + adapter tự viết (`BaseAdapter`: `getCount` / `getView`, `convertView` + ViewHolder) với `List<HashMap>` ≈ Grid + Dataset. Xem [PLAIN_JAVA_STYLE.md mục 3](PLAIN_JAVA_STYLE.md). Đọc `PlainDisposalLineAdapter` (viết tay đủ bước) trước, rồi `HashMapListAdapter` + `PlainDisposalListAdapter` (khung, còn 2 bước). Chạy `devcheck\run.bat`, rồi thử đổi 1 id trong `bind` thành id không có trong `item_plain_disposal.xml` để thấy `ProjectCheck` báo lỗi ([CHECKLISTS.md](CHECKLISTS.md)).
+- **Học kiểu khách:** view cất trong `HashMap<String, View>`, 1 `onClick(View)` chung phân nhánh bằng `if / else` theo `R.id` (AGP 8 không cho `switch`); `ListView` + adapter tự viết (`BaseAdapter`: `getCount` / `getView`, `convertView` + ViewHolder) với `List<HashMap>` ≈ Grid + Dataset. Xem [PLAIN_JAVA_STYLE.md mục 3](PLAIN_JAVA_STYLE.md). Đọc `PlainDisposalLineAdapter` (viết tay đủ bước) trước, rồi `HashMapListAdapter` + `PlainDisposalListAdapter` (khung, còn 2 bước). Chạy `devcheck\run.bat`, rồi thử đổi 1 id trong `bind` thành id không có trong `item_plain_disposal.xml` để thấy `ProjectCheck` báo lỗi ([WORK_WITHOUT_BUILD.md](WORK_WITHOUT_BUILD.md)).
 - **Học:** RecyclerView = Grid; Adapter = Band body (gán cột vào ô); `notifyDataSetChanged()` = Grid vẽ lại khi Dataset đổi; Spinner = Combo.
 - **Sửa nhỏ (kiểu khách):** trong `PlainDisposalListAdapter.getView`, hiện thêm **tổng giá bán** (`r.get("totalSaleAmount")`, định dạng bằng `JsonRows.won`); phiếu có giá vốn ≥ 100.000원 thì tô đỏ `txtSummary`. Cuộn qua lại để chắc dòng khác không bị dính màu.
 - **Sửa nhỏ (Retrofit, nếu còn giờ):** làm tương tự với `getTotalSaleAmount()` trong `DisposalListAdapter`.
@@ -80,7 +82,7 @@ Code của khách gọi API bằng **thread + `HttpURLConnection`**, không Retr
 - **Đọc cặp:** `frm_disposal_detail.xfdl` (`fn_setButtons`, `fn_checkStock`, `btn_confirm_onclick`) ↔ `plain/PlainDisposalDetailActivity.java` (`render`, `askConfirm`, `askReason`, `send`, `onStockClick`) + `PlainDisposalLineAdapter.java` (nút trong dòng) ↔ `disposal/DisposalDetailActivity.java` (`render`, `askConfirm`, `askConfirmBig`, `run`, `showError`) + `DisposalLineAdapter.java`.
 - **Đọc thêm phía server:** `DisposalService.toDetail` (tạo `actions`, `issues`).
 - **Học:** bản Nexacro tự quyết định nút trong script; bản Android hiện nút theo `actions` server trả → quy tắc nằm 1 chỗ.
-- **Sửa nhỏ:** đổi `BIG_AMOUNT` trong `rules/DisposalRules.java` từ `100_000` thành `5_000`. Chạy `devcheck\run.bat`: test `R10 99.999 không hỏi lần 2` phải FAIL, mã thoát 1 (test bắt được thay đổi). Có máy để chạy app thì xác nhận phiếu `…-0001` để thấy hộp thoại hỏi lần 2. Trả lại như cũ, chạy lại thấy PASS. Cách test bằng `main`: [TEST_WITH_MAIN.md](TEST_WITH_MAIN.md).
+- **Sửa nhỏ:** đổi `BIG_AMOUNT` trong `rules/DisposalRules.java` từ `100_000` thành `5_000`. Chạy `devcheck\run.bat`: test `R10 99.999 không hỏi lần 2` phải FAIL, mã thoát 1 (test bắt được thay đổi). Có máy để chạy app thì xác nhận phiếu `…-0001` để thấy hộp thoại hỏi lần 2. Trả lại như cũ, chạy lại thấy PASS. Cách test bằng `main`: [WORK_WITHOUT_BUILD.md](WORK_WITHOUT_BUILD.md) mục 4–6.
 - **Tự kiểm tra:** R9 (chỉ xác nhận phiếu hôm nay) nằm ở đâu ở mỗi bản? Vì sao đưa về server?
 
 ### Ngày 7: Màn đăng ký / sửa, quét barcode
@@ -113,7 +115,8 @@ Code của khách gọi API bằng **thread + `HttpURLConnection`**, không Retr
   2. `LegacyDisposalController`: thêm mã cũ `"06"` vào `REASON_BY_CODE`.
   3. Sửa test đang đếm 6 lý do (`reasonsAndItemLookupForRegistrationScreen`, `loginThenInquiry…` trong `LegacyDisposalXapiTest`) thành 7.
   4. Chạy test backend; chạy app: màn đăng ký tự có lý do mới (app lấy danh sách từ server, không phải sửa app).
-- **Làm thêm (quy tắc chỉ ở app, test bằng main):** thêm `DisposalRules.validQty(long)` (SL hủy > 0) + 2 dòng `check(...)` trong `devcheck/DisposalRulesCheck.java`, chạy `devcheck\run.bat`, rồi gọi hàm đó trong `DisposalEditActivity` trước khi thêm dòng. Làm theo [TEST_WITH_MAIN.md](TEST_WITH_MAIN.md) mục 3.
+- **Làm thêm (quy tắc chỉ ở app, test bằng main):** thêm `DisposalRules.validQty(long)` (SL hủy > 0) + 2 dòng `check(...)` trong `devcheck/DisposalRulesCheck.java`, chạy `devcheck\run.bat`, rồi gọi hàm đó trong `DisposalEditActivity` trước khi thêm dòng. Làm theo [WORK_WITHOUT_BUILD.md](WORK_WITHOUT_BUILD.md) mục 6.
+- **Tập dượt công thức làm việc:** đi qua [HOW_TO_CODE_A_SCREEN.md](HOW_TO_CODE_A_SCREEN.md) bước 1–6 với form mẫu `nexacro-sample/frm_product_search.xfdl` (điền phiếu phân tích, bảng API, copy khung code, chạy `devcheck\run.bat`). Đây là cách sẽ làm hằng ngày ở dự án.
 - **Tự kiểm tra:** giải thích được với team: 1 màn Nexacro được chuyển sang Android theo những bước nào, quy tắc nào đưa về server.
 
 ---

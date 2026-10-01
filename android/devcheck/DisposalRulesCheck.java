@@ -7,7 +7,7 @@ import com.example.andemo.rules.DisposalRules;
  * Chạy (từ thư mục android/):
  *   Windows:  devcheck\run.bat
  *   Mac/Linux: sh devcheck/run.sh
- * Hướng dẫn: docs/nexacro-migration/TEST_WITH_MAIN.md
+ * Hướng dẫn: docs/nexacro-migration/WORK_WITHOUT_BUILD.md mục 4–6
  *
  * Thêm test: viết thêm 1 dòng check(...) trong main.
  */

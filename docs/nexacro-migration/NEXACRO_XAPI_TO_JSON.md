@@ -1,5 +1,7 @@
 # Chuyển response X-API (XML Dataset) sang JSON cho Android
 
+> 📚 [Mục lục tài liệu](README.md) · Lộ trình: [2 tuần](LEARNING_PLAN_2_WEEKS.md) · Làm 1 màn: [công thức](HOW_TO_CODE_A_SCREEN.md)
+
 > Nhánh: `claude/android-nexacro-migration`. Đi kèm [MIGRATION_LAB.md](MIGRATION_LAB.md), [NEXACRO_TO_ANDROID.md](NEXACRO_TO_ANDROID.md).
 > Cập nhật: 2026-09-29. Demo chạy được và có test (backend 52/52), đã đối chiếu với tài liệu chính thức của TOBESOFT (mục 6).
 

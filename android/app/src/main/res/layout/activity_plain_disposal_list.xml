@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Danh sách phiếu hủy, bản "Java thuần": ListView + SimpleAdapter, nút lọc trạng thái -->
+<!-- Danh sách phiếu hủy, bản "Java thuần": ListView + PlainDisposalListAdapter, nút lọc trạng thái -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
