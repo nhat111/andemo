@@ -205,12 +205,12 @@ Cột "Chỉ ở client?" là tình trạng **của hệ thống Nexacro gốc**
 | R2 | Quét trùng món → +1 số lượng | `frm_disposal_reg.fn_scan` | Không | Từ chối dòng trùng (`validateLines`) | `DisposalEditActivity.addScanned` |
 | R3 | Tồn khả dụng ≤ 0 lúc quét → hỏi có thêm không | `frm_disposal_reg.fn_addItem` | **Có** (chỉ giao diện) | Chặn ở 확정 (-5 / 422) | Hộp thoại "Vẫn thêm?" (`DisposalEditActivity`, sau `api.item`) |
 | R4 | Số lượng 1–9999, bắt buộc lý do, ít nhất 1 dòng | `fn_validate`, `btn_lineOk_onclick` | Không | `validateLines` | `editLine`, `save` |
-| R5 | **Ghi chú ≤ 100 ký tự** | `fn_validate` | **Có** | **Đưa về server**: `validRemark` → 400 | `maxLength="100"` + kiểm tra trong `save` |
+| R5 | **Ghi chú ≤ 100 ký tự** | `fn_validate` | **Có** | **Đưa về server**: `validRemark` → 400 | `maxLength="100"` + `DisposalRules.remarkError` trong `save` |
 | R6 | Sửa / hủy: trạng thái 10, chưa 마감, người đăng ký hoặc 점장 | `fn_setButtons` | Không | `requireStatus`, `requireOwnerOrAdmin`, `ensureNotClosed` | Nút theo `actions` server trả |
 | R7 | Xác nhận: trạng thái 10, chưa 마감, 점장 | `fn_setButtons` | Không | `confirm` + controller | Nút theo `actions` |
 | R8 | Thiếu tồn khả dụng → tô đỏ, tắt nút xác nhận | `fn_checkStock` | Không | `shortages` → 422 | Dòng đỏ, nút tắt khi có `issues` |
 | R9 | **Chỉ xác nhận phiếu của hôm nay** (`BIZ_DT == gv_bizDt`) | `btn_confirm_onclick` | **Có** | **Đưa về server**: `requireToday` → 409 `NOT_TODAY` (X-API: -6); thêm vào `issues` | Nút tắt + hiện lý do (từ `issues`) |
-| R10 | **Giá vốn ≥ 100.000원 → hỏi lại lần 2** | `btn_confirm_onclick` | **Có** (chỉ giao diện) | Không cần | `DisposalDetailActivity.askConfirmBig` |
+| R10 | **Giá vốn ≥ 100.000원 → hỏi lại lần 2** | `btn_confirm_onclick` | **Có** (chỉ giao diện) | Không cần | `DisposalRules.needsSecondConfirm` (test bằng `devcheck/`) → `DisposalDetailActivity.askConfirmBig` |
 | R11 | Hủy xác nhận: trạng thái 20, chưa 마감, 점장 | `fn_setButtons` | Không | `cancelConfirm` | Nút theo `actions` |
 | R12 | Hủy / hủy xác nhận bắt buộc lý do | `btn_rsnOk_onclick` | Không | `requireReason` → 400 | Hộp thoại bắt nhập lý do |
 | R13 | Hết phiên → về màn login | `gfn_callback` (-99) | – | – | JWT tự làm mới (`TokenAuthenticator`) |

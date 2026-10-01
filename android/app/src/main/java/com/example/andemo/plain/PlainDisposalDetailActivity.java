@@ -13,6 +13,7 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.andemo.R;
+import com.example.andemo.rules.DisposalRules;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -32,8 +33,6 @@ public class PlainDisposalDetailActivity extends AppCompatActivity
         implements View.OnClickListener, PlainDisposalLineAdapter.OnRowButtonListener {
 
     public static final String EXTRA_DISPOSAL_NO = "disposalNo";
-    /** R10: phiếu giá vốn từ mức này phải xác nhận thêm 1 lần */
-    private static final long BIG_AMOUNT = 100_000;
 
     private final HashMap<String, TextView> tvMap = new HashMap<>();
     private final HashMap<String, Button> btnMap = new HashMap<>();
@@ -177,7 +176,7 @@ public class PlainDisposalDetailActivity extends AppCompatActivity
                 .setTitle("Xác nhận hủy hàng (확정)")
                 .setMessage("Giá vốn " + JsonRows.won(String.valueOf(cost)) + " sẽ bị trừ khỏi tồn kho. Xác nhận?")
                 .setPositiveButton("Xác nhận", (d, w) -> {
-                    if (cost >= BIG_AMOUNT) {
+                    if (DisposalRules.needsSecondConfirm(cost)) { // R10
                         new AlertDialog.Builder(this)
                                 .setMessage("Phiếu giá trị lớn. Bạn chắc chắn?")
                                 .setPositiveButton("Chắc chắn", (d2, w2) -> send("confirm", null))

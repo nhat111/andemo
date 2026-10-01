@@ -80,7 +80,7 @@ Code của khách gọi API bằng **thread + `HttpURLConnection`**, không Retr
 - **Đọc cặp:** `frm_disposal_detail.xfdl` (`fn_setButtons`, `fn_checkStock`, `btn_confirm_onclick`) ↔ `plain/PlainDisposalDetailActivity.java` (`render`, `askConfirm`, `askReason`, `send`, `onStockClick`) + `PlainDisposalLineAdapter.java` (nút trong dòng) ↔ `disposal/DisposalDetailActivity.java` (`render`, `askConfirm`, `askConfirmBig`, `run`, `showError`) + `DisposalLineAdapter.java`.
 - **Đọc thêm phía server:** `DisposalService.toDetail` (tạo `actions`, `issues`).
 - **Học:** bản Nexacro tự quyết định nút trong script; bản Android hiện nút theo `actions` server trả → quy tắc nằm 1 chỗ.
-- **Sửa nhỏ:** đổi `BIG_AMOUNT` từ `100_000` thành `5_000`, xác nhận phiếu `…-0001` để thấy hộp thoại hỏi lần 2 (R10). Trả lại như cũ.
+- **Sửa nhỏ:** đổi `BIG_AMOUNT` trong `rules/DisposalRules.java` từ `100_000` thành `5_000`. Chạy `devcheck\run.bat`: test `R10 99.999 không hỏi lần 2` phải FAIL, mã thoát 1 (test bắt được thay đổi). Có máy để chạy app thì xác nhận phiếu `…-0001` để thấy hộp thoại hỏi lần 2. Trả lại như cũ, chạy lại thấy PASS. Cách test bằng `main`: [TEST_WITH_MAIN.md](TEST_WITH_MAIN.md).
 - **Tự kiểm tra:** R9 (chỉ xác nhận phiếu hôm nay) nằm ở đâu ở mỗi bản? Vì sao đưa về server?
 
 ### Ngày 7: Màn đăng ký / sửa, quét barcode
@@ -113,6 +113,7 @@ Code của khách gọi API bằng **thread + `HttpURLConnection`**, không Retr
   2. `LegacyDisposalController`: thêm mã cũ `"06"` vào `REASON_BY_CODE`.
   3. Sửa test đang đếm 6 lý do (`reasonsAndItemLookupForRegistrationScreen`, `loginThenInquiry…` trong `LegacyDisposalXapiTest`) thành 7.
   4. Chạy test backend; chạy app: màn đăng ký tự có lý do mới (app lấy danh sách từ server, không phải sửa app).
+- **Làm thêm (quy tắc chỉ ở app, test bằng main):** thêm `DisposalRules.validQty(long)` (SL hủy > 0) + 2 dòng `check(...)` trong `devcheck/DisposalRulesCheck.java`, chạy `devcheck\run.bat`, rồi gọi hàm đó trong `DisposalEditActivity` trước khi thêm dòng. Làm theo [TEST_WITH_MAIN.md](TEST_WITH_MAIN.md) mục 3.
 - **Tự kiểm tra:** giải thích được với team: 1 màn Nexacro được chuyển sang Android theo những bước nào, quy tắc nào đưa về server.
 
 ---

@@ -1,5 +1,7 @@
 package com.example.andemo.plain;
 
+import com.example.andemo.rules.DisposalRules;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -39,19 +41,12 @@ public final class JsonRows {
         return row;
     }
 
-    /** "1234567" → "1,234,567원" (giá trị rỗng / không phải số → giữ nguyên) */
+    /** "1234567" → "1,234,567원" (logic ở DisposalRules: Java thuần, test được bằng main) */
     public static String won(String number) {
-        try {
-            return String.format(java.util.Locale.US, "%,d원", Long.parseLong(number));
-        } catch (NumberFormatException e) {
-            return number;
-        }
+        return DisposalRules.won(number);
     }
 
     public static String statusLabel(String status) {
-        if ("REGISTERED".equals(status)) return "Đã đăng ký (등록)";
-        if ("CONFIRMED".equals(status)) return "Đã xác nhận (확정)";
-        if ("CANCELLED".equals(status)) return "Đã hủy (취소)";
-        return status;
+        return DisposalRules.statusLabel(status);
     }
 }

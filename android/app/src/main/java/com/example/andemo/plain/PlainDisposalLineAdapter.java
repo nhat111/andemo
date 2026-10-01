@@ -88,7 +88,7 @@ public class PlainDisposalLineAdapter extends BaseAdapter implements View.OnClic
         h.txtCode.setText(r.get("itemCode") + " · " + r.get("reasonName")
                 + " · giá vốn " + JsonRows.won(r.get("costAmount")));
 
-        boolean shortage = checkStock && !"true".equals(r.get("sufficient"));
+        boolean shortage = checkStock && !"true".equals(r.get("sufficient")); // server đã tính R3 (DisposalRules.isShortage)
         h.txtQty.setText("Hủy " + r.get("qty") + " · khả dụng " + r.get("availableQty")
                 + (shortage ? "  ⚠ thiếu tồn" : ""));
         h.txtQty.setTextColor(shortage ? Color.RED : Color.DKGRAY); // gán cả 2 nhánh (view dùng lại)

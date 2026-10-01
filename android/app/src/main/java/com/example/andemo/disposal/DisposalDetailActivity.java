@@ -18,6 +18,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.andemo.R;
+import com.example.andemo.rules.DisposalRules;
 import com.example.andemo.api.ApiClient;
 import com.example.andemo.api.DisposalApi;
 import com.example.andemo.model.ApiErrorDto;
@@ -177,8 +178,6 @@ public class DisposalDetailActivity extends AppCompatActivity {
         setButtonsEnabled(true);
     }
 
-    /** R10: phiếu có giá vốn từ mức này phải xác nhận thêm 1 lần (bản Nexacro: MSG_CONFIRM_BIG) */
-    private static final long BIG_AMOUNT = 100_000;
 
     private void askConfirm() {
         new AlertDialog.Builder(this)
@@ -188,7 +187,7 @@ public class DisposalDetailActivity extends AppCompatActivity {
                         + ", giá vốn " + DisposalUi.won(current.getTotalCostAmount())
                         + " sẽ bị TRỪ khỏi tồn kho.\nHủy xác nhận được tới khi chốt sổ (마감).")
                 .setPositiveButton("Xác nhận", (dialog, which) -> {
-                    if (current.getTotalCostAmount() >= BIG_AMOUNT) {
+                    if (DisposalRules.needsSecondConfirm(current.getTotalCostAmount())) { // R10 (Nexacro: MSG_CONFIRM_BIG)
                         askConfirmBig();
                     } else {
                         doConfirm();

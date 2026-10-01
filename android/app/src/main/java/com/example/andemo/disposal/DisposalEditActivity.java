@@ -23,6 +23,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.andemo.R;
+import com.example.andemo.rules.DisposalRules;
 import com.example.andemo.api.ApiClient;
 import com.example.andemo.api.DisposalApi;
 import com.example.andemo.model.ApiErrorDto;
@@ -337,8 +338,9 @@ public class DisposalEditActivity extends AppCompatActivity {
         }
         String remark = edtRemark.getText().toString().trim();
         // R5: server cũng kiểm tra lại; maxLength trong layout đã chặn khi gõ
-        if (remark.length() > 100) {
-            edtRemark.setError("Tối đa 100 ký tự");
+        String remarkError = DisposalRules.remarkError(remark);
+        if (remarkError != null) {
+            edtRemark.setError(remarkError);
             return;
         }
         DisposalSaveRequest body = new DisposalSaveRequest(version, remark.isEmpty() ? null : remark);

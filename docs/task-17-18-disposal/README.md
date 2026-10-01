@@ -145,9 +145,9 @@ Khi đối chiếu với bộ form Nexacro 17 mô phỏng hệ thống gốc (`n
 |---|---|---|---|---|
 | R1 | Từ ngày ≤ đến ngày khi tra cứu | `list` → 400 | Spinner khoảng ngày | `r1_dateRangeMustBeOrdered` |
 | R3 | Hết tồn khả dụng lúc quét → hỏi có thêm không | (chặn ở 확정) | Hộp thoại trong `DisposalEditActivity` | – |
-| R5 | Ghi chú ≤ 100 ký tự | `validRemark` → 400 | `maxLength` + kiểm tra khi lưu | `r5_remarkLongerThan100IsRejected` |
+| R5 | Ghi chú ≤ 100 ký tự | `validRemark` → 400 | `maxLength` + `DisposalRules.remarkError` khi lưu | `r5_remarkLongerThan100IsRejected`, `devcheck/DisposalRulesCheck` |
 | R9 | Chỉ xác nhận phiếu của 영업일자 hôm nay | `requireToday` → 409 `NOT_TODAY`, thêm vào `issues` | Nút tắt + hiện lý do | `r9_onlyTodaysSlipCanBeConfirmed` |
-| R10 | Giá vốn ≥ 100.000원 → hỏi lại lần 2 | – | `askConfirmBig` | – |
+| R10 | Giá vốn ≥ 100.000원 → hỏi lại lần 2 | – | `DisposalRules.needsSecondConfirm` → `askConfirmBig` | `devcheck/DisposalRulesCheck` |
 
 Bảng đầy đủ 13 quy tắc: `nexacro-sample/disposal/README.md` mục 7.
 
