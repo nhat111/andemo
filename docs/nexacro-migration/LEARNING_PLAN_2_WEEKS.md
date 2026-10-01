@@ -63,12 +63,13 @@ Code của khách gọi API bằng **thread + `HttpURLConnection`**, không Retr
 
 ### Ngày 5: Màn danh sách (Grid → ListView / RecyclerView)
 
-- **Đọc cặp (kiểu khách):** `frm_disposal_list.xfdl` ↔ `plain/PlainDisposalListActivity.java` + `activity_plain_disposal_list.xml` + `item_plain_row.xml`.
+- **Đọc cặp (kiểu khách):** `frm_disposal_list.xfdl` ↔ `plain/PlainDisposalListActivity.java` + `PlainDisposalListAdapter.java` + `activity_plain_disposal_list.xml` + `item_plain_disposal.xml`.
 - **Đọc cặp (Retrofit):** `disposal/DisposalListActivity.java` + `DisposalListAdapter.java` + `res/layout/activity_disposal_list.xml` + `item_disposal.xml`.
-- **Học kiểu khách:** view cất trong `HashMap<String, View>`, 1 `onClick(View)` chung phân nhánh bằng `if / else` theo `R.id` (AGP 8 không cho `switch`); `ListView` + `SimpleAdapter` với `List<HashMap>` ≈ Grid + Dataset.
+- **Học kiểu khách:** view cất trong `HashMap<String, View>`, 1 `onClick(View)` chung phân nhánh bằng `if / else` theo `R.id` (AGP 8 không cho `switch`); `ListView` + adapter tự viết (`BaseAdapter`: `getCount` / `getView`, `convertView` + ViewHolder) với `List<HashMap>` ≈ Grid + Dataset. Xem [PLAIN_JAVA_STYLE.md mục 3](PLAIN_JAVA_STYLE.md).
 - **Học:** RecyclerView = Grid; Adapter = Band body (gán cột vào ô); `notifyDataSetChanged()` = Grid vẽ lại khi Dataset đổi; Spinner = Combo.
-- **Sửa nhỏ:** hiện thêm **tổng giá bán** (`getTotalSaleAmount()`) ở mỗi dòng danh sách.
-- **Tự kiểm tra:** vì sao tô màu trong `onBindViewHolder` phải gán cả 2 nhánh? Quy tắc R1 (từ ngày ≤ đến ngày) nằm ở đâu ở 2 bản?
+- **Sửa nhỏ (kiểu khách):** trong `PlainDisposalListAdapter.getView`, hiện thêm **tổng giá bán** (`r.get("totalSaleAmount")`, định dạng bằng `JsonRows.won`); phiếu có giá vốn ≥ 100.000원 thì tô đỏ `txtSummary`. Cuộn qua lại để chắc dòng khác không bị dính màu.
+- **Sửa nhỏ (Retrofit, nếu còn giờ):** làm tương tự với `getTotalSaleAmount()` trong `DisposalListAdapter`.
+- **Tự kiểm tra:** vì sao tô màu trong `getView` / `onBindViewHolder` phải gán cả 2 nhánh? `convertView == null` tương ứng hàm nào của RecyclerView? Quy tắc R1 (từ ngày ≤ đến ngày) nằm ở đâu ở 2 bản?
 
 ---
 
@@ -76,7 +77,7 @@ Code của khách gọi API bằng **thread + `HttpURLConnection`**, không Retr
 
 ### Ngày 6: Màn chi tiết và nút theo quyền / trạng thái
 
-- **Đọc cặp:** `frm_disposal_detail.xfdl` (`fn_setButtons`, `fn_checkStock`, `btn_confirm_onclick`) ↔ `plain/PlainDisposalDetailActivity.java` (`render`, `askConfirm`, `askReason`, `send`) ↔ `disposal/DisposalDetailActivity.java` (`render`, `askConfirm`, `askConfirmBig`, `run`, `showError`) + `DisposalLineAdapter.java`.
+- **Đọc cặp:** `frm_disposal_detail.xfdl` (`fn_setButtons`, `fn_checkStock`, `btn_confirm_onclick`) ↔ `plain/PlainDisposalDetailActivity.java` (`render`, `askConfirm`, `askReason`, `send`, `onStockClick`) + `PlainDisposalLineAdapter.java` (nút trong dòng) ↔ `disposal/DisposalDetailActivity.java` (`render`, `askConfirm`, `askConfirmBig`, `run`, `showError`) + `DisposalLineAdapter.java`.
 - **Đọc thêm phía server:** `DisposalService.toDetail` (tạo `actions`, `issues`).
 - **Học:** bản Nexacro tự quyết định nút trong script; bản Android hiện nút theo `actions` server trả → quy tắc nằm 1 chỗ.
 - **Sửa nhỏ:** đổi `BIG_AMOUNT` từ `100_000` thành `5_000`, xác nhận phiếu `…-0001` để thấy hộp thoại hỏi lần 2 (R10). Trả lại như cũ.

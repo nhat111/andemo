@@ -12,7 +12,7 @@ import java.util.List;
 /**
  * JSON → HashMap: mỗi object thành 1 HashMap&lt;String, String&gt; (giống 1 dòng Dataset của Nexacro),
  * mảng thành List các HashMap. Giá trị đều là chuỗi; object / mảng lồng nhau giữ dạng chuỗi JSON.
- * Dùng thẳng được với SimpleAdapter (ListView) và getString(...) khi hiển thị.
+ * Adapter (PlainDisposalListAdapter...) đọc theo key: row.get("disposalNo").
  */
 public final class JsonRows {
 

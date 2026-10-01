@@ -6,7 +6,6 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
-import android.widget.SimpleAdapter;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -29,7 +28,8 @@ import java.util.List;
  *
  * Cùng chức năng với disposal/DisposalDetailActivity (bản Retrofit).
  */
-public class PlainDisposalDetailActivity extends AppCompatActivity implements View.OnClickListener {
+public class PlainDisposalDetailActivity extends AppCompatActivity
+        implements View.OnClickListener, PlainDisposalLineAdapter.OnRowButtonListener {
 
     public static final String EXTRA_DISPOSAL_NO = "disposalNo";
     /** R10: phiếu giá vốn từ mức này phải xác nhận thêm 1 lần */
@@ -38,7 +38,7 @@ public class PlainDisposalDetailActivity extends AppCompatActivity implements Vi
     private final HashMap<String, TextView> tvMap = new HashMap<>();
     private final HashMap<String, Button> btnMap = new HashMap<>();
     private final List<HashMap<String, String>> lines = new ArrayList<>();
-    private SimpleAdapter lineAdapter;
+    private PlainDisposalLineAdapter lineAdapter;
 
     private String disposalNo;
     /** Phiếu đang hiển thị (JSON gốc từ server): lấy version, tổng tiền… khi bấm nút */
@@ -64,9 +64,8 @@ public class PlainDisposalDetailActivity extends AppCompatActivity implements Vi
             b.setOnClickListener(this);
         }
 
-        lineAdapter = new SimpleAdapter(this, lines, R.layout.item_plain_row,
-                new String[]{"line1", "line2", "line3"},
-                new int[]{R.id.txtLine1, R.id.txtLine2, R.id.txtLine3});
+        // Adapter tự viết; nút "Tồn" trong từng dòng báo về onStockClick(...) bên dưới
+        lineAdapter = new PlainDisposalLineAdapter(this, lines, this);
         ((ListView) findViewById(R.id.lvLines)).setAdapter(lineAdapter);
 
         load();
@@ -89,6 +88,20 @@ public class PlainDisposalDetailActivity extends AppCompatActivity implements Vi
     }
 
     // ---------------- tải + hiển thị ----------------
+
+    /** Nút "Tồn" trong 1 dòng hàng (adapter báo về): hiện tồn kho / giá của mặt hàng đó */
+    @Override
+    public void onStockClick(int position, HashMap<String, String> row) {
+        new AlertDialog.Builder(this)
+                .setTitle(row.get("itemName"))
+                .setMessage("Mã: " + row.get("itemCode")
+                        + "\nTồn (재고): " + row.get("onHandQty")
+                        + "\nKhả dụng: " + row.get("availableQty")
+                        + "\nGiá vốn (원가): " + JsonRows.won(row.get("costPrice"))
+                        + "\nGiá bán (매가): " + JsonRows.won(row.get("salePrice")))
+                .setPositiveButton("Đóng", null)
+                .show();
+    }
 
     private void load() {
         HttpTask.get(this, "api/disposals/" + disposalNo, new HttpTask.Callback() {
@@ -132,18 +145,13 @@ public class PlainDisposalDetailActivity extends AppCompatActivity implements Vi
             tvMap.get("tvIssues").setText(sb);
             tvMap.get("tvIssues").setVisibility(registered && issues.length() > 0 ? View.VISIBLE : View.GONE);
 
-            // Dòng hàng → List<HashMap> cho SimpleAdapter
+            // Dòng hàng → List<HashMap>; adapter tự quyết định chữ / màu trong getView
             lines.clear();
             JSONArray items = current.getJSONArray("items");
             for (int i = 0; i < items.length(); i++) {
-                HashMap<String, String> r = JsonRows.row(items.getJSONObject(i));
-                r.put("line1", r.get("lineNo") + ". " + r.get("itemName"));
-                r.put("line2", "Hủy " + r.get("qty") + " · khả dụng " + r.get("availableQty")
-                        + (registered && !"true".equals(r.get("sufficient")) ? "  ⚠ thiếu tồn" : ""));
-                r.put("line3", r.get("itemCode") + " · " + r.get("reasonName")
-                        + " · giá vốn " + JsonRows.won(r.get("costAmount")));
-                lines.add(r);
+                lines.add(JsonRows.row(items.getJSONObject(i)));
             }
+            lineAdapter.setCheckStock(registered); // chỉ phiếu đăng ký mới cảnh báo thiếu tồn
             lineAdapter.notifyDataSetChanged();
 
             // Nút hiện theo "actions" server trả về (server quyết định quyền, app chỉ hiển thị)

@@ -11,8 +11,8 @@ Repo này có **2 bản cùng chức năng hủy hàng** để đọc song song:
 |---|---|---|
 | Gọi server | `plain/HttpTask.java` | `api/ApiClient.java`, `AuthInterceptor`, `TokenAuthenticator`, `api/DisposalApi.java` |
 | JSON → dữ liệu | `plain/JsonRows.java` (`List<HashMap<String,String>>`) | `model/Disposal*Dto.java` (Gson tự map) |
-| Màn danh sách | `plain/PlainDisposalListActivity.java` + `activity_plain_disposal_list.xml` + `item_plain_row.xml` | `disposal/DisposalListActivity.java` + `DisposalListAdapter.java` |
-| Màn chi tiết + xác nhận / hủy | `plain/PlainDisposalDetailActivity.java` + `activity_plain_disposal_detail.xml` | `disposal/DisposalDetailActivity.java` + `DisposalLineAdapter.java` |
+| Màn danh sách | `plain/PlainDisposalListActivity.java` + `PlainDisposalListAdapter.java` + `activity_plain_disposal_list.xml` + `item_plain_disposal.xml` | `disposal/DisposalListActivity.java` + `DisposalListAdapter.java` |
+| Màn chi tiết + xác nhận / hủy | `plain/PlainDisposalDetailActivity.java` + `PlainDisposalLineAdapter.java` + `activity_plain_disposal_detail.xml` + `item_plain_line.xml` | `disposal/DisposalDetailActivity.java` + `DisposalLineAdapter.java` |
 
 Mở app → nút **"Phiếu hủy hàng (Java thuần)"**. Cùng backend, cùng API `/api/disposals/**`, nên kết quả phải giống bản Retrofit.
 
@@ -106,18 +106,90 @@ Từ **Android Gradle Plugin 8** (`android.nonFinalResIds=true` mặc định), 
 
 ---
 
-## 3. Danh sách: ListView + SimpleAdapter (thay RecyclerView)
+## 3. Danh sách: ListView + adapter tự viết (BaseAdapter + ViewHolder)
+
+Code thật của khách thường là `ListView` + **custom adapter** `extends BaseAdapter`. Repo có 2 adapter mẫu:
+
+| Adapter | Dùng ở | Có gì |
+|---|---|---|
+| `plain/PlainDisposalListAdapter.java` + `item_plain_disposal.xml` | Danh sách phiếu | ViewHolder, tô màu trạng thái |
+| `plain/PlainDisposalLineAdapter.java` + `item_plain_line.xml` | Dòng hàng trong chi tiết | ViewHolder, chữ đỏ khi thiếu tồn, **nút "Tồn" trong từng dòng** báo về Activity qua interface |
+
+### 3.1 Khung 4 hàm của BaseAdapter
 
 ```java
-adapter = new SimpleAdapter(this, rows, R.layout.item_plain_row,
-        new String[]{"line1", "line2", "line3"},          // key trong HashMap
-        new int[]{R.id.txtLine1, R.id.txtLine2, R.id.txtLine3}); // TextView nhận giá trị
+public class PlainDisposalListAdapter extends BaseAdapter {
+    private final List<HashMap<String, String>> rows;   // Activity giữ, adapter chỉ đọc
+
+    public int getCount()               { return rows.size(); }        // số dòng
+    public HashMap<String,String> getItem(int p) { return rows.get(p); }
+    public long getItemId(int p)        { return p; }
+    public View getView(int p, View convertView, ViewGroup parent) { ... } // vẽ 1 dòng
+}
 ```
 
 - `rows` là `List<HashMap<String,String>>`: rất giống **Dataset** của Nexacro (dòng = HashMap, cột = key).
-- Cập nhật: sửa `rows` rồi `adapter.notifyDataSetChanged()` (≈ Grid vẽ lại khi Dataset đổi).
-- Chỉ gán được chữ. Muốn tô màu từng dòng → phải viết adapter riêng (`BaseAdapter` + `getView`), như `DisposalListAdapter` bản Retrofit làm trong `onBindViewHolder`.
-- Ở `JsonRows.row`: giá trị `null` của JSON đổi thành `""` để `SimpleAdapter` không hiện chữ "null".
+- Activity sửa `rows` (clear / addAll) rồi gọi `adapter.notifyDataSetChanged()` (≈ Grid vẽ lại khi Dataset đổi).
+- `getView` ≈ Band body của Grid: gán cột nào vào ô nào, màu gì (≈ `cssclass="expr:..."`).
+
+### 3.2 getView: convertView + ViewHolder
+
+```java
+public View getView(int position, View convertView, ViewGroup parent) {
+    ViewHolder h;
+    if (convertView == null) {                      // lần đầu: tạo view từ XML
+        convertView = inflater.inflate(R.layout.item_plain_disposal, parent, false);
+        h = new ViewHolder();
+        h.txtNo = convertView.findViewById(R.id.txtNo);
+        ...
+        convertView.setTag(h);                      // cất holder vào view
+    } else {
+        h = (ViewHolder) convertView.getTag();      // view cũ cuộn ra khỏi màn hình được đưa lại
+    }
+    HashMap<String, String> r = rows.get(position);
+    h.txtNo.setText(r.get("disposalNo"));
+    h.txtStatus.setTextColor(statusColor(r.get("status")));
+    return convertView;
+}
+```
+
+ListView chỉ tạo đủ view cho số dòng nhìn thấy, cuộn thì **dùng lại** view cũ (`convertView`). ViewHolder giữ sẵn các TextView để khỏi `findViewById` mỗi lần cuộn. Ý tưởng này giống hệt `RecyclerView.ViewHolder` (`onCreateViewHolder` ≈ nhánh `convertView == null`, `onBindViewHolder` ≈ phần gán dữ liệu).
+
+### 3.3 Nút trong dòng (setTag(position) + interface)
+
+```java
+// Adapter
+public interface OnRowButtonListener { void onStockClick(int position, HashMap<String,String> row); }
+
+h.btnStock.setOnClickListener(this);   // trong nhánh convertView == null: gắn 1 lần
+h.btnStock.setTag(position);           // mỗi lần getView: ghi lại vị trí hiện tại
+
+public void onClick(View v) {
+    int position = (Integer) v.getTag();
+    listener.onStockClick(position, rows.get(position));
+}
+
+// Activity: implements PlainDisposalLineAdapter.OnRowButtonListener
+lineAdapter = new PlainDisposalLineAdapter(this, lines, this);
+```
+
+Adapter **không tự gọi API / mở màn hình**: nó báo về Activity, Activity quyết định (giống Grid gọi event của Form).
+
+### 3.4 Lỗi hay gặp với custom adapter
+
+| Lỗi | Hậu quả | Cách tránh |
+|---|---|---|
+| Chỉ gán màu ở 1 nhánh `if` | Cuộn lên xuống, dòng khác bị "dính" màu đỏ của dòng cũ | Gán **cả 2 nhánh** (`shortage ? RED : DKGRAY`) |
+| `inflate` mỗi lần, bỏ qua `convertView` | Cuộn giật, tốn bộ nhớ | Chỉ `inflate` khi `convertView == null` |
+| `inflate(id, parent)` hoặc `inflate(id, null)` | Crash "addView not supported" / mất `layout_height` của dòng | `inflate(id, parent, false)` |
+| Dùng `position` cũ trong listener tạo 1 lần | Bấm dòng 10 mà xử lý dòng 1 | Ghi `setTag(position)` mỗi lần `getView`, đọc lại khi bấm |
+| `new OnClickListener` trong `getView` mỗi lần | Không sai, nhưng tạo object liên tục | Gắn 1 lần khi tạo view, lấy vị trí từ tag |
+| Có Button / CheckBox trong dòng → `OnItemClickListener` của ListView không chạy | Bấm dòng không có phản ứng | `android:descendantFocusability="blocksDescendants"` ở layout gốc của dòng (xem `item_plain_line.xml`) hoặc `focusable="false"` cho nút |
+| Sửa `rows` ở luồng nền | Crash "The content of the adapter has changed but ListView did not receive a notification" | Chỉ sửa `rows` + `notifyDataSetChanged()` trên luồng giao diện (trong callback `HttpTask`) |
+| Gán `rows = newList` trong Activity | Adapter vẫn giữ list cũ, màn hình không đổi | `rows.clear(); rows.addAll(newList);` |
+| `r.get("key")` của key không có | `null` → `NullPointerException` khi `.isEmpty()` | `JsonRows.row` đổi JSON `null` thành `""`; key có thể thiếu thì kiểm tra `null` |
+
+Danh sách rất đơn giản, chỉ có chữ thì vẫn có thể dùng `SimpleAdapter(context, rows, layout, String[] keys, int[] ids)`, nhưng hễ cần màu / ẩn hiện / nút trong dòng là phải tự viết adapter như trên.
 
 ---
 
@@ -133,6 +205,6 @@ adapter = new SimpleAdapter(this, rows, R.layout.item_plain_row,
 ## 5. Đọc 2 bản thế nào cho nhanh
 
 1. Mở `plain/PlainDisposalListActivity.java` và `disposal/DisposalListActivity.java` cạnh nhau (chuột phải tab → *Split Right*).
-2. Đi theo 1 lần bấm: nút → `onClick` → `search()` → `HttpTask.get` → `onSuccess` → `JsonRows.rows` → `adapter.notifyDataSetChanged()`.
+2. Đi theo 1 lần bấm: nút → `onClick` → `search()` → `HttpTask.get` → `onSuccess` → `JsonRows.rows` → `adapter.notifyDataSetChanged()` → `PlainDisposalListAdapter.getView`.
 3. Làm lại với bản Retrofit: nút → listener → `load()` → `DisposalApi.list` → `onResponse` → `adapter.submit(...)`.
 4. Làm lại với `PlainDisposalDetailActivity.send(...)` ↔ `DisposalDetailActivity.run(...)`: 2 bản xử lý lỗi 409 / mất mạng giống nhau.
