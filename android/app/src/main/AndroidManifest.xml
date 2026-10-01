@@ -82,6 +82,14 @@
             android:exported="false" />
 
         <activity
+            android:name=".plain.PlainDisposalListActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".plain.PlainDisposalDetailActivity"
+            android:exported="false" />
+
+        <activity
             android:name=".disposal.DisposalEditActivity"
             android:exported="false"
             android:windowSoftInputMode="adjustResize" />

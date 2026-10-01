@@ -16,6 +16,7 @@ import com.example.andemo.model.ItemDto;
 import com.example.andemo.model.RefreshTokenRequest;
 import com.example.andemo.command.CommandChannel;
 import com.example.andemo.disposal.DisposalListActivity;
+import com.example.andemo.plain.PlainDisposalListActivity;
 import com.example.andemo.migration.NexacroGatewayDemoActivity;
 import com.example.andemo.migration.ProductSearchActivity;
 import com.example.andemo.requester.FindPdaActivity;
@@ -71,6 +72,9 @@ public class MainActivity extends AppCompatActivity {
         );
         findViewById(R.id.btnDisposal).setOnClickListener(v ->
                 startActivity(new Intent(this, DisposalListActivity.class))
+        );
+        findViewById(R.id.btnDisposalPlain).setOnClickListener(v ->
+                startActivity(new Intent(this, PlainDisposalListActivity.class))
         );
 
         // Requester: chỉ quản lý (ADMIN) mới được gửi lệnh tìm PDA; server cũng kiểm tra lại

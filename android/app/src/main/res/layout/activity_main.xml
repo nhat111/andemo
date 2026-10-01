@@ -57,6 +57,14 @@
         android:text="Phiếu hủy hàng"
         android:layout_marginBottom="8dp" />
 
+    <!-- Cùng chức năng, viết kiểu Java thuần (thread + HttpURLConnection, View trong HashMap) -->
+    <Button
+        android:id="@+id/btnDisposalPlain"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Phiếu hủy hàng (Java thuần)"
+        android:layout_marginBottom="8dp" />
+
     <!-- Chỉ hiện với ADMIN (MainActivity) -->
     <Button
         android:id="@+id/btnFindPda"

@@ -49,18 +49,23 @@ Bảng đối chiếu 13 quy tắc giữa 2 bản: `nexacro-sample/disposal/READ
 - **Sửa nhỏ:** thêm `Log.d("LIFE", "onCreate")`, `onResume`, `onPause` vào `disposal/DisposalListActivity`; chạy, xoay màn hình, bấm Home rồi quay lại, xem Logcat (lọc `tag:LIFE`).
 - **Tự kiểm tra:** `this.go("frm::…")` + `gv_disposalNo` của Nexacro tương ứng gì trên Android? (Tìm `putExtra` trong `DisposalListActivity`.)
 
-### Ngày 4: Gọi server
+### Ngày 4: Gọi server (kiểu của khách trước, Retrofit sau)
 
-- **Đọc:** `api/ApiClient.java`, `api/AuthInterceptor.java`, `api/TokenAuthenticator.java`, `api/DisposalApi.java`, `model/DisposalSummaryDto.java`, `model/ApiErrorDto.java`.
+Code của khách gọi API bằng **thread + `HttpURLConnection`**, không Retrofit → học bản đó trước. Đọc kèm [PLAIN_JAVA_STYLE.md](PLAIN_JAVA_STYLE.md).
+
+- **Đọc (chính):** `plain/HttpTask.java` (`call`, `readAll`, `errorMessage`), `plain/JsonRows.java`.
+- **Đọc (so sánh, lướt):** `api/ApiClient.java`, `api/AuthInterceptor.java`, `api/TokenAuthenticator.java`, `api/DisposalApi.java`, `model/DisposalSummaryDto.java`.
 - **So với:** `gfn_transaction` / `gfn_callback` trong `common.xjs`.
-- **Học:** Retrofit interface (`@GET`, `@POST`, `@Query`, `@Path`, `@Body`); `enqueue` → `onResponse` (có trả lời, kể cả lỗi HTTP) / `onFailure` (mất mạng); JWT thay cho session.
-- **Chạy / thử:** Logcat lọc `okhttp` khi mở danh sách phiếu (thấy URL + JSON). Tắt backend rồi kéo lại danh sách: app báo lỗi, không crash.
-- **Sửa nhỏ:** trong `DisposalListActivity.load()`, thêm `Log.d` in số phiếu nhận được.
-- **Tự kiểm tra:** `errorCode < 0` trong `fn_callback` tương ứng chỗ nào trong Android?
+- **Học:** vì sao phải chạy luồng nền (`ExecutorService`) rồi `Handler` về luồng giao diện; `getErrorStream()` cho 4xx; timeout; UTF-8; `org.json` (`JSONObject`, `JSONArray`, `optString`). Retrofit làm đúng các việc đó, chỉ là tự động.
+- **Chạy / thử:** mở **"Phiếu hủy hàng (Java thuần)"**, Logcat lọc `tag:HttpTask` (thấy URL + mã HTTP). Tắt backend rồi bấm "Tải lại": app báo lỗi (`onError` code 0), không crash.
+- **Sửa nhỏ:** trong `PlainDisposalListActivity.search()`, thêm `Log.d` in số phiếu nhận được.
+- **Tự kiểm tra:** `errorCode < 0` trong `fn_callback` tương ứng chỗ nào trong `HttpTask`? Nếu gọi `setText` ngay trong `EXECUTOR.execute(...)` thì sao?
 
-### Ngày 5: Màn danh sách (Grid → RecyclerView)
+### Ngày 5: Màn danh sách (Grid → ListView / RecyclerView)
 
-- **Đọc cặp:** `frm_disposal_list.xfdl` ↔ `disposal/DisposalListActivity.java` + `DisposalListAdapter.java` + `res/layout/activity_disposal_list.xml` + `item_disposal.xml`.
+- **Đọc cặp (kiểu khách):** `frm_disposal_list.xfdl` ↔ `plain/PlainDisposalListActivity.java` + `activity_plain_disposal_list.xml` + `item_plain_row.xml`.
+- **Đọc cặp (Retrofit):** `disposal/DisposalListActivity.java` + `DisposalListAdapter.java` + `res/layout/activity_disposal_list.xml` + `item_disposal.xml`.
+- **Học kiểu khách:** view cất trong `HashMap<String, View>`, 1 `onClick(View)` chung phân nhánh bằng `if / else` theo `R.id` (AGP 8 không cho `switch`); `ListView` + `SimpleAdapter` với `List<HashMap>` ≈ Grid + Dataset.
 - **Học:** RecyclerView = Grid; Adapter = Band body (gán cột vào ô); `notifyDataSetChanged()` = Grid vẽ lại khi Dataset đổi; Spinner = Combo.
 - **Sửa nhỏ:** hiện thêm **tổng giá bán** (`getTotalSaleAmount()`) ở mỗi dòng danh sách.
 - **Tự kiểm tra:** vì sao tô màu trong `onBindViewHolder` phải gán cả 2 nhánh? Quy tắc R1 (từ ngày ≤ đến ngày) nằm ở đâu ở 2 bản?
@@ -71,7 +76,7 @@ Bảng đối chiếu 13 quy tắc giữa 2 bản: `nexacro-sample/disposal/READ
 
 ### Ngày 6: Màn chi tiết và nút theo quyền / trạng thái
 
-- **Đọc cặp:** `frm_disposal_detail.xfdl` (`fn_setButtons`, `fn_checkStock`, `btn_confirm_onclick`) ↔ `disposal/DisposalDetailActivity.java` (`render`, `askConfirm`, `askConfirmBig`, `run`, `showError`) + `DisposalLineAdapter.java`.
+- **Đọc cặp:** `frm_disposal_detail.xfdl` (`fn_setButtons`, `fn_checkStock`, `btn_confirm_onclick`) ↔ `plain/PlainDisposalDetailActivity.java` (`render`, `askConfirm`, `askReason`, `send`) ↔ `disposal/DisposalDetailActivity.java` (`render`, `askConfirm`, `askConfirmBig`, `run`, `showError`) + `DisposalLineAdapter.java`.
 - **Đọc thêm phía server:** `DisposalService.toDetail` (tạo `actions`, `issues`).
 - **Học:** bản Nexacro tự quyết định nút trong script; bản Android hiện nút theo `actions` server trả → quy tắc nằm 1 chỗ.
 - **Sửa nhỏ:** đổi `BIG_AMOUNT` từ `100_000` thành `5_000`, xác nhận phiếu `…-0001` để thấy hộp thoại hỏi lần 2 (R10). Trả lại như cũ.
