@@ -90,6 +90,17 @@ Thời lượng dưới đây chỉ để hình dung thứ tự và độ lớn 
 | K13 | Mạng: PDA vào server qua Wi-Fi nội bộ, VPN, hay Internet? Có proxy / chứng chỉ riêng không? |
 | K14 | Có môi trường test (server + DB) riêng cho đội migrate không? |
 
+**Môi trường làm việc (VDI của khách, không có internet)**: hỏi ngay ngày đầu, xem A10
+
+| # | Câu hỏi |
+|---|---|
+| K15 | Có kho thư viện nội bộ (Nexus / Artifactory) proxy Maven Central + Google Maven không? Nếu không: thư viện được đưa vào bằng cách nào, ai duyệt? |
+| K16 | Android Studio, Android SDK (platform 34, build-tools), JDK 17, Gradle (bản trong `gradle-wrapper.properties`) đã cài sẵn trong VDI chưa? |
+| K17 | Máy ảo Android có chạy được trong VDI không (cần ảo hóa lồng nhau)? Nếu không: test trên thiết bị nào? |
+| K18 | PDA test kết nối với VDI được không (USB redirect / ADB qua mạng)? Nếu không: cài APK lên PDA bằng gì (MDM, kênh phát hành nội bộ)? |
+| K19 | Từ VDI gọi được server test không? PDA test có vào được server test không? |
+| K20 | Được mang gì vào / ra VDI (tài liệu, file mẫu, log)? Được dùng công cụ gì (curl, Postman, trình duyệt)? |
+
 ### A5. Khung app cần làm trước (giai đoạn 1)
 
 Tương ứng với những gì `Application` + `gfn_*` đang làm cho mọi form Nexacro.
@@ -195,6 +206,7 @@ Có XML rồi:
 | Quy trình phát hành APK chưa có | Không cập nhật được máy ở cửa hàng | Chốt MDM / tự cập nhật từ giai đoạn 1 |
 | Session / đăng nhập khác cách cũ | Bị đăng xuất liên tục, gọi sai cửa hàng | Khảo sát K2 trước khi làm khung app |
 | Máy PDA cũ, chậm | Danh sách giật, hết bộ nhớ | Phân trang, không tải hết; test trên máy chậm nhất |
+| VDI không có internet | Gradle không tải được thư viện; không có máy ảo; không cài được APK để thử | Hỏi K15–K20 ngày đầu; chốt danh sách thư viện sớm; tách logic để test JUnit (A10) |
 
 ### A9. Bảng theo dõi (mẫu)
 
@@ -204,6 +216,26 @@ Có XML rồi:
 | 2 | … | `frm_xxx.xfdl` | | | 0 / N | Thấp / TB / Cao | ⬜ Phân tích · ⬜ Code · ⬜ So sánh · ⬜ Test PDA |
 
 ---
+
+### A10. Làm việc trong VDI không có internet
+
+**Vấn đề và cách xử lý**
+
+| Vấn đề | Cách xử lý (tùy chính sách khách) |
+|---|---|
+| Gradle cần tải thư viện (`dependencies` trong `app/build.gradle`) và chính Gradle (`gradle-wrapper.properties`) | Tốt nhất: kho nội bộ (K15), đổi `repositories` trong `settings.gradle` sang URL nội bộ. Nếu không có: xin IT đưa vào bộ cache Gradle / thư mục Maven cục bộ đã tải sẵn từ máy có mạng, rồi build với `--offline` |
+| Danh sách thư viện | Chốt sớm và **ít**: AppCompat, Material (kèm RecyclerView), ConstraintLayout, Retrofit + Gson, OkHttp logging, ZXing (nếu quét bằng camera), JUnit (test). Mỗi thư viện thêm sau = 1 lần xin duyệt |
+| Không có máy ảo | Build để bắt lỗi (Ctrl+F9) · xem trước layout (tab Design) · JUnit cho logic · thử API bằng curl / Postman tới server test · cài APK lên PDA thật theo kênh của khách (K18) |
+| Không tra được tài liệu | Mang vào (nếu được phép, K20) bảng tra `NEXACRO_TO_ANDROID.md`, `LEARNING_PLAN_2_WEEKS.md` mục 4; Android Studio vẫn xem được Javadoc của thư viện đã tải |
+| Không gửi code / log ra ngoài | Tuân thủ chính sách khách: **không chép code, dữ liệu, log của khách ra máy ngoài hoặc dán vào công cụ bên ngoài** khi chưa được phép. Khi cần hỏi: tự viết lại tình huống bằng ví dụ giả |
+
+**Vòng làm việc hằng ngày khi không chạy được app trong VDI**
+
+1. Thử API (curl / Postman) tới server test → biết chắc request / response.
+2. Viết model + API interface + màn hình → **build** (Ctrl+F9) sau mỗi thay đổi.
+3. Logic (kiểm tra dữ liệu, tính tiền, đổi định dạng, đọc lỗi) đặt trong class Java thường → **JUnit**.
+4. Xem layout ở tab Design.
+5. Cuối ngày / cuối đợt: build APK → cài lên PDA test theo kênh của khách → bấm thử, ghi lỗi.
 
 ## Phần B. Lộ trình học
 
