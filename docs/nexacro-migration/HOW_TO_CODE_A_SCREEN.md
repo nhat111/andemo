@@ -8,7 +8,7 @@ AI chỉ dùng ở bước 8 để review (nếu được phép, xem bước 8).
 | Bước | Việc | Ra cái gì |
 |---|---|---|
 | 1 | Đọc form Nexacro, điền phiếu phân tích | Bảng: Dataset, transaction, event, quy tắc |
-| 2 | Chốt API | Bảng: transaction cũ → API mới |
+| 2 | Truy logic backend cũ, chốt API trong project REST API | Bản đồ: transaction → Controller → Service → SQL → API REST |
 | 3 | Đặt tên file theo quy ước | Danh sách file sẽ tạo |
 | 4 | Copy khung code, điền vào | Layout, adapter, Activity, manifest |
 | 5 | Đặt quy tắc đúng chỗ | Quy tắc ở server / `rules/` / giao diện |
@@ -51,21 +51,44 @@ Tra khái niệm Nexacro → Android: [NEXACRO_TO_ANDROID.md](NEXACRO_TO_ANDROID
 
 ---
 
-## Bước 2: Chốt API
+## Bước 2: Truy logic backend cũ → chốt API trong project REST API
 
-Mỗi `transaction` cũ ↔ 1 API mới. Ghi rõ để code không phải đoán:
+Luồng thật của dự án: **form Nexacro** gọi **backend cũ** (`*.do`, X-API) → cần đưa logic đó sang **project REST API** (JSON) → **app Android** gọi REST API.
+Làm cho **từng `transaction`** trong phiếu bước 1:
+
+| # | Làm | Tìm thế nào (IntelliJ: `Ctrl+Shift+F` tìm trong cả project) |
+|---|---|---|
+| 1 | Lấy URL trong form | `this.transaction("search", "svc::stock/selectList.do", ...)` → URL là `stock/selectList.do` |
+| 2 | Tìm Controller ở **backend cũ** | Tìm phần cuối `selectList.do` (đường dẫn hay bị tách: `@RequestMapping("/stock")` ở class + `"/selectList.do"` ở hàm) |
+| 3 | Đi tiếp Controller → Service → DAO / Mapper | `Ctrl+B` (hoặc Ctrl + click) vào từng hàm được gọi |
+| 4 | Đọc **SQL** (thường trong file Mapper `.xml` của MyBatis, tìm theo id câu SQL) | Đây là logic chính: bảng nào, điều kiện gì, cập nhật gì. Ghi lại cả các `if` / `throw` trong Service |
+| 5 | Xem dataset vào / ra | Controller đọc `ds_search` cột nào, trả `ds_list` cột nào → đó là tham số / key JSON sẽ dùng |
+| 6 | Tìm trong **project REST API** đã có API tương đương chưa | Tìm theo **tên bảng** hoặc **id câu SQL** vừa thấy. Có rồi thì dùng lại; chưa có thì thêm (Controller → Service → Mapper, chép SQL / logic sang) |
+| 7 | Chạy thử API REST bằng `curl` / trình duyệt, so với kết quả màn Nexacro cùng điều kiện | Cùng dữ liệu vào → phải cùng dữ liệu ra |
+
+Ghi lại thành bảng (1 dòng = 1 transaction), đây là "bản đồ" để code bước 4 và để reviewer kiểm tra:
 
 ```
-svcID cũ  | API mới                          | method | gửi                       | nhận (key JSON)                         | lỗi có thể
-search    | api/xxx?keyword=                 | GET    | –                         | [ {code, name, qty} ]                   | 400 điều kiện sai
-save      | api/xxx/{code}                   | POST   | {version, qty, remark}    | chi tiết mới                            | 409 dữ liệu đã đổi
+svcID   | URL cũ (.do)          | Controller.hàm → Service.hàm → SQL id (bảng)                         | API REST                 | Có sẵn?
+search  | stock/selectList.do   | StockController.selectList → StockService.getList → selectStockList (TB_STOCK) | GET api/stocks?keyword=  | có
+save    | stock/save.do         | StockController.save → StockService.save → updateStock (TB_STOCK)    | POST api/stocks/{code}   | thêm mới
 ```
 
-- API đã có: thử bằng `curl` / Postman (trên máy được phép), lưu 1 response mẫu để biết **đúng tên key**.
-- API chưa có, server vẫn là X-API: xem [NEXACRO_XAPI_TO_JSON.md](NEXACRO_XAPI_TO_JSON.md) (gateway / controller JSON).
-- Mẫu đầy đủ của luồng hủy hàng: [task-17-18-disposal/README.md](../task-17-18-disposal/README.md) (mục API).
+Mỗi API REST ghi rõ để code Android không phải đoán:
 
-**Xong khi:** có response mẫu cho từng API, biết mã lỗi nào cần xử lý riêng (thường: 0 mất mạng, 400, 403, 409).
+```
+API                      | method | gửi                       | nhận (key JSON)          | lỗi có thể
+api/stocks?keyword=      | GET    | –                         | [ {code, name, qty} ]    | 400 điều kiện sai
+api/stocks/{code}        | POST   | {version, qty, remark}    | chi tiết mới             | 409 dữ liệu đã đổi
+```
+
+Lưu ý:
+- **Quy tắc nằm rải 3 nơi**: script form (bước 1), Service backend cũ (`if` / `throw`), và SQL (`WHERE`, `UPDATE ... WHERE status = ...`). Sót chỗ nào là API mới chạy khác bản cũ.
+- Thêm API vào project REST API là **sửa code backend dùng chung**: hỏi lead ai làm phần này, đặt tên / cấu trúc theo các API có sẵn trong project đó.
+- Chạy project REST API trên máy: [restapi-demo/README.md](../../restapi-demo/README.md) (tập ở nhà), cách chọn môi trường `resources-local`.
+- Server chỉ có X-API mà chưa có REST: xem [NEXACRO_XAPI_TO_JSON.md](NEXACRO_XAPI_TO_JSON.md). Mẫu đầy đủ của luồng hủy hàng: [task-17-18-disposal/README.md](../task-17-18-disposal/README.md) (mục API).
+
+**Xong khi:** mỗi transaction có 1 dòng trong bản đồ; mỗi API REST đã gọi thử được (hoặc đã có người nhận làm), có response mẫu, biết mã lỗi cần xử lý (thường: 0 mất mạng, 400, 403, 409).
 
 ---
 
