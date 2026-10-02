@@ -42,6 +42,7 @@ API: `http://localhost:8080/api/auth/login`
 **Migrate Nexacro 17 mobile → Android (Java)**: bắt đầu ở [**Mục lục tài liệu**](docs/nexacro-migration/README.md) (mọi file migrate / học / task hủy hàng đều link từ đó).
 - Đang học: [lộ trình 2 tuần](docs/nexacro-migration/LEARNING_PLAN_2_WEEKS.md)
 - Đang làm 1 màn: [công thức 8 bước + khung code](docs/nexacro-migration/HOW_TO_CODE_A_SCREEN.md)
+- Tập build / run project REST API giống dự án (Gradle 7, Java 8): [`restapi-demo/`](restapi-demo/README.md)
 
 **PDA Finder và project chung** (`docs/`)
 - [LOCAL_SETUP_GUIDE.md](docs/LOCAL_SETUP_GUIDE.md): **setup và test trên máy local** (mock server, web quản lý, máy ảo / máy thật)

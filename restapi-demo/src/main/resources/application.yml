@@ -1,0 +1,12 @@
+# Cấu hình chung cho mọi môi trường.
+spring:
+  application:
+    name: restapi-demo
+  config:
+    # env.yml nằm trong src/main/resources-<profile> (build.gradle chọn thư mục theo profile)
+    import: classpath:env.yml
+server:
+  port: 8080
+logging:
+  charset:
+    console: UTF-8

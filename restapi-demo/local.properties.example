@@ -1,0 +1,3 @@
+# Copy file này thành local.properties (file đó không commit).
+# Chọn môi trường khi build / chạy: local | dev | ops
+profile=local

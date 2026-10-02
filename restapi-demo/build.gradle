@@ -1,0 +1,80 @@
+plugins {
+    id 'java'
+    id 'war'
+    id 'org.springframework.boot' version '2.7.18'
+    id 'io.spring.dependency-management' version '1.0.15.RELEASE'
+}
+
+group = 'com.example'
+version = '0.0.1'
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
+}
+
+// ---------------------------------------------------------------------------
+// Chọn môi trường: local / dev / ops
+// Ưu tiên: -Pprofile=xxx (dòng lệnh)  >  profile=xxx trong local.properties  >  mặc định 'local'
+// Môi trường được chọn quyết định thư mục src/main/resources-<profile> nào được đưa vào bản build.
+// ---------------------------------------------------------------------------
+def localProps = new Properties()
+def localFile = rootProject.file('local.properties')
+if (localFile.exists()) {
+    localFile.withInputStream { localProps.load(it) }
+}
+def profile = project.findProperty('profile') ?: localProps.getProperty('profile', 'local')
+if (!['local', 'dev', 'ops'].contains(profile)) {
+    throw new GradleException("profile không hợp lệ: '${profile}' (chỉ nhận local | dev | ops)")
+}
+logger.lifecycle("==> profile = ${profile}  (dùng src/main/resources-${profile})")
+
+sourceSets {
+    main {
+        resources {
+            srcDirs = ['src/main/resources', "src/main/resources-${profile}"]
+        }
+    }
+}
+
+repositories {
+    mavenCentral()
+    // Dự án thật trong VDI dùng Nexus nội bộ thay cho mavenCentral(), dạng:
+    // maven {
+    //     url "http://<nexus-nội-bộ>/repository/maven-public/"
+    //     allowInsecureProtocol = true            // chỉ khi Nexus dùng http
+    //     credentials {                            // tài khoản để trong ~/.gradle/gradle.properties
+    //         username = findProperty('nexusUsername')
+    //         password = findProperty('nexusPassword')
+    //     }
+    // }
+}
+
+dependencies {
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    // Đóng gói .war chạy được trên Tomcat ngoài: Tomcat nhúng chỉ dùng khi chạy trực tiếp
+    providedRuntime 'org.springframework.boot:spring-boot-starter-tomcat'
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+}
+
+// WEB-INF ở gốc project (giống dự án cũ) được chép vào trong file .war
+bootWar {
+    from('WEB-INF') { into('WEB-INF') }
+}
+war {
+    from('WEB-INF') { into('WEB-INF') }
+}
+
+// Mã nguồn có tiếng Việt / Hàn: bắt buộc UTF-8 (Windows mặc định đọc theo bảng mã khác → vỡ chữ)
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+}
+
+bootRun {
+    jvmArgs '-Dfile.encoding=UTF-8'
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+    jvmArgs '-Dfile.encoding=UTF-8'
+}

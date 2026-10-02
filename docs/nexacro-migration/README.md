@@ -18,6 +18,7 @@ Mọi file đều có dòng **📚 Mục lục tài liệu** ở đầu để qu
 | Code 1 màn mới theo các bước nào? Khung code ở đâu? | [HOW_TO_CODE_A_SCREEN.md](HOW_TO_CODE_A_SCREEN.md) |
 | Code của khách (thread + `HttpURLConnection`, view trong HashMap, custom adapter) viết thế nào, lỗi hay gặp? | [PLAIN_JAVA_STYLE.md](PLAIN_JAVA_STYLE.md) |
 | Code đỏ / không build / không có emulator trong VDI thì kiểm tra bằng gì? Checklist không sót bước? | [WORK_WITHOUT_BUILD.md](WORK_WITHOUT_BUILD.md) |
+| Tập build / run project REST API (Gradle 7, chọn môi trường local/dev/ops) ở nhà? | [../../restapi-demo/README.md](../../restapi-demo/README.md) |
 | Dataset / Grid / Combo / `transaction` / popup của Nexacro tương ứng gì trên Android? | [NEXACRO_TO_ANDROID.md](NEXACRO_TO_ANDROID.md) |
 | Server chỉ trả XML X-API, Android cần JSON? | [NEXACRO_XAPI_TO_JSON.md](NEXACRO_XAPI_TO_JSON.md) |
 | Nghiệp vụ hủy hàng (등록 → 확정 → 확정취소, 수불, 마감), API, giả định? | [../task-17-18-disposal/README.md](../task-17-18-disposal/README.md) |
@@ -51,4 +52,5 @@ Mọi file đều có dòng **📚 Mục lục tài liệu** ở đầu để qu
 | `android/.../disposal/` | Cùng chức năng, kiểu Retrofit + RecyclerView (để so sánh) |
 | `android/.../migration/` | Bài mẫu của LAB, màn demo X-API → JSON |
 | `nexacro-sample/` | Form Nexacro 17: bài mẫu `frm_product_search.xfdl`, bộ hủy hàng `disposal/`, helper `XapiJsonConverter.java.txt` |
+| [`restapi-demo/`](../../restapi-demo/README.md) | Project REST API mẫu cấu trúc giống dự án (Gradle 7, Java 8, `resources-local/dev/ops`, `local.properties`, `.war`) để tập build / run ở nhà + bài tập tự gây lỗi |
 | `backend/.../disposal/`, `backend/.../nexacro/` | API hủy hàng, server X-API giả lập, gateway `/api/nx/**` |

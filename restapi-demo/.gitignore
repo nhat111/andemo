@@ -1,0 +1,13 @@
+# Gradle
+.gradle/
+build/
+# Cấu hình riêng từng máy: không commit (copy từ local.properties.example)
+local.properties
+# IDE
+.idea/
+*.iml
+.vscode/
+bin/
+.settings/
+.classpath
+.project
