@@ -10,6 +10,8 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.andemo.api.ApiClient;
 import com.example.andemo.api.AuthService;
+import com.example.andemo.log.DeviceLog;
+import com.example.andemo.log.LogExporter;
 import com.example.andemo.model.LoginRequest;
 import com.example.andemo.model.LoginResponse;
 import com.example.andemo.util.PreferenceManager;
@@ -19,6 +21,8 @@ import retrofit2.Callback;
 import retrofit2.Response;
 
 public class LoginActivity extends AppCompatActivity {
+
+    private static final String TAG = "LoginActivity";
 
     private EditText edtUsername, edtPassword;
     private PreferenceManager pref;
@@ -41,6 +45,7 @@ public class LoginActivity extends AppCompatActivity {
         Button btnLogin = findViewById(R.id.btnLogin);
 
         btnLogin.setOnClickListener(v -> doLogin());
+        findViewById(R.id.btnExportLog).setOnClickListener(v -> LogExporter.share(this));
     }
 
     private void doLogin() {
@@ -62,15 +67,18 @@ public class LoginActivity extends AppCompatActivity {
                 if (response.isSuccessful() && response.body() != null) {
                     LoginResponse body = response.body();
                     pref.saveLogin(body.getToken(), body.getRefreshToken(), body.getRole(), body.getUsername());
+                    DeviceLog.i(TAG, "Login ok: " + body.getUsername() + " (" + body.getRole() + ")");
                     Toast.makeText(LoginActivity.this, "Login thành công!", Toast.LENGTH_SHORT).show();
                     goToMain();
                 } else {
+                    DeviceLog.w(TAG, "Login rejected: HTTP " + response.code() + ", user=" + username);
                     Toast.makeText(LoginActivity.this, "Sai tài khoản hoặc mật khẩu", Toast.LENGTH_SHORT).show();
                 }
             }
 
             @Override
             public void onFailure(Call<LoginResponse> call, Throwable t) {
+                DeviceLog.w(TAG, "Login failed: " + t.getMessage());
                 Toast.makeText(LoginActivity.this, "Lỗi kết nối: " + t.getMessage(), Toast.LENGTH_LONG).show();
             }
         });

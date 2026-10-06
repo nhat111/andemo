@@ -15,6 +15,8 @@ import com.example.andemo.api.ItemService;
 import com.example.andemo.model.ItemDto;
 import com.example.andemo.model.RefreshTokenRequest;
 import com.example.andemo.command.CommandChannel;
+import com.example.andemo.log.DeviceLog;
+import com.example.andemo.log.LogExporter;
 import com.example.andemo.requester.FindPdaActivity;
 import com.example.andemo.util.PreferenceManager;
 
@@ -25,6 +27,8 @@ import retrofit2.Callback;
 import retrofit2.Response;
 
 public class MainActivity extends AppCompatActivity {
+
+    private static final String TAG = "MainActivity";
 
     private PreferenceManager pref;
     private TextView tvItems;
@@ -70,7 +74,10 @@ public class MainActivity extends AppCompatActivity {
             );
         }
 
+        findViewById(R.id.btnExportLog).setOnClickListener(v -> LogExporter.share(this));
+
         btnLogout.setOnClickListener(v -> {
+            DeviceLog.i(TAG, "Logout by user: " + username);
             CommandChannel.stop(this);
             revokeRefreshToken();
             pref.clear();

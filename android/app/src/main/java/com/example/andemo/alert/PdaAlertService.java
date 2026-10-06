@@ -17,10 +17,11 @@ import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
-import android.util.Log;
 
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
+
+import com.example.andemo.log.DeviceLog;
 
 /**
  * Foreground Service phát alert khi nhận lệnh tìm PDA.
@@ -70,7 +71,7 @@ public class PdaAlertService extends Service {
 
         // Xử lý action Stop
         if (ACTION_STOP_ALERT.equals(intent.getAction())) {
-            Log.d(TAG, "Stop action received");
+            DeviceLog.d(TAG, "Stop action received");
             // Lấy requestId từ intent: Stop từ notification fallback đến khi service chưa chạy,
             // lúc đó currentRequestId là null
             String stoppedRequestId = intent.getStringExtra(EXTRA_REQUEST_ID);
@@ -96,14 +97,14 @@ public class PdaAlertService extends Service {
         startForeground(NOTIFICATION_ID, buildHighPriorityNotification(message, requestId));
 
         if (requestId == null || requestId.isEmpty()) {
-            Log.w(TAG, "Missing requestId");
+            DeviceLog.w(TAG, "Missing requestId");
             stopAlert();
             return START_NOT_STICKY;
         }
 
         // FCM có thể gửi lại cùng message: không phát lại, không reset timeout
         if (requestId.equals(currentRequestId)) {
-            Log.d(TAG, "Duplicate alert ignored, requestId=" + requestId);
+            DeviceLog.d(TAG, "Duplicate alert ignored, requestId=" + requestId);
             return START_NOT_STICKY;
         }
 
@@ -117,7 +118,7 @@ public class PdaAlertService extends Service {
         showFullScreenAlert(message, requestId);
         timeoutHandler.postDelayed(timeoutRunnable, TIMEOUT_MS);
 
-        Log.d(TAG, "Alert started for requestId=" + requestId + ", storeCode=" + storeCode);
+        DeviceLog.d(TAG, "Alert started for requestId=" + requestId + ", storeCode=" + storeCode);
         // Process bị kill thì không cần hệ thống tạo lại service: alert đã mất, không phát lại được
         return START_NOT_STICKY;
     }
@@ -135,7 +136,7 @@ public class PdaAlertService extends Service {
         NotificationManagerCompat manager = NotificationManagerCompat.from(context);
         if (!manager.areNotificationsEnabled()) {
             // Android 13+ chưa được cấp POST_NOTIFICATIONS: notification sẽ không hiện
-            Log.w(TAG, "Notifications disabled, cannot show fallback alert for requestId=" + requestId);
+            DeviceLog.w(TAG, "Notifications disabled, cannot show fallback alert for requestId=" + requestId);
             return;
         }
         createNotificationChannels(context);
@@ -157,7 +158,7 @@ public class PdaAlertService extends Service {
         notification.flags |= Notification.FLAG_INSISTENT;
 
         manager.notify(FALLBACK_NOTIFICATION_ID, notification);
-        Log.d(TAG, "Fallback alert notification shown for requestId=" + requestId);
+        DeviceLog.d(TAG, "Fallback alert notification shown for requestId=" + requestId);
     }
 
     private static void createNotificationChannels(Context context) {
@@ -263,7 +264,7 @@ public class PdaAlertService extends Service {
                 audioManager.setStreamVolume(AudioManager.STREAM_ALARM, maxVolume, 0);
             } catch (SecurityException e) {
                 // Một số trạng thái Do Not Disturb không cho app đổi volume: vẫn phát ở volume hiện tại
-                Log.w(TAG, "Not allowed to change alarm volume", e);
+                DeviceLog.w(TAG, "Not allowed to change alarm volume", e);
             }
         }
 
@@ -275,7 +276,7 @@ public class PdaAlertService extends Service {
             mediaPlayer.prepare();
             mediaPlayer.start();
         } catch (Exception e) {
-            Log.e(TAG, "Failed to play alert sound", e);
+            DeviceLog.e(TAG, "Failed to play alert sound", e);
             releasePlayer();
         }
     }
@@ -289,7 +290,7 @@ public class PdaAlertService extends Service {
             try {
                 audioManager.setStreamVolume(AudioManager.STREAM_ALARM, originalAlarmVolume, 0);
             } catch (SecurityException e) {
-                Log.w(TAG, "Not allowed to restore alarm volume", e);
+                DeviceLog.w(TAG, "Not allowed to restore alarm volume", e);
             }
         }
         originalAlarmVolume = -1;
@@ -303,7 +304,7 @@ public class PdaAlertService extends Service {
                 }
                 mediaPlayer.release();
             } catch (Exception e) {
-                Log.w(TAG, "Error releasing MediaPlayer", e);
+                DeviceLog.w(TAG, "Error releasing MediaPlayer", e);
             }
             mediaPlayer = null;
         }
@@ -333,7 +334,7 @@ public class PdaAlertService extends Service {
     }
 
     private void stopAlert() {
-        Log.d(TAG, "Stopping alert, requestId=" + currentRequestId);
+        DeviceLog.d(TAG, "Stopping alert, requestId=" + currentRequestId);
         cleanUp();
         stopForeground(STOP_FOREGROUND_REMOVE);
         stopSelf();

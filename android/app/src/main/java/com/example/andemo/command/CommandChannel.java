@@ -1,10 +1,10 @@
 package com.example.andemo.command;
 
 import android.content.Context;
-import android.util.Log;
 
 import com.example.andemo.BuildConfig;
 import com.example.andemo.fcm.FcmTokenRegistrar;
+import com.example.andemo.log.DeviceLog;
 import com.example.andemo.polling.AlertPoller;
 import com.example.andemo.polling.PdaPollingService;
 import com.example.andemo.websocket.PdaWebSocketService;
@@ -31,7 +31,7 @@ public final class CommandChannel {
 
     public static void start(Context context) {
         String channel = effectiveChannel(context);
-        Log.d(TAG, "Command channel: " + channel);
+        DeviceLog.d(TAG, "Command channel: " + channel);
         switch (channel) {
             case "fcm":
                 PdaWebSocketService.stop(context);
@@ -63,7 +63,7 @@ public final class CommandChannel {
     private static String effectiveChannel(Context context) {
         String channel = BuildConfig.PDA_COMMAND_CHANNEL;
         if ("fcm".equals(channel) && !FcmTokenRegistrar.isFirebaseConfigured(context)) {
-            Log.w(TAG, "FCM flavor but app/google-services.json is missing: falling back to polling");
+            DeviceLog.w(TAG, "FCM flavor but app/google-services.json is missing: falling back to polling");
             return "polling";
         }
         return channel;

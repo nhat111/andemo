@@ -1,12 +1,12 @@
 package com.example.andemo.polling;
 
 import android.content.Context;
-import android.util.Log;
 
 import com.example.andemo.alert.AlertAckReporter;
 import com.example.andemo.alert.AlertDispatcher;
 import com.example.andemo.api.AlertApi;
 import com.example.andemo.api.ApiClient;
+import com.example.andemo.log.DeviceLog;
 import com.example.andemo.model.PendingAlertDto;
 import com.example.andemo.util.DeviceIdProvider;
 
@@ -34,17 +34,17 @@ public final class AlertPoller {
             response = api.getPending(DeviceIdProvider.get(context), DeviceIdProvider.getDeviceName()).execute();
         } catch (IOException e) {
             // Mất mạng, timeout, server ngủ… lần poll sau thử lại
-            Log.w(TAG, "Poll failed: " + e.getMessage());
+            DeviceLog.w(TAG, "Poll failed: " + e.getMessage());
             return;
         }
 
         if (!response.isSuccessful() || response.body() == null) {
-            Log.w(TAG, "Poll rejected: HTTP " + response.code());
+            DeviceLog.w(TAG, "Poll rejected: HTTP " + response.code());
             return;
         }
 
         List<PendingAlertDto> alerts = response.body();
-        Log.d(TAG, "Poll ok, pending alerts: " + alerts.size());
+        DeviceLog.d(TAG, "Poll ok, pending alerts: " + alerts.size());
         for (PendingAlertDto alert : alerts) {
             String requestId = alert.getRequestId();
             if (requestId == null || requestId.isEmpty()) {

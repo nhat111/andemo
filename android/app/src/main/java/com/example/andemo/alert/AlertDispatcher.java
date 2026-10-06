@@ -2,9 +2,10 @@ package com.example.andemo.alert;
 
 import android.content.Context;
 import android.content.Intent;
-import android.util.Log;
 
 import androidx.core.content.ContextCompat;
+
+import com.example.andemo.log.DeviceLog;
 
 /**
  * Điểm vào chung cho mọi kênh nhận lệnh tìm PDA (FCM, polling, …).
@@ -26,11 +27,11 @@ public final class AlertDispatcher {
      */
     public static boolean dispatch(Context context, String requestId, String message, String storeCode) {
         if (requestId == null || requestId.isEmpty()) {
-            Log.w(TAG, "Missing requestId, ignore alert");
+            DeviceLog.w(TAG, "Missing requestId, ignore alert");
             return false;
         }
         if (!ProcessedAlertStore.markIfNew(context, requestId)) {
-            Log.d(TAG, "Alert already handled, requestId=" + requestId);
+            DeviceLog.d(TAG, "Alert already handled, requestId=" + requestId);
             return false;
         }
 
@@ -43,13 +44,13 @@ public final class AlertDispatcher {
 
         try {
             ContextCompat.startForegroundService(context, intent);
-            Log.d(TAG, "Started PdaAlertService for requestId=" + requestId);
+            DeviceLog.d(TAG, "Started PdaAlertService for requestId=" + requestId);
         } catch (IllegalStateException e) {
             // Android 12+ ném ForegroundServiceStartNotAllowedException (lớp con của
             // IllegalStateException) khi app ở background và không thuộc trường hợp ngoại lệ,
             // ví dụ FCM không phải high priority, hoặc polling khi app chưa được tắt tối ưu pin.
             // Không bắt thì app crash và mất luôn alert → chuyển sang chỉ hiện notification.
-            Log.w(TAG, "Cannot start PdaAlertService, showing fallback notification", e);
+            DeviceLog.w(TAG, "Cannot start PdaAlertService, showing fallback notification", e);
             PdaAlertService.showFallbackNotification(context, requestId, message);
         }
         return true;

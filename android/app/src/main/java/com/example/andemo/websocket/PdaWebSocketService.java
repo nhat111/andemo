@@ -12,7 +12,6 @@ import android.os.HandlerThread;
 import android.os.IBinder;
 import android.os.PowerManager;
 import android.os.SystemClock;
-import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -23,6 +22,7 @@ import com.example.andemo.alert.AlertAckReporter;
 import com.example.andemo.alert.AlertDispatcher;
 import com.example.andemo.api.TokenRefresher;
 import com.example.andemo.command.CommandNotification;
+import com.example.andemo.log.DeviceLog;
 import com.example.andemo.model.PendingAlertDto;
 import com.example.andemo.polling.AlertPoller;
 import com.example.andemo.util.DeviceIdProvider;
@@ -92,7 +92,7 @@ public class PdaWebSocketService extends Service {
             ContextCompat.startForegroundService(context, new Intent(context, PdaWebSocketService.class));
         } catch (IllegalStateException e) {
             // Android 12+: gọi từ background mà không thuộc trường hợp được phép
-            Log.w(TAG, "Cannot start WebSocket service", e);
+            DeviceLog.w(TAG, "Cannot start WebSocket service", e);
         }
     }
 
@@ -128,7 +128,7 @@ public class PdaWebSocketService extends Service {
         } catch (IllegalStateException e) {
             // Android 12+: hệ thống khởi động lại service (START_STICKY) hoặc alarm gọi tới
             // trong lúc app không được phép chạy foreground service → dừng, chờ user mở app
-            Log.w(TAG, "Not allowed to run in foreground, stopping", e);
+            DeviceLog.w(TAG, "Not allowed to run in foreground, stopping", e);
             stopSelf();
             return START_NOT_STICKY;
         }
@@ -169,7 +169,7 @@ public class PdaWebSocketService extends Service {
                 .url(buildWebSocketUrl())
                 .header("Authorization", "Bearer " + connectionToken)
                 .build();
-        Log.d(TAG, "Connecting to " + request.url());
+        DeviceLog.d(TAG, "Connecting to " + request.url());
         webSocket = client.newWebSocket(request, new Listener());
     }
 
@@ -192,7 +192,7 @@ public class PdaWebSocketService extends Service {
         if (code == 401) {
             // Access token hết hạn: làm mới rồi kết nối lại ngay. Client WebSocket không có
             // TokenAuthenticator như client REST nên phải tự làm ở đây.
-            Log.d(TAG, "Handshake rejected: HTTP 401, refreshing token");
+            DeviceLog.d(TAG, "Handshake rejected: HTTP 401, refreshing token");
             if (TokenRefresher.refresh(getApplicationContext(), connectionToken) != null) {
                 reconnectAttempt = 0;
                 connectIfNeeded();
@@ -207,7 +207,7 @@ public class PdaWebSocketService extends Service {
         long delay;
         if (code == 401 || code == 403) {
             // Không làm mới được token, hoặc không có quyền: không kết nối lại dồn dập
-            Log.w(TAG, "Handshake rejected: HTTP " + code);
+            DeviceLog.w(TAG, "Handshake rejected: HTTP " + code);
             delay = MAX_RECONNECT_DELAY_MS;
         } else {
             // Backoff tăng dần 1s, 2s, 4s… tối đa 60s, cộng ngẫu nhiên để hàng loạt PDA
@@ -216,7 +216,7 @@ public class PdaWebSocketService extends Service {
             delay = base + random.nextInt((int) (base / 2) + 1);
         }
         reconnectAttempt++;
-        Log.d(TAG, "Reconnect in " + delay + " ms (attempt " + reconnectAttempt + ")");
+        DeviceLog.d(TAG, "Reconnect in " + delay + " ms (attempt " + reconnectAttempt + ")");
         wsHandler.removeCallbacks(connectRunnable);
         wsHandler.postDelayed(connectRunnable, delay);
     }
@@ -227,11 +227,11 @@ public class PdaWebSocketService extends Service {
         try {
             command = gson.fromJson(text, PendingAlertDto.class);
         } catch (JsonSyntaxException e) {
-            Log.w(TAG, "Invalid message: " + text);
+            DeviceLog.w(TAG, "Invalid message: " + text);
             return;
         }
         if (command == null || !"PDA_FINDER_ALERT".equals(command.getType())) {
-            Log.d(TAG, "Ignored message: " + text);
+            DeviceLog.d(TAG, "Ignored message: " + text);
             return;
         }
         wakeLock.acquire(WAKE_LOCK_TIMEOUT_MS);
@@ -257,7 +257,7 @@ public class PdaWebSocketService extends Service {
                 if (ws != webSocket) {
                     return;
                 }
-                Log.d(TAG, "Connected");
+                DeviceLog.d(TAG, "Connected");
                 connected = true;
                 reconnectAttempt = 0;
                 // Bắt kịp các lệnh gửi trong lúc chưa kết nối
@@ -295,7 +295,7 @@ public class PdaWebSocketService extends Service {
         if (ws != webSocket) {
             return;
         }
-        Log.d(TAG, "Disconnected: " + reason + (connected ? "" : " (was connecting)"));
+        DeviceLog.d(TAG, "Disconnected: " + reason + (connected ? "" : " (was connecting)"));
         webSocket = null;
         connected = false;
         scheduleReconnect(response);
@@ -342,7 +342,7 @@ public class PdaWebSocketService extends Service {
         if (new PreferenceManager(this).isLoggedIn()) {
             return true;
         }
-        Log.d(TAG, "Not logged in, stopping");
+        DeviceLog.d(TAG, "Not logged in, stopping");
         stopSelf();
         return false;
     }

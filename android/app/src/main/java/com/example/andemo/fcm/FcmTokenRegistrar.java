@@ -6,6 +6,7 @@ import android.util.Log;
 import com.example.andemo.BuildConfig;
 import com.example.andemo.api.AlertApi;
 import com.example.andemo.api.ApiClient;
+import com.example.andemo.log.DeviceLog;
 import com.example.andemo.model.FcmTokenRequest;
 import com.example.andemo.util.DeviceIdProvider;
 import com.example.andemo.util.PreferenceManager;
@@ -44,7 +45,7 @@ public final class FcmTokenRegistrar {
                 send(appContext, task.getResult());
             } else {
                 // Thường gặp: máy không có Google Play services, hoặc không vào được máy chủ Google
-                Log.w(TAG, "Cannot get FCM token", task.getException());
+                DeviceLog.w(TAG, "Cannot get FCM token", task.getException());
             }
         });
     }
@@ -59,19 +60,19 @@ public final class FcmTokenRegistrar {
             @Override
             public void onResponse(Call<Void> call, Response<Void> response) {
                 if (response.isSuccessful()) {
-                    Log.d(TAG, "FCM token registered with server");
+                    DeviceLog.d(TAG, "FCM token registered with server");
                     if (BuildConfig.DEBUG) {
                         // Chỉ bản debug: để gửi thử từ Firebase Console (Messaging → Send test message)
-                        Log.d(TAG, "FCM token: " + token);
+                        Log.d(TAG, "FCM token: " + token); // không ghi file: token là dữ liệu nhạy cảm
                     }
                 } else {
-                    Log.w(TAG, "FCM token rejected: HTTP " + response.code());
+                    DeviceLog.w(TAG, "FCM token rejected: HTTP " + response.code());
                 }
             }
 
             @Override
             public void onFailure(Call<Void> call, Throwable t) {
-                Log.w(TAG, "FCM token registration failed: " + t.getMessage());
+                DeviceLog.w(TAG, "FCM token registration failed: " + t.getMessage());
             }
         });
     }

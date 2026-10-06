@@ -1,10 +1,10 @@
 package com.example.andemo.alert;
 
 import android.content.Context;
-import android.util.Log;
 
 import com.example.andemo.api.AlertApi;
 import com.example.andemo.api.ApiClient;
+import com.example.andemo.log.DeviceLog;
 import com.example.andemo.model.AlertAckRequest;
 import com.example.andemo.util.DeviceIdProvider;
 
@@ -40,15 +40,15 @@ public final class AlertAckReporter {
             @Override
             public void onResponse(Call<Void> call, Response<Void> response) {
                 if (response.isSuccessful()) {
-                    Log.d(TAG, "Ack " + status + " sent for requestId=" + requestId);
+                    DeviceLog.d(TAG, "Ack " + status + " sent for requestId=" + requestId);
                 } else {
-                    Log.w(TAG, "Ack " + status + " rejected: HTTP " + response.code());
+                    DeviceLog.w(TAG, "Ack " + status + " rejected: HTTP " + response.code());
                 }
             }
 
             @Override
             public void onFailure(Call<Void> call, Throwable t) {
-                Log.w(TAG, "Ack " + status + " failed for requestId=" + requestId + ": " + t.getMessage());
+                DeviceLog.w(TAG, "Ack " + status + " failed for requestId=" + requestId + ": " + t.getMessage());
             }
         });
     }

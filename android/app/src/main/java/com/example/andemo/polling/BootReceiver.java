@@ -3,9 +3,9 @@ package com.example.andemo.polling;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.util.Log;
 
 import com.example.andemo.command.CommandChannel;
+import com.example.andemo.log.DeviceLog;
 import com.example.andemo.util.PreferenceManager;
 
 /**
@@ -26,7 +26,7 @@ public class BootReceiver extends BroadcastReceiver {
             return;
         }
         if (new PreferenceManager(context).isLoggedIn()) {
-            Log.d(TAG, "Starting command channel after " + action);
+            DeviceLog.d(TAG, "Starting command channel after " + action);
             CommandChannel.start(context);
         }
     }

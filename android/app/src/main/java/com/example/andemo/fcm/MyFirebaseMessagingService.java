@@ -1,12 +1,12 @@
 package com.example.andemo.fcm;
 
-import android.util.Log;
 
 import androidx.annotation.NonNull;
 
 import com.example.andemo.alert.AlertAckReporter;
 import com.example.andemo.alert.AlertDispatcher;
 import com.example.andemo.command.CommandChannel;
+import com.example.andemo.log.DeviceLog;
 import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.messaging.RemoteMessage;
 
@@ -26,7 +26,7 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
     @Override
     public void onNewToken(@NonNull String token) {
         super.onNewToken(token);
-        Log.d(TAG, "New FCM token received");
+        DeviceLog.d(TAG, "New FCM token received");
 
         // Firebase đổi token (cài lại app, xóa dữ liệu, token hết hạn…): báo lại server.
         // Chỉ ở chế độ fcm, để polling / WebSocket so sánh được độc lập.
@@ -39,11 +39,11 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
     public void onMessageReceived(@NonNull RemoteMessage remoteMessage) {
         super.onMessageReceived(remoteMessage);
 
-        Log.d(TAG, "From: " + remoteMessage.getFrom());
+        DeviceLog.d(TAG, "From: " + remoteMessage.getFrom());
 
         Map<String, String> data = remoteMessage.getData();
         if (data.isEmpty()) {
-            Log.w(TAG, "Received message with empty data payload");
+            DeviceLog.w(TAG, "Received message with empty data payload");
             return;
         }
 
@@ -62,7 +62,7 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
             // Báo server đã nhận (giống polling / WebSocket): web quản lý chuyển sang "đang đổ chuông"
             AlertAckReporter.report(this, requestId, AlertAckReporter.STATUS_DELIVERED);
         } else {
-            Log.d(TAG, "Unknown message type: " + type);
+            DeviceLog.d(TAG, "Unknown message type: " + type);
         }
     }
 }

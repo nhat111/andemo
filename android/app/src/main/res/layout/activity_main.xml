@@ -59,4 +59,14 @@
         android:layout_height="wrap_content"
         android:text="Logout"
         android:layout_marginTop="16dp" />
+
+    <!-- Lấy log trên máy ra để điều tra sự cố (LogExporter) -->
+    <Button
+        android:id="@+id/btnExportLog"
+        style="?android:attr/borderlessButtonStyle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:text="Xuất log"
+        android:layout_marginTop="4dp" />
 </LinearLayout>

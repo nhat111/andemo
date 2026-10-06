@@ -8,7 +8,6 @@ import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
-import android.util.Log;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -18,6 +17,7 @@ import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 
+import com.example.andemo.log.DeviceLog;
 import com.google.zxing.BinaryBitmap;
 import com.google.zxing.MultiFormatReader;
 import com.google.zxing.RGBLuminanceSource;
@@ -112,7 +112,7 @@ public class QrScanActivity extends AppCompatActivity {
 
         String barcode = extractBarcodeFromIntent(intent);
         if (barcode != null && !barcode.isEmpty()) {
-            Log.d(TAG, "Received barcode from hardware scanner: " + barcode);
+            DeviceLog.d(TAG, "Received barcode from hardware scanner: " + barcode);
             onBarcodeScanned(barcode);
         }
     }
@@ -148,7 +148,7 @@ public class QrScanActivity extends AppCompatActivity {
     private void onBarcodeScanned(String barcode) {
         tvQrResult.setText(barcode);
         Toast.makeText(this, "Quét thành công! Đang tìm sản phẩm...", Toast.LENGTH_SHORT).show();
-        Log.d(TAG, "Barcode result: " + barcode);
+        DeviceLog.d(TAG, "Barcode result: " + barcode);
 
         Intent intent = new Intent(this, ProductDetailActivity.class);
         intent.putExtra(ProductDetailActivity.EXTRA_BARCODE, barcode);

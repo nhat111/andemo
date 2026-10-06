@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Chỉ chia sẻ được bản log đã xuất (LogExporter), không lộ file nào khác của app -->
+<paths>
+    <cache-path name="log_export" path="log-export/" />
+</paths>

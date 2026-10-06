@@ -1,10 +1,10 @@
 package com.example.andemo.api;
 
 import android.content.Context;
-import android.util.Log;
 
 import androidx.annotation.Nullable;
 
+import com.example.andemo.log.DeviceLog;
 import com.example.andemo.model.LoginResponse;
 import com.example.andemo.model.RefreshTokenRequest;
 import com.example.andemo.util.PreferenceManager;
@@ -49,7 +49,7 @@ public final class TokenRefresher {
             String refreshToken = pref.getRefreshToken();
             if (refreshToken == null) {
                 // Bản app cũ (login trước khi có refresh token) hoặc mock server: buộc login lại
-                Log.w(TAG, "No refresh token, logging out");
+                DeviceLog.w(TAG, "No refresh token, logging out");
                 pref.clear();
                 return null;
             }
@@ -61,21 +61,21 @@ public final class TokenRefresher {
                 LoginResponse body = response.body();
                 if (response.isSuccessful() && body != null && body.getToken() != null) {
                     pref.updateTokens(body.getToken(), body.getRefreshToken());
-                    Log.d(TAG, "Access token refreshed");
+                    DeviceLog.d(TAG, "Access token refreshed");
                     return body.getToken();
                 }
                 if (response.code() == 401) {
                     // Refresh token hết hạn / bị thu hồi: phiên đã hết, phải login lại
-                    Log.w(TAG, "Refresh token rejected, logging out");
+                    DeviceLog.w(TAG, "Refresh token rejected, logging out");
                     pref.clear();
                     return null;
                 }
                 // Lỗi server (5xx…): giữ phiên, lần sau thử lại
-                Log.w(TAG, "Refresh failed: HTTP " + response.code());
+                DeviceLog.w(TAG, "Refresh failed: HTTP " + response.code());
                 return null;
             } catch (IOException e) {
                 // Mất mạng: giữ phiên, lần sau thử lại
-                Log.w(TAG, "Refresh failed: " + e.getMessage());
+                DeviceLog.w(TAG, "Refresh failed: " + e.getMessage());
                 return null;
             }
         }

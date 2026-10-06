@@ -12,12 +12,12 @@ import android.os.HandlerThread;
 import android.os.IBinder;
 import android.os.PowerManager;
 import android.os.SystemClock;
-import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.core.content.ContextCompat;
 
 import com.example.andemo.command.CommandNotification;
+import com.example.andemo.log.DeviceLog;
 import com.example.andemo.util.PreferenceManager;
 
 /**
@@ -56,7 +56,7 @@ public class PdaPollingService extends Service {
             ContextCompat.startForegroundService(context, new Intent(context, PdaPollingService.class));
         } catch (IllegalStateException e) {
             // Android 12+: gọi từ background mà không thuộc trường hợp được phép
-            Log.w(TAG, "Cannot start polling service", e);
+            DeviceLog.w(TAG, "Cannot start polling service", e);
         }
     }
 
@@ -86,7 +86,7 @@ public class PdaPollingService extends Service {
         } catch (IllegalStateException e) {
             // Android 12+: hệ thống khởi động lại service (START_STICKY) hoặc alarm gọi tới
             // trong lúc app không được phép chạy foreground service → dừng, chờ user mở app
-            Log.w(TAG, "Not allowed to run in foreground, stopping", e);
+            DeviceLog.w(TAG, "Not allowed to run in foreground, stopping", e);
             stopSelf();
             return START_NOT_STICKY;
         }
@@ -105,7 +105,7 @@ public class PdaPollingService extends Service {
     /** Chạy trên pollThread. */
     private void pollAndScheduleNext() {
         if (!new PreferenceManager(this).isLoggedIn()) {
-            Log.d(TAG, "Not logged in, stopping polling");
+            DeviceLog.d(TAG, "Not logged in, stopping polling");
             stopSelf();
             return;
         }
@@ -154,7 +154,7 @@ public class PdaPollingService extends Service {
             @Override
             public void onAvailable(@NonNull Network network) {
                 // Có mạng lại: poll ngay để nhận các lệnh gửi trong lúc mất mạng
-                Log.d(TAG, "Network available, polling now");
+                DeviceLog.d(TAG, "Network available, polling now");
                 pollNow();
             }
         };
