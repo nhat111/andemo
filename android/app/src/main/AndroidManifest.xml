@@ -89,6 +89,12 @@
             android:name=".plain.PlainDisposalDetailActivity"
             android:exported="false" />
 
+        <!-- adjustResize: list co lại phía trên bàn phím, ô số lượng đang gõ không bị che -->
+        <activity
+            android:name=".plain.PlainDisposalBulkEditActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
+
         <activity
             android:name=".disposal.DisposalEditActivity"
             android:exported="false"

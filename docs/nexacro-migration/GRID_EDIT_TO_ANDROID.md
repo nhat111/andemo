@@ -3,8 +3,12 @@
 Tình huống: grid Nexacro cho sửa thẳng trong ô (`<Cell edittype="normal" | "mask" ...>`),
 còn màn Android dùng ListView với `TextView`, nên chưa sửa được.
 
-Code mẫu: `android/.../plain/PlainDisposalDetailActivity.java` + `PlainDisposalLineAdapter.java`
-(màn chi tiết phiếu hủy, phiếu đang 등록 thì bấm 1 dòng để sửa số lượng).
+Code mẫu (màn hủy hàng bản Java thuần, phiếu đang 등록):
+- **Cách A**: `plain/PlainDisposalDetailActivity.java` + `PlainDisposalLineAdapter.java`: bấm 1 dòng → dialog.
+- **Cách B**: `plain/PlainDisposalBulkEditActivity.java` + `PlainBulkQtyAdapter.java` (RecyclerView):
+  nút "Sửa nhiều dòng" trên màn chi tiết → mỗi dòng 1 ô số, Next để sang dòng sau.
+
+Có thể làm **cả hai**: A để sửa nhanh 1–2 dòng, B khi phải sửa nhiều dòng liên tục.
 
 ## Chọn cách nào
 
@@ -17,8 +21,8 @@ Code mẫu: `android/.../plain/PlainDisposalDetailActivity.java` + `PlainDisposa
 | Quét barcode | Không bị ảnh hưởng | Scanner "gõ" vào EditText đang focus → có thể ghi mã vạch vào ô số lượng |
 | Công sức + rủi ro test | Thấp | Cao (nhiều máy / Android version cư xử khác nhau) |
 
-**Đề xuất: A.** Chỉ chọn B khi người dùng thật sự phải sửa liên tục rất nhiều dòng (khi đó nên
-dùng RecyclerView, không dùng ListView).
+**Đề xuất: A.** Chỉ chọn B khi người dùng thật sự phải sửa liên tục rất nhiều dòng (khi đó dùng
+RecyclerView, không dùng ListView). Nếu bên Nexacro người dùng hay sửa nhiều ô một lượt: làm cả A và B.
 
 Điểm cộng: bản Nexacro mẫu `frm_disposal_reg.xfdl` cũng sửa dòng bằng popup
 (`grd_detail_oncellclick` → `div_line` → `btn_lineOk_onclick`), nên A là cùng cách làm.
@@ -43,6 +47,37 @@ Bấm "Lưu" → PUT /api/disposals/{no} {version, remark, items[]}
 Back khi còn dòng chưa lưu → hỏi "Bỏ thay đổi và thoát?"   ← như canrowposchange return false
 ```
 
+## Cách B: sửa nhiều dòng bằng RecyclerView
+
+```
+Màn chi tiết → "Sửa nhiều dòng" (chỉ khi actions.edit; còn dòng sửa bằng dialog chưa lưu thì bắt lưu trước)
+ └─ PlainDisposalBulkEditActivity: GET phiếu → mỗi dòng 1 EditText số (bàn phím số, chọn sẵn số cũ)
+      ├─ gõ số → afterTextChanged ghi ngay vào HashMap của dòng (putQty: _rowType "U", _orgQty)
+      │          → chỉ đổi màu / lỗi / "thiếu tồn" của chính dòng đó (không notify → không mất focus)
+      │          → cập nhật "đã sửa N dòng", bật nút Lưu
+      ├─ Next trên bàn phím → cuộn + focus ô của dòng sau (Done ở dòng cuối đóng bàn phím)
+      ├─ Lưu → kiểm tra mọi dòng (1..9999), sai thì cuộn tới dòng sai → PUT (tất cả dòng + version)
+      │     ├─ 200 → RESULT_OK → màn chi tiết tải lại
+      │     └─ lỗi / 409 → giữ số đã nhập, có "Tải lại"
+      └─ Back / Đóng khi còn dòng chưa lưu → hỏi "Bỏ thay đổi và thoát?"
+```
+
+4 điểm bắt buộc (đã làm trong `PlainBulkQtyAdapter`), thiếu 1 điểm là lỗi ngay:
+
+| Điểm | Không làm thì |
+|---|---|
+| Ghi giá trị vào HashMap trong `afterTextChanged`, không giữ trên view | Cuộn xong số biến mất / hiện ở dòng khác |
+| 1 `TextWatcher` mỗi ViewHolder (gắn ở `onCreateViewHolder`) + cờ `binding` khi `setText` lúc bind | Watcher chồng nhau, số dòng mới ghi đè dòng cũ |
+| Lấy vị trí bằng `getAdapterPosition()` lúc gõ | Ghi nhầm dòng sau khi list đổi |
+| Khi gõ không gọi `notifyItemChanged` / `notifyDataSetChanged` | Mỗi lần gõ 1 số là mất focus, bàn phím đóng |
+
+Thêm: activity để `windowSoftInputMode="adjustResize"` (bàn phím không che ô đang gõ).
+
+Lưu ý với khách khi chọn B:
+- Máy quét kiểu "keyboard wedge" gõ mã vạch vào ô đang focus. Màn B không có chức năng quét, nhưng
+  nếu sau này thêm quét vào màn này thì phải nhận barcode qua Intent (DataWedge), không qua bàn phím.
+- Test trên đúng model PDA của khách: bàn phím số / nút Next của từng hãng khác nhau.
+
 ## Đối chiếu Nexacro ↔ code
 
 | Nexacro | Android (file mẫu) |
@@ -66,4 +101,7 @@ Back khi còn dòng chưa lưu → hỏi "Bỏ thay đổi và thoát?"   ← nh
 > - 바코드 스캔 값이 수량 칸에 잘못 들어가는 문제가 없습니다.
 > - 수정된 행은 색상으로 표시하고, 저장 전에는 확정 버튼을 막습니다. 저장하지 않고 나가면 확인 메시지를 띄웁니다.
 >
-> 여러 행을 연속으로 빠르게 수정해야 하는 업무라면 행 내 직접 입력 방식도 가능하지만, 개발·테스트 공수가 더 듭니다.
+> 여러 행을 연속으로 빠르게 수정해야 하는 업무라면 **"여러 행 수정" 화면**을 별도로 제공할 수 있습니다.
+> 각 행에 수량 입력칸이 있고, 키패드의 "다음" 버튼으로 다음 행으로 바로 이동합니다(그리드 연속 입력과 유사).
+> 다만 기종별 키패드 동작 차이가 있어 실제 PDA 기종에서 테스트가 필요하고, 개발·테스트 공수가 더 듭니다.
+> 1~2개 행 수정은 팝업 방식, 여러 행 일괄 수정은 별도 화면 방식으로 함께 제공하는 것을 권장드립니다.

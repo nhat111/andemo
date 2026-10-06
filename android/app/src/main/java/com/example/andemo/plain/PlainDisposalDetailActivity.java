@@ -1,5 +1,6 @@
 package com.example.andemo.plain;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.text.InputFilter;
 import android.text.InputType;
@@ -12,6 +13,8 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.OnBackPressedCallback;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -71,6 +74,7 @@ public class PlainDisposalDetailActivity extends AppCompatActivity
         btnMap.put("btnCancel", findViewById(R.id.btnCancel));
         btnMap.put("btnCancelConfirm", findViewById(R.id.btnCancelConfirm));
         btnMap.put("btnSave", findViewById(R.id.btnSave));
+        btnMap.put("btnBulkEdit", findViewById(R.id.btnBulkEdit));
         for (Button b : btnMap.values()) {
             b.setOnClickListener(this);
         }
@@ -120,6 +124,8 @@ public class PlainDisposalDetailActivity extends AppCompatActivity
             askReason("Hủy xác nhận (확정취소)", "cancel-confirm");
         } else if (id == R.id.btnSave) {
             save();
+        } else if (id == R.id.btnBulkEdit) {
+            openBulkEdit();
         }
     }
 
@@ -212,10 +218,30 @@ public class PlainDisposalDetailActivity extends AppCompatActivity
     private void updateEditButtons() {
         boolean modified = lineAdapter.hasModified();
         show("btnSave", canEdit && modified);
+        show("btnBulkEdit", canEdit);
         btnMap.get("btnConfirm").setEnabled(issueCount == 0 && !modified);
     }
 
     // ---------------- sửa số lượng ----------------
+
+    /** Màn sửa nhiều dòng lưu xong (RESULT_OK) → tải lại chi tiết */
+    private final ActivityResultLauncher<Intent> bulkEditLauncher = registerForActivityResult(
+            new ActivityResultContracts.StartActivityForResult(),
+            result -> {
+                if (result.getResultCode() == RESULT_OK) {
+                    load();
+                }
+            });
+
+    private void openBulkEdit() {
+        if (lineAdapter.hasModified()) {
+            // Màn sửa nhiều dòng tải lại phiếu từ server: số sửa ở đây sẽ mất
+            Toast.makeText(this, "Lưu các dòng đã sửa trước", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        bulkEditLauncher.launch(new Intent(this, PlainDisposalBulkEditActivity.class)
+                .putExtra(PlainDisposalBulkEditActivity.EXTRA_DISPOSAL_NO, disposalNo));
+    }
 
     /** Dialog nhập số lượng cho 1 dòng (giống div_line của frm_disposal_reg: edt_qty inputtype=number) */
     private void editQty(int position) {

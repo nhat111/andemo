@@ -54,14 +54,25 @@ public class PlainDisposalLineAdapter extends BaseAdapter implements View.OnClic
 
     /** Như ds.setColumn(row, "DISP_QTY", qty): đổi số lượng 1 dòng và đánh dấu dòng đã sửa. */
     public void setQty(int position, long qty) {
-        HashMap<String, String> r = rows.get(position);
-        if (!r.containsKey(COL_ORG_QTY)) {
-            r.put(COL_ORG_QTY, r.get("qty"));
-        }
-        String value = String.valueOf(qty);
-        r.put("qty", value);
-        r.put(COL_ROW_TYPE, value.equals(r.get(COL_ORG_QTY)) ? "" : ROW_TYPE_UPDATE);
+        putQty(rows.get(position), String.valueOf(qty));
         notifyDataSetChanged();
+    }
+
+    /**
+     * Ghi số lượng vào HashMap của dòng + cập nhật trạng thái dòng (dùng chung cho màn sửa nhiều dòng).
+     * Lần sửa đầu lưu số gốc; sửa về đúng số gốc thì dòng hết "đã sửa".
+     */
+    public static void putQty(HashMap<String, String> row, String value) {
+        if (!row.containsKey(COL_ORG_QTY)) {
+            row.put(COL_ORG_QTY, row.get("qty"));
+        }
+        row.put("qty", value);
+        row.put(COL_ROW_TYPE, value.equals(row.get(COL_ORG_QTY)) ? "" : ROW_TYPE_UPDATE);
+    }
+
+    /** Số lượng gốc từ server (trước khi sửa) */
+    public static String orgQty(HashMap<String, String> row) {
+        return row.containsKey(COL_ORG_QTY) ? row.get(COL_ORG_QTY) : row.get("qty");
     }
 
     public static boolean isModified(HashMap<String, String> row) {
