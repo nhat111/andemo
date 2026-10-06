@@ -20,6 +20,7 @@ Mọi file đều có dòng **📚 Mục lục tài liệu** ở đầu để qu
 | Code đỏ / không build / không có emulator trong VDI thì kiểm tra bằng gì? Checklist không sót bước? | [WORK_WITHOUT_BUILD.md](WORK_WITHOUT_BUILD.md) |
 | Tập build / run project REST API (Gradle 7, chọn môi trường local/dev/ops) ở nhà? | [../../restapi-demo/README.md](../../restapi-demo/README.md) |
 | Dataset / Grid / Combo / `transaction` / popup của Nexacro tương ứng gì trên Android? | [NEXACRO_TO_ANDROID.md](NEXACRO_TO_ANDROID.md) |
+| Grid cho sửa trong ô (`edittype`), Android đang là TextView? Chọn cách nào, giải thích khách ra sao? | [GRID_EDIT_TO_ANDROID.md](GRID_EDIT_TO_ANDROID.md) |
 | Server chỉ trả XML X-API, Android cần JSON? | [NEXACRO_XAPI_TO_JSON.md](NEXACRO_XAPI_TO_JSON.md) |
 | Nghiệp vụ hủy hàng (등록 → 확정 → 확정취소, 수불, 마감), API, giả định? | [../task-17-18-disposal/README.md](../task-17-18-disposal/README.md) |
 | Bản Nexacro 17 "cũ" của hủy hàng + 13 quy tắc và chỗ đã migrate? | [../../nexacro-sample/disposal/README.md](../../nexacro-sample/disposal/README.md) |

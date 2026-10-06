@@ -54,6 +54,15 @@
         android:layout_height="wrap_content"
         android:orientation="horizontal">
 
+        <!-- Chỉ hiện khi có dòng đã sửa chưa lưu (PlainDisposalDetailActivity.updateEditButtons) -->
+        <Button
+            android:id="@+id/btnSave"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Lưu"
+            android:visibility="gone" />
+
         <Button
             android:id="@+id/btnCancel"
             android:layout_width="0dp"
