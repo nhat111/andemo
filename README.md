@@ -28,7 +28,9 @@ API: `http://localhost:8080/api/auth/login`
 
 ## Chạy Android
 
-- Mở folder `android` bằng Android Studio (cần JDK 17+ và Android SDK 34)
+- Mở folder `android` bằng Android Studio (cần Android SDK 34). Build bằng **Gradle 9.3.1 + Android Gradle Plugin 9.1.1**,
+  chạy được với JDK 17 đến 25 (JBR đi kèm Android Studio là đủ). Android Studio gợi ý nâng Gradle / AGP thì bỏ qua:
+  AGP 9.x đòi Gradle cao hơn (AGP 9.3 cần Gradle 9.5, AGP 9.4 cần Gradle 9.6).
 - Hoặc build bằng command line: `cd android && ./gradlew assembleDebug`
   (APK nằm ở `android/app/build/outputs/apk/debug/app-debug.apk`)
 - Không có `android/app/google-services.json` app vẫn build được, chỉ là FCM không hoạt động.

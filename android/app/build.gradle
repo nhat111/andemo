@@ -20,15 +20,15 @@ if (file('google-services.json').exists()) {
 }
 
 android {
-    namespace 'com.example.andemo'
-    compileSdk 34
+    namespace = 'com.example.andemo'
+    compileSdk = 34
 
     defaultConfig {
-        applicationId "com.example.andemo"
-        minSdk 24
-        targetSdk 34
-        versionCode 1
-        versionName "1.0"
+        applicationId = "com.example.andemo"
+        minSdk = 24
+        targetSdk = 34
+        versionCode = 1
+        versionName = "1.0"
 
         // Đổi backend lúc build, ví dụ trỏ vào mock server (tools/MockPdaAlertServer.java):
         //   ./gradlew assembleDebug -PapiBaseUrl=http://10.0.2.2:8081/
@@ -40,24 +40,24 @@ android {
     //   Andemo Polling (cam)  |  Andemo WebSocket (xanh dương)  |  Andemo FCM (xanh lá)
     // Android Studio: View → Tool Windows → Build Variants → chọn pollingDebug / websocketDebug / fcmDebug
     // Dòng lệnh:      ./gradlew installPollingDebug  installWebsocketDebug  installFcmDebug
-    flavorDimensions "channel"
+    flavorDimensions = ["channel"]
     productFlavors {
         polling {
-            dimension "channel"
-            applicationIdSuffix ".polling"
+            dimension = "channel"
+            applicationIdSuffix = ".polling"
             resValue "string", "app_name", "Andemo Polling"
             resValue "color", "launcher_background", "#FFE65100"
             buildConfigField "String", "PDA_COMMAND_CHANNEL", "\"polling\""
         }
         websocket {
-            dimension "channel"
-            applicationIdSuffix ".websocket"
+            dimension = "channel"
+            applicationIdSuffix = ".websocket"
             resValue "string", "app_name", "Andemo WebSocket"
             resValue "color", "launcher_background", "#FF1565C0"
             buildConfigField "String", "PDA_COMMAND_CHANNEL", "\"websocket\""
         }
         fcm {
-            dimension "channel"
+            dimension = "channel"
             // Giữ package gốc com.example.andemo: google-services.json được đăng ký với package này
             resValue "string", "app_name", "Andemo FCM"
             resValue "color", "launcher_background", "#FF2E7D32"
@@ -67,18 +67,20 @@ android {
     }
 
     buildFeatures {
-        buildConfig true
+        buildConfig = true
+        // AGP 9 tắt resValue mặc định; các flavor dùng resValue cho app_name / màu icon
+        resValues = true
     }
 
     buildTypes {
         release {
-            minifyEnabled false
+            minifyEnabled = false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_17
-        targetCompatibility JavaVersion.VERSION_17
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
 }
 
