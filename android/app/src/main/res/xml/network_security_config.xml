@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  base-config: giữ như cũ (cho phép http để gọi mock server / backend chạy trên máy dev,
+  vì khi có file này thì android:usesCleartextTraffic trong manifest không còn tác dụng).
+
+  debug-overrides: CHỈ áp dụng cho bản debug. Tin thêm CA do người dùng tự cài vào máy
+  (Settings → Security → Install certificate). Dùng khi mạng công ty kiểm tra HTTPS
+  (proxy ký lại chứng chỉ bằng CA nội bộ) → lỗi "Trust anchor for certification path not found".
+  Bản release vẫn chỉ tin CA hệ thống.
+-->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="true">
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </base-config>
+    <debug-overrides>
+        <trust-anchors>
+            <certificates src="user" />
+        </trust-anchors>
+    </debug-overrides>
+</network-security-config>
