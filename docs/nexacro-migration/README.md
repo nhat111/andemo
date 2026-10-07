@@ -17,6 +17,7 @@ Mọi file đều có dòng **📚 Mục lục tài liệu** ở đầu để qu
 | Hôm nay học gì? | [LEARNING_PLAN_2_WEEKS.md](LEARNING_PLAN_2_WEEKS.md) |
 | Code 1 màn mới theo các bước nào? Khung code ở đâu? | [HOW_TO_CODE_A_SCREEN.md](HOW_TO_CODE_A_SCREEN.md) |
 | Code của khách (thread + `HttpURLConnection`, view trong HashMap, custom adapter) viết thế nào, lỗi hay gặp? | [PLAIN_JAVA_STYLE.md](PLAIN_JAVA_STYLE.md) |
+| Đọc layout XML: `0dp`, `layout_weight`, `match_parent`, `padding` / `margin`, `gone`… là gì? | [PLAIN_JAVA_STYLE.md mục 6](PLAIN_JAVA_STYLE.md#6-đọc-layout-xml-reslayoutxml) |
 | Code đỏ / không build / không có emulator trong VDI thì kiểm tra bằng gì? Checklist không sót bước? | [WORK_WITHOUT_BUILD.md](WORK_WITHOUT_BUILD.md) |
 | Tập build / run project REST API (Gradle 7, chọn môi trường local/dev/ops) ở nhà? | [../../restapi-demo/README.md](../../restapi-demo/README.md) |
 | Dataset / Grid / Combo / `transaction` / popup của Nexacro tương ứng gì trên Android? | [NEXACRO_TO_ANDROID.md](NEXACRO_TO_ANDROID.md) |

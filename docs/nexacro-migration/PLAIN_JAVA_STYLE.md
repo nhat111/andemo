@@ -214,3 +214,81 @@ Danh sách rất đơn giản, chỉ có chữ thì vẫn có thể dùng `Simpl
 2. Đi theo 1 lần bấm: nút → `onClick` → `search()` → `HttpTask.get` → `onSuccess` → `JsonRows.rows` → `adapter.notifyDataSetChanged()` → `PlainDisposalListAdapter.getView`.
 3. Làm lại với bản Retrofit: nút → listener → `load()` → `DisposalApi.list` → `onResponse` → `adapter.submit(...)`.
 4. Làm lại với `PlainDisposalDetailActivity.send(...)` ↔ `DisposalDetailActivity.run(...)`: 2 bản xử lý lỗi 409 / mất mạng giống nhau.
+
+---
+
+## 6. Đọc layout XML (`res/layout/*.xml`)
+
+Ví dụ xuyên suốt: `res/layout/activity_plain_disposal_save.xml` (màn "Lưu hủy").
+
+### 6.1 Khác Nexacro ở đâu
+
+Nexacro đặt vị trí **tuyệt đối**: `left="10" top="50" width="460" height="24"`.
+Android **xếp nối tiếp**: `LinearLayout` xếp các view con lần lượt theo dọc / ngang; mỗi view chỉ khai báo **muốn rộng / cao bao nhiêu**, vị trí tự chạy theo thứ tự trong file.
+
+### 6.2 Kích thước: `layout_width` / `layout_height`
+
+| Giá trị | Nghĩa | Ví dụ |
+|---|---|---|
+| `match_parent` | Bằng view cha | `tvHeader` rộng hết màn hình |
+| `wrap_content` | Vừa đủ nội dung | nút `Tìm` chỉ rộng bằng chữ "Tìm" |
+| `120dp` | Cố định | ít dùng: mỗi PDA một cỡ màn hình |
+| **`0dp`** | "Đừng tự đo, để `layout_weight` chia" | xem 6.3 |
+
+### 6.3 `0dp` + `layout_weight`: chia phần còn trống
+
+`layout_weight` = **đo các view khác trước, phần trống còn lại chia cho các view có weight**.
+Kích thước theo **chiều đang chia** để `0dp`: "phần của tôi lấy hết từ phần chia".
+
+**Hàng ngang** (chia chiều rộng → `layout_width="0dp"`): ô từ khóa + nút Tìm
+
+```xml
+<EditText android:layout_width="0dp" android:layout_weight="1" />   <!-- lấy hết phần còn lại -->
+<Button   android:layout_width="wrap_content" />                    <!-- chỉ rộng bằng chữ -->
+```
+
+**Hàng dọc** (chia chiều cao → `layout_height="0dp"`): ListView ở giữa co giãn
+
+```xml
+<TextView android:id="@+id/tvHeader" android:layout_height="wrap_content" />
+<ListView android:id="@+id/lvLines"  android:layout_height="0dp" android:layout_weight="1" />
+<LinearLayout android:layout_height="wrap_content"> … nút Tải lại / Lưu … </LinearLayout>
+```
+
+→ Tiêu đề trên, nút dưới đáy, ListView lấp đầy giữa. Để `wrap_content` thì list dài đẩy nút Lưu ra khỏi màn hình.
+
+**Chia tỉ lệ**: 2 nút cùng `0dp` + `weight="1"` → 50 / 50; weight `1` và `2` → 1/3 và 2/3.
+
+Nhớ:
+- Hàng **ngang** → `width="0dp"`; hàng **dọc** → `height="0dp"`.
+- **Không dùng weight trong `ScrollView`**: không có "phần còn lại" để chia → view cao 0, biến mất. Cần chiều cao tối thiểu thì dùng `wrap_content` + `android:minHeight="160dp"` (xem `tvItems` trong `activity_main.xml`).
+
+### 6.4 Các thông số hay gặp
+
+| Thông số | Nghĩa |
+|---|---|
+| `xmlns:android="…"` | Khai báo, chỉ ở thẻ ngoài cùng. Copy nguyên |
+| `android:orientation` | `vertical` trên xuống, `horizontal` trái sang phải |
+| `android:id="@+id/btnSearch"` | Tên để Java tìm (`findViewById(R.id.btnSearch)`); `+` = tạo id mới. Key trong `viewMap` nên trùng tên này |
+| `android:padding="12dp"` | Khoảng cách **bên trong** view (nội dung lùi vào) |
+| `android:layout_margin…` | Khoảng cách **bên ngoài** view (đẩy view khác ra) |
+| `dp` | Đơn vị kích thước, tự quy đổi theo mật độ màn hình. Không dùng `px` |
+| `sp` | Đơn vị **cỡ chữ** (`textSize="15sp"`), to theo cài đặt cỡ chữ của máy |
+| `text` / `hint` | Chữ hiển thị / chữ mờ gợi ý khi ô trống |
+| `textStyle="bold"`, `textColor="#616161"` | Chữ đậm / màu (`#RRGGBB`, `#AARRGGBB` có độ trong suốt) |
+| `inputType="text"` / `"number"` | Loại bàn phím; `number` = bàn phím số (≈ `inputtype="number"` của Nexacro) |
+| `imeOptions="actionSearch"` | Phím Enter thành nút 🔍; Java bắt bằng `setOnEditorActionListener` |
+| `maxLines="1"` | Ô nhập 1 dòng |
+| `visibility` | `visible` hiện; `invisible` ẩn nhưng **giữ chỗ**; `gone` ẩn và **không chiếm chỗ** (≈ `visible="false"` của Nexacro) |
+| `gravity` | Căn **nội dung bên trong** view (chữ giữa nút…) |
+| `layout_gravity` | Căn **chính view đó** trong view cha |
+| `minHeight` | Cao tối thiểu, nội dung nhiều thì cao thêm |
+| `descendantFocusability="blocksDescendants"` | (`item_plain_line.xml`) Có nút trong dòng mà vẫn bấm được cả dòng ListView |
+| `windowSoftInputMode="adjustResize"` | (trong `AndroidManifest.xml`, không phải layout) Bàn phím hiện thì màn co lại, ô đang gõ không bị che |
+| `<!-- … -->` | Comment |
+
+### 6.5 Xem trước giao diện
+
+Mở file layout trong Android Studio → tab **Split** (góc trên phải): sửa XML bên trái, bên phải hiện ngay.
+Thử đổi `weight`, đổi `0dp` ↔ `wrap_content`, đổi `gone` ↔ `invisible` để thấy khác biệt.
+Chạy `devcheck\run.bat` sau khi sửa layout: `ProjectCheck` báo id sai / id không thuộc layout ([WORK_WITHOUT_BUILD.md](WORK_WITHOUT_BUILD.md) mục 2).
