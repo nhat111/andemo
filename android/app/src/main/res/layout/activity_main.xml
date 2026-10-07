@@ -1,7 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<!-- ScrollView: nhiều nút, màn PDA nhỏ vẫn cuộn tới được nút cuối -->
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
+    android:layout_height="match_parent">
+
+<LinearLayout
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
     android:orientation="vertical"
     android:padding="24dp">
 
@@ -65,6 +70,13 @@
         android:text="Phiếu hủy hàng (Java thuần)"
         android:layout_marginBottom="8dp" />
 
+    <Button
+        android:id="@+id/btnDisposalSave"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Lưu hủy: tìm → chọn phiếu → sửa SL (Java thuần)"
+        android:layout_marginBottom="8dp" />
+
     <!-- Chỉ hiện với ADMIN (MainActivity) -->
     <Button
         android:id="@+id/btnFindPda"
@@ -77,8 +89,8 @@
     <TextView
         android:id="@+id/tvItems"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
+        android:layout_height="wrap_content"
+        android:minHeight="160dp"
         android:textSize="15sp"
         android:padding="8dp"
         android:background="#F5F5F5"
@@ -91,3 +103,5 @@
         android:text="Logout"
         android:layout_marginTop="16dp" />
 </LinearLayout>
+
+</ScrollView>

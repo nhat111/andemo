@@ -15,6 +15,7 @@ Repo này có **2 bản cùng chức năng hủy hàng** để đọc song song:
 | JSON → dữ liệu | `plain/JsonRows.java` (`List<HashMap<String,String>>`) | `model/Disposal*Dto.java` (Gson tự map) |
 | Màn danh sách | `plain/PlainDisposalListActivity.java` + `PlainDisposalListAdapter.java` + `activity_plain_disposal_list.xml` + `item_plain_disposal.xml` | `disposal/DisposalListActivity.java` + `DisposalListAdapter.java` |
 | Màn chi tiết + xác nhận / hủy | `plain/PlainDisposalDetailActivity.java` + `PlainDisposalLineAdapter.java` + `activity_plain_disposal_detail.xml` + `item_plain_line.xml` | `disposal/DisposalDetailActivity.java` + `DisposalLineAdapter.java` |
+| Màn "Lưu hủy": Tìm → **dialog ListView** chọn phiếu → chi tiết lên ListView → bấm dòng sửa SL (dialog) → Lưu | `plain/PlainDisposalSaveActivity.java` + `activity_plain_disposal_save.xml` (dùng lại `PlainDisposalListAdapter`, `PlainDisposalLineAdapter`) | – |
 
 Mở app → nút **"Phiếu hủy hàng (Java thuần)"**. Cùng backend, cùng API `/api/disposals/**`, nên kết quả phải giống bản Retrofit.
 

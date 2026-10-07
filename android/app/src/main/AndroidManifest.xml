@@ -90,6 +90,12 @@
             android:name=".plain.PlainDisposalDetailActivity"
             android:exported="false" />
 
+        <!-- adjustResize: ListView co lại phía trên bàn phím khi gõ từ khóa -->
+        <activity
+            android:name=".plain.PlainDisposalSaveActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
+
         <!-- adjustResize: list co lại phía trên bàn phím, ô số lượng đang gõ không bị che -->
         <activity
             android:name=".plain.PlainDisposalBulkEditActivity"
