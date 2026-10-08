@@ -55,6 +55,8 @@ public class PlainDisposalSaveActivity extends AppCompatActivity
     private JSONObject current;
     /** Server cho phép sửa phiếu này không (actions.edit) */
     private boolean canEdit;
+    /** Đang chờ server trả kết quả Lưu: không cho sửa thêm (kết quả trả về sẽ ghi đè danh sách) */
+    private boolean saving;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -230,6 +232,10 @@ public class PlainDisposalSaveActivity extends AppCompatActivity
         if (current == null) {
             return;
         }
+        if (saving) {
+            Toast.makeText(this, "Đang lưu, chờ một chút", Toast.LENGTH_SHORT).show();
+            return;
+        }
         if (!canEdit) {
             Toast.makeText(this, "Phiếu này không sửa được", Toast.LENGTH_SHORT).show();
             return;
@@ -361,6 +367,7 @@ public class PlainDisposalSaveActivity extends AppCompatActivity
     }
 
     private void setBusy(boolean busy) {
+        saving = busy;
         for (String key : new String[]{"btnSearch", "btnReload", "btnSave"}) {
             viewMap.get(key).setEnabled(!busy);
         }

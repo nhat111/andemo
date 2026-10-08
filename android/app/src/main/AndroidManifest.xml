@@ -90,10 +90,12 @@
             android:name=".plain.PlainDisposalDetailActivity"
             android:exported="false" />
 
-        <!-- adjustResize: ListView co lại phía trên bàn phím khi gõ từ khóa -->
+        <!-- adjustResize: ListView co lại phía trên bàn phím khi gõ từ khóa.
+             portrait: khoá màn dọc. Xoay màn hình làm Activity bị tạo lại → mất số lượng đã sửa chưa lưu. -->
         <activity
             android:name=".plain.PlainDisposalSaveActivity"
             android:exported="false"
+            android:screenOrientation="portrait"
             android:windowSoftInputMode="adjustResize" />
 
         <!-- adjustResize: list co lại phía trên bàn phím, ô số lượng đang gõ không bị che -->
