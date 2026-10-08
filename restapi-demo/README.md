@@ -103,3 +103,73 @@ Nhớ trả lại như cũ sau mỗi bài.
 | Gradle wrapper tải từ `services.gradle.org` | `distributionUrl` có thể là file zip nằm sẵn trong project |
 | JDK 17 | JDK 8 (`openjdk-1.8.0_332`) |
 | `profile` / `local.properties` | Xem `build.gradle` dự án dùng tên biến gì (tìm chữ `resources-`) |
+
+## PDA Finder: tự chọn PDA khi bấm "Tìm PDA" (interceptor + MyBatis)
+
+Mẫu cho yêu cầu "1 nút, hệ thống tự xác định PDA người dùng đang dùng". Viết theo stack giống dự án: **Spring MVC `HandlerInterceptor` + MyBatis (mapper XML, cú pháp Oracle)**. Demo chạy trên **H2 chế độ Oracle** nên không cần Oracle.
+
+### File
+
+| File | Vai trò |
+|---|---|
+| `src/main/resources/schema.sql` | Bảng `PDA_DEVICE_ACTIVITY`: **1 PDA = 1 dòng** (cửa hàng, người dùng, lần hoạt động gần nhất, lần đăng xuất) |
+| `src/main/resources/mapper/DeviceActivityMapper.xml` | `touch` (`MERGE`: có thì UPDATE, chưa có thì INSERT), `logout`, `findCandidates` |
+| `pda/DeviceActivityInterceptor.java` | Chạy **sau** mọi `/api/**`: request thành công + có `X-Unique-Id` + đã đăng nhập → ghi "máy vừa hoạt động". **Không sửa từng API** |
+| `pda/PdaWebConfig.java` | Đăng ký interceptor 1 lần (`/api/**`, trừ login / logout) |
+| `pda/DeviceActivityService.java` | Chặn ghi dồn dập (mỗi máy 1 lần / phút, trong RAM); lỗi ghi **không làm hỏng** API chính |
+| `pda/PdaFinderService.java` | Quy tắc chọn máy (xem dưới) |
+| `pda/PdaFinderController.java` | `POST /api/pda/find`: PC bấm nút, server tự chọn máy, trả máy đã chọn để PC hiển thị |
+| `pda/PdaAuthController.java` | Login / logout **bản demo**: chỉ minh hoạ 2 dòng cần thêm vào login / logout thật |
+| `pda/DemoAuth.java` | Lấy người dùng + mã máy từ request. **Chỗ duy nhất phải viết lại theo dự án** (session / JWT) |
+| `src/test/.../pda/PdaFinderTest.java` | 14 test: **6 trường hợp của khách**, đăng xuất, interceptor, chặn ghi |
+
+### Quy tắc chọn máy (`application.yml` → `pda.finder`)
+
+Trong các PDA **của cửa hàng người bấm**, hoạt động trong `inactive-days` (7) ngày gần nhất:
+1. Ưu tiên máy mà **người bấm** dùng gần nhất (`rule: USER`).
+2. Người bấm không có máy → máy dùng gần nhất của **cửa hàng** (`rule: STORE`), nếu `fallback-to-store: true`; ngược lại báo không có.
+3. Nhiều máy hoạt động cách máy mới nhất ≤ `near-minutes` (10) phút → **gửi tất cả**.
+4. Máy **đã đăng xuất vẫn được chọn** (máy dùng chung thường đăng xuất rồi mới thất lạc). Kết quả có cờ `loggedOut` để PC hiển thị.
+
+SQL chỉ lọc + sắp xếp (máy của người bấm trước, mới nhất trước); phần chọn cuối cùng viết bằng Java cho dễ đọc, dễ đổi quy tắc.
+
+### Thử bằng curl
+
+Demo đọc người dùng từ header `X-Store-Cd` / `X-User-Id` (dự án thật lấy từ session / JWT). PDA gửi thêm `X-Unique-Id`, PC thì không.
+
+```bash
+# PDA A (người dùng 001) đăng nhập và dùng app
+curl -X POST -H "X-Store-Cd: S001" -H "X-User-Id: 001" -H "X-Unique-Id: PDA-A" localhost:8080/api/auth/login
+curl -H "X-Store-Cd: S001" -H "X-User-Id: 001" -H "X-Unique-Id: PDA-A" localhost:8080/api/products
+# PC: 001 bấm "Tìm PDA"
+curl -X POST -H "X-Store-Cd: S001" -H "X-User-Id: 001" localhost:8080/api/pda/find
+# → {"rule":"USER","targets":[{"uniqueId":"PDA-A","lastUserId":"001",...,"loggedOut":false}],"message":"Đã gửi lệnh tìm tới 1 PDA"}
+```
+
+### Đưa sang dự án thật
+
+1. **App PDA:** lớp HTTP dùng chung gửi header `X-Unique-Id` trong mọi request (hoặc dùng UNIQUE_ID app đang gửi sẵn).
+2. **`DemoAuth.currentUser`:** viết lại theo cách đăng nhập của dự án.
+3. **Login / logout thật:** thêm `deviceActivityService.touch(...)` / `logout(...)` như `PdaAuthController`.
+4. **Đăng ký interceptor:** Spring Boot → thêm vào `WebMvcConfigurer` có sẵn. Spring MVC XML (eGovFrame) → `dispatcher-servlet.xml`:
+   ```xml
+   <mvc:interceptors>
+       <mvc:interceptor>
+           <mvc:mapping path="/api/**"/>
+           <mvc:exclude-mapping path="/api/auth/login"/>
+           <mvc:exclude-mapping path="/api/auth/logout"/>
+           <bean class="kr.co.xxx.pda.DeviceActivityInterceptor"/>
+       </mvc:interceptor>
+   </mvc:interceptors>
+   ```
+5. **Gửi lệnh tìm thật** (FCM / polling) ở chỗ `TODO` trong `PdaFinderController`.
+
+### Lưu ý (đã gặp khi làm demo)
+
+| Điểm | Vì sao |
+|---|---|
+| **Phải loại `/api/auth/logout` khỏi interceptor** | Interceptor chạy **sau** API: nếu không loại, nó `MERGE` lại ngay sau logout và **xoá mất** `LOGOUT_AT` |
+| `CAST(#{uniqueId} AS VARCHAR2(64))` trong `MERGE` | H2 không đoán được kiểu tham số trong `SELECT … FROM DUAL` (lỗi `Unknown data type`). Oracle chạy được cả 2 cách |
+| Lỗi ghi DB bị "nuốt" (chỉ log `WARN`) | Đúng thiết kế: không làm hỏng API chính. Nhưng sai SQL sẽ **không ai thấy** → có test + theo dõi log `Không ghi được hoạt động PDA` |
+| 2 class test dùng 2 Spring context | Mỗi context chạy lại `schema.sql`; dùng chung 1 DB trong RAM sẽ lỗi "table already exists" → test PDA dùng DB riêng (`jdbc:h2:mem:pdatest`) |
+| Giờ app server và giờ DB | Mốc 7 ngày tính bằng giờ app server, `LAST_ACTIVE_AT` ghi bằng `SYSDATE` của DB → 2 máy nên đồng bộ giờ (NTP) |

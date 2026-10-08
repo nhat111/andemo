@@ -5,8 +5,26 @@ spring:
   config:
     # env.yml nằm trong src/main/resources-<profile> (build.gradle chọn thư mục theo profile)
     import: classpath:env.yml
+  # DB demo: H2 trong RAM, chế độ Oracle (VARCHAR2, DUAL, SYSDATE, MERGE…). Dự án thật: Oracle / Tibero.
+  # Bảng tạo từ src/main/resources/schema.sql mỗi lần khởi động.
+  datasource:
+    url: jdbc:h2:mem:restdemo;MODE=Oracle;DB_CLOSE_DELAY=-1
+    username: sa
+    password:
 server:
   port: 8080
+mybatis:
+  mapper-locations: classpath:mapper/*.xml
+  configuration:
+    map-underscore-to-camel-case: true   # LAST_ACTIVE_AT → lastActiveAt
+# Quy tắc chọn PDA (xem pda/PdaFinderService)
+pda:
+  finder:
+    inactive-days: 7          # máy không hoạt động quá N ngày: bỏ qua (thu hồi / hủy / bỏ dùng)
+    near-minutes: 10          # các máy hoạt động cách máy mới nhất <= X phút: gửi tất cả
+    fallback-to-store: true   # người bấm không có máy nào → (true) máy gần nhất của cửa hàng / (false) báo không có
+  activity:
+    min-interval-ms: 60000    # mỗi máy ghi DB tối đa 1 lần / phút
 logging:
   charset:
     console: UTF-8

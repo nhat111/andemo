@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- SQL viết theo cú pháp Oracle; chạy được trên H2 MODE=Oracle (demo) -->
+<mapper namespace="com.example.restdemo.pda.DeviceActivityMapper">
+
+    <!-- Ghi nhận PDA vừa hoạt động: có dòng thì UPDATE, chưa có thì INSERT (1 PDA = 1 dòng).
+         Máy chuyển cửa hàng / đổi người dùng → dòng tự cập nhật theo lần dùng mới nhất. -->
+    <update id="touch">
+        MERGE INTO PDA_DEVICE_ACTIVITY t
+        USING (SELECT CAST(#{uniqueId} AS VARCHAR2(64)) AS UNIQUE_ID FROM DUAL) s   <!-- CAST: H2 cần biết kiểu, Oracle chạy được như nhau -->
+           ON (t.UNIQUE_ID = s.UNIQUE_ID)
+        WHEN MATCHED THEN UPDATE
+             SET t.STORE_CD = #{storeCd},
+                 t.USER_ID = #{userId},
+                 t.LAST_ACTIVE_AT = SYSDATE,
+                 t.LOGOUT_AT = NULL
+        WHEN NOT MATCHED THEN INSERT (UNIQUE_ID, STORE_CD, USER_ID, LAST_ACTIVE_AT)
+             VALUES (#{uniqueId}, #{storeCd}, #{userId}, SYSDATE)
+    </update>
+
+    <!-- Đăng xuất: chỉ ghi thời điểm để PC hiển thị, KHÔNG loại máy khỏi danh sách tìm -->
+    <update id="logout">
+        UPDATE PDA_DEVICE_ACTIVITY
+           SET LOGOUT_AT = SYSDATE
+         WHERE UNIQUE_ID = #{uniqueId}
+    </update>
+
+    <!-- Máy ứng viên của cửa hàng còn hoạt động từ #{activeSince}.
+         Thứ tự: máy của chính người bấm trước (PRI = 0), rồi máy dùng gần nhất trước.
+         Phần chọn cuối cùng (ưu tiên / gửi nhiều máy gần nhau) làm trong PdaFinderService cho dễ đọc. -->
+    <select id="findCandidates" resultType="com.example.restdemo.pda.DeviceActivity">
+        SELECT UNIQUE_ID, STORE_CD, USER_ID, LAST_ACTIVE_AT, LOGOUT_AT
+          FROM PDA_DEVICE_ACTIVITY
+         WHERE STORE_CD = #{storeCd}
+           AND LAST_ACTIVE_AT &gt;= #{activeSince}
+         ORDER BY CASE WHEN USER_ID = #{userId} THEN 0 ELSE 1 END,
+                  LAST_ACTIVE_AT DESC
+    </select>
+
+    <select id="findByUniqueId" resultType="com.example.restdemo.pda.DeviceActivity">
+        SELECT UNIQUE_ID, STORE_CD, USER_ID, LAST_ACTIVE_AT, LOGOUT_AT
+          FROM PDA_DEVICE_ACTIVITY
+         WHERE UNIQUE_ID = #{uniqueId}
+    </select>
+</mapper>

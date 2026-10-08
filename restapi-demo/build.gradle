@@ -52,6 +52,9 @@ repositories {
 
 dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-web'
+    // PDA Finder (chọn PDA tự động): MyBatis như dự án thật, DB H2 chế độ Oracle để chạy không cần Oracle
+    implementation 'org.mybatis.spring.boot:mybatis-spring-boot-starter:2.3.2'
+    runtimeOnly 'com.h2database:h2'
     // Đóng gói .war chạy được trên Tomcat ngoài: Tomcat nhúng chỉ dùng khi chạy trực tiếp
     providedRuntime 'org.springframework.boot:spring-boot-starter-tomcat'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
