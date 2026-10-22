@@ -61,6 +61,18 @@
             android:exported="false" />
 
         <activity
+            android:name=".menulock.MenuLockActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".menulock.PinSetupActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".menulock.MenuScreenActivity"
+            android:exported="false" />
+
+        <activity
             android:name=".alert.AlertActivity"
             android:exported="false"
             android:showWhenLocked="true"

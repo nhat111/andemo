@@ -10,6 +10,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.andemo.api.ApiClient;
 import com.example.andemo.api.ItemService;
+import com.example.andemo.menulock.MenuLockActivity;
 import com.example.andemo.model.ItemDto;
 import com.example.andemo.util.PreferenceManager;
 
@@ -40,6 +41,7 @@ public class MainActivity extends AppCompatActivity {
         Button btnLoadItems = findViewById(R.id.btnLoadItems);
         Button btnQrScan = findViewById(R.id.btnQrScan);
         Button btnNearby = findViewById(R.id.btnNearby);
+        Button btnMenuLock = findViewById(R.id.btnMenuLock);
         Button btnLogout = findViewById(R.id.btnLogout);
         tvItems = findViewById(R.id.tvItems);
 
@@ -54,6 +56,9 @@ public class MainActivity extends AppCompatActivity {
         );
         btnNearby.setOnClickListener(v ->
                 startActivity(new Intent(this, NearbyActivity.class))
+        );
+        btnMenuLock.setOnClickListener(v ->
+                startActivity(new Intent(this, MenuLockActivity.class))
         );
 
         btnLogout.setOnClickListener(v -> {

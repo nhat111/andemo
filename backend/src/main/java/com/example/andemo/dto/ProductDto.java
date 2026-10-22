@@ -6,6 +6,10 @@ public class ProductDto {
     private String description;
     private String imageUrl;
     private int stockQuantity;
+    private Integer salePrice;
+    // Dữ liệu nhạy cảm (원가 / 이익률): null khi menu COST đang bị khóa
+    private Integer costPrice;
+    private Double marginRate;
 
     public ProductDto() {}
 
@@ -15,6 +19,19 @@ public class ProductDto {
         this.description = description;
         this.imageUrl = imageUrl;
         this.stockQuantity = stockQuantity;
+    }
+
+    public ProductDto(String barcode, String name, String description, String imageUrl, int stockQuantity,
+                      Integer salePrice, Integer costPrice, Double marginRate) {
+        this(barcode, name, description, imageUrl, stockQuantity);
+        this.salePrice = salePrice;
+        this.costPrice = costPrice;
+        this.marginRate = marginRate;
+    }
+
+    /** Bản copy đã ẩn Giá vốn / Tỷ suất lợi nhuận (không sửa object gốc) */
+    public ProductDto masked() {
+        return new ProductDto(barcode, name, description, imageUrl, stockQuantity, salePrice, null, null);
     }
 
     public String getBarcode() { return barcode; }
@@ -31,4 +48,13 @@ public class ProductDto {
 
     public int getStockQuantity() { return stockQuantity; }
     public void setStockQuantity(int stockQuantity) { this.stockQuantity = stockQuantity; }
+
+    public Integer getSalePrice() { return salePrice; }
+    public void setSalePrice(Integer salePrice) { this.salePrice = salePrice; }
+
+    public Integer getCostPrice() { return costPrice; }
+    public void setCostPrice(Integer costPrice) { this.costPrice = costPrice; }
+
+    public Double getMarginRate() { return marginRate; }
+    public void setMarginRate(Double marginRate) { this.marginRate = marginRate; }
 }

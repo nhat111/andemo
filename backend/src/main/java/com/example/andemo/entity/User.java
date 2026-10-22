@@ -27,4 +27,7 @@ public class User {
     // Vị trí hiện tại (nullable = chưa cập nhật location)
     private Double latitude;
     private Double longitude;
+
+    // Cửa hàng mà user thuộc về (khóa menu áp dụng theo cửa hàng)
+    private String storeId;
 }

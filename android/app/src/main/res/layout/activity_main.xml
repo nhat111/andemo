@@ -32,6 +32,13 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="Tìm bạn quanh đây"
+        android:layout_marginBottom="8dp" />
+
+    <Button
+        android:id="@+id/btnMenuLock"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Khóa Menu (메뉴 잠금)"
         android:layout_marginBottom="12dp" />
 
     <TextView

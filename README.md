@@ -39,6 +39,7 @@ API: `http://localhost:8080/api/auth/login`
 - ADMIN thấy menu Admin, USER chỉ thấy menu User
 - Logout xóa token
 - **PDA Finder Alert (FCM)** – nhận lệnh tìm PDA từ xa, phát alert max volume
+- **Khóa Menu (메뉴 잠금)** – khóa 발주/반품/폐기/재고 bằng PIN 4 số, ẩn 원가/이익률, reset PIN qua OTP (demo: `123456`) → [docs/MENU_LOCK_REQUIREMENTS.md](docs/MENU_LOCK_REQUIREMENTS.md)
 
 ## PDA Finder Alert (FCM)
 

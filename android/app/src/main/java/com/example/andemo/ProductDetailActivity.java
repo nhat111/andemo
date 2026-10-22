@@ -28,7 +28,7 @@ public class ProductDetailActivity extends AppCompatActivity {
     public static final String EXTRA_BARCODE = "barcode";
 
     private ProgressBar progressBar;
-    private TextView tvBarcode, tvName, tvDescription, tvStock, tvError;
+    private TextView tvBarcode, tvName, tvDescription, tvStock, tvPrice, tvError;
     private ImageView ivProduct;
     private Button btnBack, btnRetry;
 
@@ -44,6 +44,7 @@ public class ProductDetailActivity extends AppCompatActivity {
         tvName = findViewById(R.id.tvName);
         tvDescription = findViewById(R.id.tvDescription);
         tvStock = findViewById(R.id.tvStock);
+        tvPrice = findViewById(R.id.tvPrice);
         tvError = findViewById(R.id.tvError);
         ivProduct = findViewById(R.id.ivProduct);
         btnBack = findViewById(R.id.btnBack);
@@ -99,6 +100,7 @@ public class ProductDetailActivity extends AppCompatActivity {
         tvName.setText(product.getName() != null ? product.getName() : "-");
         tvDescription.setText(product.getDescription() != null ? product.getDescription() : "-");
         tvStock.setText("Tồn kho: " + product.getStockQuantity());
+        bindPrice(product);
 
         String imageUrl = product.getImageUrl();
         if (imageUrl != null && !imageUrl.isEmpty()) {
@@ -115,6 +117,18 @@ public class ProductDetailActivity extends AppCompatActivity {
         }
     }
 
+    /** Backend trả null cho Giá vốn / Tỷ suất LN khi menu 원가 bị khóa → để trống */
+    private void bindPrice(ProductDto product) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("Giá bán: ").append(product.getSalePrice() != null ? product.getSalePrice() : "-").append("\n");
+        sb.append("Giá vốn: ").append(product.getCostPrice() != null ? product.getCostPrice() : "").append("\n");
+        sb.append("Tỷ suất LN: ").append(product.getMarginRate() != null ? product.getMarginRate() + "%" : "");
+        if (product.getCostPrice() == null) {
+            sb.append("\n🔒 Giá vốn / Lợi nhuận đang bị ẩn");
+        }
+        tvPrice.setText(sb.toString());
+    }
+
     private void showLoading(boolean loading) {
         progressBar.setVisibility(loading ? View.VISIBLE : View.GONE);
     }
@@ -126,6 +140,7 @@ public class ProductDetailActivity extends AppCompatActivity {
         tvName.setText("-");
         tvDescription.setText("-");
         tvStock.setText("-");
+        tvPrice.setText("-");
         ivProduct.setImageResource(android.R.drawable.ic_menu_report_image);
     }
 }

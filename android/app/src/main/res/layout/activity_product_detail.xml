@@ -67,6 +67,14 @@
             android:layout_height="wrap_content"
             android:text="Tồn kho: -"
             android:textSize="16sp"
+            android:layout_marginBottom="8dp" />
+
+        <TextView
+            android:id="@+id/tvPrice"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="-"
+            android:textSize="16sp"
             android:layout_marginBottom="16dp" />
 
         <TextView
