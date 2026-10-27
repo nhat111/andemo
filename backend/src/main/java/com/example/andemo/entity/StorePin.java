@@ -6,7 +6,7 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
-/** Mật khẩu 4 số (비밀번호) của cửa hàng dùng để mở khóa menu */
+/** Mật khẩu 4 số của cửa hàng dùng để mở khóa menu */
 @Entity
 @Table(name = "store_pin")
 @Data

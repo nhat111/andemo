@@ -32,12 +32,19 @@ public class OtpService {
     public void issue(String storeId) {
         String code = demoMode ? DEMO_OTP : String.format("%06d", random.nextInt(1_000_000));
         otps.put(storeId, new OtpEntry(code, Instant.now().plusSeconds(ttlSeconds)));
-        // TODO: gửi SMS cho 경영주 thay vì in log
+        // TODO: gửi SMS cho chủ cửa hàng thay vì in log
         System.out.println(">>> [OTP] store=" + storeId + " code=" + code);
     }
 
     /** Kiểm tra OTP, đúng thì xóa luôn (dùng 1 lần) */
     public boolean verify(String storeId, String code) {
+        if (!check(storeId, code)) return false;
+        otps.remove(storeId);
+        return true;
+    }
+
+    /** Chỉ kiểm tra OTP, không xóa (bước xác nhận OTP trước khi nhập mật khẩu mới) */
+    public boolean check(String storeId, String code) {
         if (code == null) return false;
 
         OtpEntry entry = otps.get(storeId);
@@ -45,10 +52,6 @@ public class OtpService {
             // Demo: cho phép dùng 123456 kể cả khi chưa bấm "Gửi OTP"
             return DEMO_OTP.equals(code);
         }
-        if (entry == null || Instant.now().isAfter(entry.expiresAt()) || !entry.code().equals(code)) {
-            return false;
-        }
-        otps.remove(storeId);
-        return true;
+        return entry != null && !Instant.now().isAfter(entry.expiresAt()) && entry.code().equals(code);
     }
 }

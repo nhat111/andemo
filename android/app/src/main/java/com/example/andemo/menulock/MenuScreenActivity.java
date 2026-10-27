@@ -23,7 +23,7 @@ import retrofit2.Response;
 
 /**
  * Màn hình nghiệp vụ của 1 menu (dữ liệu mock từ backend).
- * Backend trả 423 nếu menu bị khóa; với menu 원가 bị khóa thì cột Giá vốn / Tỷ suất LN để trống.
+ * Backend trả 423 nếu menu bị khóa; với menu Giá vốn bị khóa thì cột Giá vốn / Tỷ suất LN để trống.
  */
 public class MenuScreenActivity extends AppCompatActivity {
 
@@ -67,7 +67,7 @@ public class MenuScreenActivity extends AppCompatActivity {
                     new AlertDialog.Builder(MenuScreenActivity.this)
                             .setMessage(error.getMessage())
                             .setCancelable(false)
-                            .setPositiveButton("확인", (d, w) -> finish())
+                            .setPositiveButton("Đóng", (d, w) -> finish())
                             .show();
                 } else {
                     tvContent.setText(error.getMessage());
@@ -84,7 +84,7 @@ public class MenuScreenActivity extends AppCompatActivity {
 
     private void bind(MenuDataDto data) {
         if (data.isMasked()) {
-            tvNotice.setText("🔒 Giá vốn & Tỷ suất lợi nhuận đang bị ẩn (menu 원가 đã khóa)");
+            tvNotice.setText("🔒 Giá vốn & Tỷ suất lợi nhuận đang bị ẩn (menu Giá vốn đã khóa)");
             tvNotice.setVisibility(View.VISIBLE);
         }
 

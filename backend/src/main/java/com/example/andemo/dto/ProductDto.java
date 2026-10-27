@@ -7,7 +7,7 @@ public class ProductDto {
     private String imageUrl;
     private int stockQuantity;
     private Integer salePrice;
-    // Dữ liệu nhạy cảm (원가 / 이익률): null khi menu COST đang bị khóa
+    // Dữ liệu nhạy cảm (giá vốn / tỷ suất lợi nhuận): null khi menu COST đang bị khóa
     private Integer costPrice;
     private Double marginRate;
 

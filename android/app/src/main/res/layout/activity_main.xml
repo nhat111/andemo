@@ -38,7 +38,7 @@
         android:id="@+id/btnMenuLock"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Khóa Menu (메뉴 잠금)"
+        android:text="Trạng thái khóa menu"
         android:layout_marginBottom="12dp" />
 
     <TextView

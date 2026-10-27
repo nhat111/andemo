@@ -16,17 +16,16 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Khóa Menu (메뉴 잠금)"
+            android:text="Khóa Menu"
             android:textSize="22sp"
             android:textStyle="bold" />
 
-        <!-- Nút trên title: mở popup kiểm tra đã cài mật khẩu 4 số chưa -->
+        <!-- Nút trên title: Khóa / Mở khóa tất cả chức năng -->
         <Button
-            android:id="@+id/btnPinSetting"
-            style="?attr/materialButtonOutlinedStyle"
+            android:id="@+id/btnFeatureLock"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="🔑 Mật khẩu" />
+            android:text="Khóa" />
     </LinearLayout>
 
     <TextView
@@ -58,15 +57,9 @@
     </ScrollView>
 
     <Button
-        android:id="@+id/btnLockAll"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Khóa tất cả (전체 잠금)"
-        android:layout_marginTop="12dp" />
-
-    <Button
         android:id="@+id/btnBack"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Quay lại" />
+        android:text="Quay lại"
+        android:layout_marginTop="12dp" />
 </LinearLayout>

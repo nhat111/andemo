@@ -117,7 +117,7 @@ public class ProductDetailActivity extends AppCompatActivity {
         }
     }
 
-    /** Backend trả null cho Giá vốn / Tỷ suất LN khi menu 원가 bị khóa → để trống */
+    /** Backend trả null cho Giá vốn / Tỷ suất LN khi menu Giá vốn bị khóa → để trống */
     private void bindPrice(ProductDto product) {
         StringBuilder sb = new StringBuilder();
         sb.append("Giá bán: ").append(product.getSalePrice() != null ? product.getSalePrice() : "-").append("\n");

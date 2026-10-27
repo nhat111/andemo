@@ -9,7 +9,9 @@ import java.util.List;
 @AllArgsConstructor
 public class MenuLockStatusResponse {
     private String storeId;
-    private boolean pinSet;        // 비번 설정 ? (Đã cài mật khẩu?)
+    private String storeName;
+    private String ownerPhone;     // SĐT chủ cửa hàng đã che (010-****-8110) – nhận OTP
+    private boolean pinSet;        // Đã cài mật khẩu chưa?
     private boolean otpRequired;   // sai PIN quá N lần → phải xác thực OTP
     private List<MenuStatusDto> menus;
 }

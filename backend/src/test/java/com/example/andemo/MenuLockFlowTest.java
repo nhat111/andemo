@@ -156,4 +156,34 @@ class MenuLockFlowTest {
         mvc.perform(auth(get("/api/menu-lock/status")))
                 .andExpect(jsonPath("$.otpRequired").value(false));
     }
+
+    @Test
+    void unlockWithoutMenuCodeUnlocksAll() throws Exception {
+        setupPin("1234");
+        lock("ORDER", "RETURN", "COST");
+
+        mvc.perform(auth(post("/api/menu-lock/unlock")).content("{\"pin\":\"0000\"}"))
+                .andExpect(status().isUnauthorized());
+        mvc.perform(auth(post("/api/menu-lock/unlock")).content("{\"pin\":\"1234\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[?(@.locked == true)]").isEmpty());
+        mvc.perform(auth(get("/api/store-menus/ORDER/data"))).andExpect(status().isOk());
+    }
+
+    @Test
+    void otpVerifyDoesNotConsumeOtp() throws Exception {
+        mvc.perform(auth(post("/api/menu-lock/otp/request"))).andExpect(status().isOk());
+        mvc.perform(auth(post("/api/menu-lock/otp/verify")).content("{\"otp\":\"000000\"}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("OTP_INVALID"));
+        mvc.perform(auth(post("/api/menu-lock/otp/verify")).content("{\"otp\":\"123456\"}"))
+                .andExpect(status().isOk());
+        // OTP vẫn dùng được để lưu mật khẩu
+        mvc.perform(auth(post("/api/menu-lock/pin"))
+                        .content("{\"otp\":\"123456\",\"newPin\":\"1234\",\"confirmPin\":\"1234\"}"))
+                .andExpect(status().isOk());
+        mvc.perform(auth(get("/api/menu-lock/status")))
+                .andExpect(jsonPath("$.pinSet").value(true))
+                .andExpect(jsonPath("$.ownerPhone").value("010-****-8110"));
+    }
 }

@@ -18,6 +18,7 @@ import com.example.andemo.R;
 import com.example.andemo.api.ApiClient;
 import com.example.andemo.api.MenuLockService;
 import com.example.andemo.model.ApiError;
+import com.example.andemo.model.OtpVerifyRequest;
 import com.example.andemo.model.PinSetupRequest;
 
 import okhttp3.ResponseBody;
@@ -27,8 +28,9 @@ import retrofit2.Response;
 
 /**
  * Popup xác thực & thiết lập mật khẩu:
- * (3) Nhập mã OTP → (4) Nhập mật khẩu mới → (5) Xác nhận mật khẩu → 확인 → lưu DB.
- * Dùng cho cả cài lần đầu và Quên mật khẩu / Reset PIN.
+ * (2) Yêu cầu mã xác thực → popup xác nhận gửi OTP tới SĐT chủ cửa hàng
+ * (3) Nhập OTP → Xác nhận → (4) Nhập mật khẩu mới → (5) Xác nhận mật khẩu → Xác nhận → lưu DB.
+ * Dùng cho cả cài lần đầu và Đặt lại mật khẩu.
  * Kết quả trả về qua Fragment Result API với key {@link #REQUEST_KEY}.
  */
 public class PinSetupDialog extends DialogFragment {
@@ -38,15 +40,24 @@ public class PinSetupDialog extends DialogFragment {
     public static final String RESULT_SAVED = "saved";
 
     private static final String ARG_IS_RESET = "is_reset";
+    private static final String ARG_STORE_ID = "store_id";
+    private static final String ARG_STORE_NAME = "store_name";
+    private static final String ARG_OWNER_PHONE = "owner_phone";
+    private static final String STATE_OTP_VERIFIED = "otp_verified";
 
     private MenuLockService service;
     private EditText etOtp, etNewPin, etConfirmPin;
-    private TextView tvError;
+    private Button btnVerifyOtp;
+    private TextView tvOtpVerified, tvError;
+    private boolean otpVerified;
     private boolean submitting;
 
-    public static PinSetupDialog newInstance(boolean isReset) {
+    public static PinSetupDialog newInstance(boolean isReset, String storeId, String storeName, String ownerPhone) {
         Bundle args = new Bundle();
         args.putBoolean(ARG_IS_RESET, isReset);
+        args.putString(ARG_STORE_ID, storeId);
+        args.putString(ARG_STORE_NAME, storeName);
+        args.putString(ARG_OWNER_PHONE, ownerPhone);
         PinSetupDialog dialog = new PinSetupDialog();
         dialog.setArguments(args);
         return dialog;
@@ -61,16 +72,23 @@ public class PinSetupDialog extends DialogFragment {
         etOtp = view.findViewById(R.id.etOtp);
         etNewPin = view.findViewById(R.id.etNewPin);
         etConfirmPin = view.findViewById(R.id.etConfirmPin);
+        btnVerifyOtp = view.findViewById(R.id.btnVerifyOtp);
+        tvOtpVerified = view.findViewById(R.id.tvOtpVerified);
         tvError = view.findViewById(R.id.tvError);
-        view.findViewById(R.id.btnSendOtp).setOnClickListener(v -> requestOtp());
+        view.findViewById(R.id.btnRequestOtp).setOnClickListener(v -> confirmRequestOtp());
+        btnVerifyOtp.setOnClickListener(v -> verifyOtp());
+
+        if (savedInstanceState != null && savedInstanceState.getBoolean(STATE_OTP_VERIFIED)) {
+            onOtpVerified();
+        }
 
         boolean isReset = requireArguments().getBoolean(ARG_IS_RESET, false);
         AlertDialog dialog = new AlertDialog.Builder(requireContext())
-                .setTitle(isReset ? "Reset mật khẩu 4 số" : "Xác thực & Thiết lập mật khẩu")
+                .setTitle(isReset ? "Đặt lại mật khẩu" : "Thiết lập mật khẩu")
                 .setView(view)
                 // Listener gán lại trong onShow để không tự đóng popup khi validate lỗi
-                .setPositiveButton("확인 (Xác nhận)", null)
-                .setNegativeButton("취소", (d, w) -> sendResult(false))
+                .setPositiveButton("Xác nhận", null)
+                .setNegativeButton("Đóng", (d, w) -> sendResult(false))
                 .create();
         dialog.setCanceledOnTouchOutside(false);
         dialog.setOnShowListener(d ->
@@ -79,9 +97,32 @@ public class PinSetupDialog extends DialogFragment {
     }
 
     @Override
+    public void onSaveInstanceState(@NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putBoolean(STATE_OTP_VERIFIED, otpVerified);
+    }
+
+    @Override
     public void onCancel(@NonNull DialogInterface dialog) {
         super.onCancel(dialog);
         sendResult(false);
+    }
+
+    // ===================== (2) Yêu cầu mã xác thực =====================
+
+    private void confirmRequestOtp() {
+        Bundle args = requireArguments();
+        String phone = args.getString(ARG_OWNER_PHONE);
+        String message = "Mã cửa hàng: " + args.getString(ARG_STORE_ID)
+                + "\nTên cửa hàng: " + args.getString(ARG_STORE_NAME)
+                + "\nSố điện thoại: " + (phone != null ? phone : "—")
+                + "\n\nBạn có muốn yêu cầu xác thực OTP không?";
+        new AlertDialog.Builder(requireContext())
+                .setTitle("Yêu cầu mã xác thực")
+                .setMessage(message)
+                .setPositiveButton("Xác nhận", (d, w) -> requestOtp())
+                .setNegativeButton("Hủy", null)
+                .show();
     }
 
     private void requestOtp() {
@@ -91,7 +132,7 @@ public class PinSetupDialog extends DialogFragment {
                 if (!isAdded()) return;
                 if (response.isSuccessful()) {
                     Toast.makeText(requireContext(),
-                            "Đã gửi OTP (demo: 123456)", Toast.LENGTH_LONG).show();
+                            "Đã gửi mã OTP (demo: 123456)", Toast.LENGTH_LONG).show();
                 } else {
                     showError(ApiError.from(response.errorBody(), response.code()).getMessage());
                 }
@@ -105,6 +146,50 @@ public class PinSetupDialog extends DialogFragment {
         });
     }
 
+    // ===================== (3) Xác nhận OTP =====================
+
+    private void verifyOtp() {
+        String otp = etOtp.getText().toString().trim();
+        if (otp.length() != 6) {
+            showError("Vui lòng nhập mã OTP 6 số");
+            return;
+        }
+        tvError.setVisibility(View.GONE);
+        btnVerifyOtp.setEnabled(false);
+        service.verifyOtp(new OtpVerifyRequest(otp)).enqueue(new Callback<ResponseBody>() {
+            @Override
+            public void onResponse(@NonNull Call<ResponseBody> call, @NonNull Response<ResponseBody> response) {
+                if (!isAdded()) return;
+                if (response.isSuccessful()) {
+                    onOtpVerified();
+                } else {
+                    btnVerifyOtp.setEnabled(true);
+                    showError(ApiError.from(response.errorBody(), response.code()).getMessage());
+                }
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<ResponseBody> call, @NonNull Throwable t) {
+                if (!isAdded()) return;
+                btnVerifyOtp.setEnabled(true);
+                showError("Lỗi kết nối: " + t.getMessage());
+            }
+        });
+    }
+
+    /** OTP đúng → khóa ô OTP, mở ô nhập mật khẩu (4)(5) */
+    private void onOtpVerified() {
+        otpVerified = true;
+        etOtp.setEnabled(false);
+        btnVerifyOtp.setEnabled(false);
+        tvOtpVerified.setVisibility(View.VISIBLE);
+        etNewPin.setEnabled(true);
+        etConfirmPin.setEnabled(true);
+        etNewPin.requestFocus();
+    }
+
+    // ===================== (4)(5) Lưu mật khẩu =====================
+
     private void submit() {
         if (submitting) return;
         String otp = etOtp.getText().toString().trim();
@@ -112,8 +197,8 @@ public class PinSetupDialog extends DialogFragment {
         String confirmPin = etConfirmPin.getText().toString();
 
         // Validate sớm ở client, backend vẫn validate lại
-        if (otp.length() != 6) {
-            showError("Vui lòng nhập mã OTP 6 số");
+        if (!otpVerified) {
+            showError("Vui lòng xác thực mã OTP trước");
             return;
         }
         if (!newPin.matches("\\d{4}")) {

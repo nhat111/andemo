@@ -5,6 +5,7 @@ import com.example.andemo.model.MenuAccessResponse;
 import com.example.andemo.model.MenuDataDto;
 import com.example.andemo.model.MenuLockStatusResponse;
 import com.example.andemo.model.MenuStatusDto;
+import com.example.andemo.model.OtpVerifyRequest;
 import com.example.andemo.model.PinSetupRequest;
 import com.example.andemo.model.UnlockRequest;
 
@@ -33,6 +34,9 @@ public interface MenuLockService {
 
     @POST("api/menu-lock/otp/request")
     Call<ResponseBody> requestOtp();
+
+    @POST("api/menu-lock/otp/verify")
+    Call<ResponseBody> verifyOtp(@Body OtpVerifyRequest request);
 
     @POST("api/menu-lock/pin")
     Call<ResponseBody> setupPin(@Body PinSetupRequest request);

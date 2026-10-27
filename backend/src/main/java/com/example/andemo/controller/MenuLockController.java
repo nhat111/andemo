@@ -5,6 +5,7 @@ import com.example.andemo.dto.MenuAccessResponse;
 import com.example.andemo.dto.MenuLockLogDto;
 import com.example.andemo.dto.MenuLockStatusResponse;
 import com.example.andemo.dto.MenuStatusDto;
+import com.example.andemo.dto.OtpVerifyRequest;
 import com.example.andemo.dto.PinSetupRequest;
 import com.example.andemo.dto.UnlockRequest;
 import com.example.andemo.service.MenuLockService;
@@ -17,7 +18,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 /**
- * Khóa / mở khóa menu nhạy cảm (발주 / 반품 / 폐기 / 재고 / 원가) bằng mật khẩu 4 số.
+ * Khóa / mở khóa menu nhạy cảm (đặt hàng / trả hàng / hủy hàng / tồn kho / giá vốn) bằng mật khẩu 4 số.
  */
 @RestController
 @RequestMapping("/api/menu-lock")
@@ -58,6 +59,13 @@ public class MenuLockController {
     public ResponseEntity<?> requestOtp(Authentication auth) {
         menuLockService.requestOtp(storeOf(auth));
         return ResponseEntity.ok("Đã gửi mã OTP");
+    }
+
+    /** Bước xác nhận OTP: kiểm tra OTP trước khi nhập mật khẩu mới */
+    @PostMapping("/otp/verify")
+    public ResponseEntity<?> verifyOtp(@RequestBody OtpVerifyRequest request, Authentication auth) {
+        menuLockService.verifyOtp(storeOf(auth), request.getOtp());
+        return ResponseEntity.ok("OTP hợp lệ");
     }
 
     /** Thiết lập lần đầu / Reset PIN: OTP + PIN mới + xác nhận PIN */

@@ -45,11 +45,11 @@ public class DataInitializer implements CommandLineRunner {
         // BLOCK = chặn vào màn hình, MASK = vào được nhưng ẩn Giá vốn / Tỷ suất lợi nhuận
         if (commonCodeRepository.countByGroupCode(MenuLockService.GROUP_LOCK_MENU) == 0) {
             String g = MenuLockService.GROUP_LOCK_MENU;
-            commonCodeRepository.save(new CommonCode(null, g, "ORDER", "발주 (Đặt hàng)", "BLOCK", 1, true));
-            commonCodeRepository.save(new CommonCode(null, g, "RETURN", "반품 (Trả hàng)", "BLOCK", 2, true));
-            commonCodeRepository.save(new CommonCode(null, g, "DISPOSAL", "폐기 (Hủy hàng)", "BLOCK", 3, true));
-            commonCodeRepository.save(new CommonCode(null, g, "INVENTORY", "재고 (Tồn kho)", "BLOCK", 4, true));
-            commonCodeRepository.save(new CommonCode(null, g, "COST", "원가 (Giá vốn / Lợi nhuận)", "MASK", 5, true));
+            commonCodeRepository.save(new CommonCode(null, g, "ORDER", "Đặt hàng", "BLOCK", 1, true));
+            commonCodeRepository.save(new CommonCode(null, g, "RETURN", "Trả hàng", "BLOCK", 2, true));
+            commonCodeRepository.save(new CommonCode(null, g, "DISPOSAL", "Hủy hàng", "BLOCK", 3, true));
+            commonCodeRepository.save(new CommonCode(null, g, "INVENTORY", "Tồn kho", "BLOCK", 4, true));
+            commonCodeRepository.save(new CommonCode(null, g, "COST", "Giá vốn", "MASK", 5, true));
             System.out.println(">>> Seeded COMMON_CODE LOCK_MENU");
         }
     }

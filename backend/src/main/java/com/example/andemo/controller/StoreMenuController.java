@@ -44,7 +44,7 @@ public class StoreMenuController {
         menuLockService.assertAccessible(storeId, menuCode); // BLOCK + khóa → 423
         MenuAccessResponse access = menuLockService.checkAccess(storeId, menuCode);
 
-        // Menu loại MASK (vd 원가): màn hình tra cứu sản phẩm, để trống Giá vốn & Tỷ suất lợi nhuận
+        // Menu loại MASK (vd Giá vốn): màn hình tra cứu sản phẩm, để trống Giá vốn & Tỷ suất lợi nhuận
         boolean isMaskType = menuLockService.getMenus(storeId).stream()
                 .anyMatch(m -> m.getMenuCode().equals(menuCode)
                         && MenuLockService.LOCK_TYPE_MASK.equals(m.getLockType()));

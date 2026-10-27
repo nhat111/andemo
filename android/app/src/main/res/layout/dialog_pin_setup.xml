@@ -11,10 +11,19 @@
         android:paddingEnd="24dp"
         android:paddingTop="8dp">
 
+        <!-- (2) Yêu cầu mã xác thực -->
+        <Button
+            android:id="@+id/btnRequestOtp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Yêu cầu mã xác thực" />
+
+        <!-- (3) Nhập OTP + xác nhận -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal">
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
 
             <EditText
                 android:id="@+id/etOtp"
@@ -26,29 +35,72 @@
                 android:maxLength="6" />
 
             <Button
-                android:id="@+id/btnSendOtp"
+                android:id="@+id/btnVerifyOtp"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Gửi OTP" />
+                android:text="Xác nhận" />
         </LinearLayout>
 
-        <EditText
-            android:id="@+id/etNewPin"
+        <TextView
+            android:id="@+id/tvOtpVerified"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Mật khẩu mới (4 số)"
-            android:inputType="numberPassword"
-            android:maxLength="4"
-            android:layout_marginTop="8dp" />
+            android:text="✔ Đã xác thực OTP"
+            android:textColor="#2E7D32"
+            android:visibility="gone" />
 
-        <EditText
-            android:id="@+id/etConfirmPin"
+        <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Xác nhận mật khẩu"
-            android:inputType="numberPassword"
-            android:maxLength="4"
-            android:layout_marginTop="8dp" />
+            android:text="Mật khẩu (4 chữ số)"
+            android:textStyle="bold"
+            android:layout_marginTop="16dp" />
+
+        <!-- (4) Nhập mật khẩu mới -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <TextView
+                android:layout_width="80dp"
+                android:layout_height="wrap_content"
+                android:text="Nhập" />
+
+            <EditText
+                android:id="@+id/etNewPin"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:hint="••••"
+                android:inputType="numberPassword"
+                android:maxLength="4"
+                android:enabled="false" />
+        </LinearLayout>
+
+        <!-- (5) Xác nhận mật khẩu -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <TextView
+                android:layout_width="80dp"
+                android:layout_height="wrap_content"
+                android:text="Xác nhận" />
+
+            <EditText
+                android:id="@+id/etConfirmPin"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:hint="••••"
+                android:inputType="numberPassword"
+                android:maxLength="4"
+                android:enabled="false" />
+        </LinearLayout>
 
         <TextView
             android:id="@+id/tvError"

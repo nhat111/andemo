@@ -14,7 +14,7 @@ import java.util.stream.Collectors;
 /**
  * API tìm sản phẩm theo barcode (US-05 Product Image Lookup).
  * Dữ liệu mock – thực tế sẽ lấy từ ERP/POS.
- * Khi menu 원가 (COST) bị khóa → trả null cho costPrice / marginRate (tránh leak qua F12 Network tab).
+ * Khi menu Giá vốn (COST) bị khóa → trả null cho costPrice / marginRate (tránh leak qua F12 Network tab).
  */
 @RestController
 @RequestMapping("/api/products")

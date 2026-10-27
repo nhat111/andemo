@@ -1,33 +1,44 @@
-# Khóa Menu (메뉴 잠금) – Requirements & Implementation Notes
+# Khóa Menu – Requirements & Implementation Notes
 
-> Khóa các menu nhạy cảm của cửa hàng bằng mật khẩu 4 số (비밀번호), mở khóa bằng PIN, quên PIN thì reset qua OTP.
+> Khóa các menu nhạy cảm của cửa hàng bằng mật khẩu 4 số, mở khóa bằng PIN, quên PIN thì reset qua OTP.
 
 ## 1. Danh sách menu (COMMON_CODE, group `LOCK_MENU`)
 
 | code | Tên | attr1 (lock type) | Khi bị khóa |
 |------|-----|-------------------|-------------|
-| ORDER | 발주 | BLOCK | Popup "Menu này đã bị khóa. Vui lòng liên hệ 경영주", chặn vào màn hình |
-| RETURN | 반품 | BLOCK | như trên |
-| DISPOSAL | 폐기 | BLOCK | như trên |
-| INVENTORY | 재고 | BLOCK | như trên |
-| COST | 원가 | MASK | Vào được màn hình tra cứu, **Giá vốn / Tỷ suất lợi nhuận để trống** |
+| ORDER | Đặt hàng | BLOCK | Popup "Menu này đã bị khóa. Vui lòng liên hệ chủ cửa hàng", chặn vào màn hình |
+| RETURN | Trả hàng | BLOCK | như trên |
+| DISPOSAL | Hủy hàng | BLOCK | như trên |
+| INVENTORY | Tồn kho | BLOCK | như trên |
+| COST | Giá vốn | MASK | Vào được màn hình tra cứu, **Giá vốn / Tỷ suất lợi nhuận để trống** |
 
 Thêm menu mới = thêm 1 row vào `common_code` (không sửa source). App Android dựng danh sách menu động từ API.
 
 ## 2. Luồng
 
-```
-[Khóa]   비번 설정 ? ── N → Popup OTP + PIN mới + Xác nhận → lưu DB ───┐
-                    └─ Y ───────────────────────────────────────────────┴→ Popup "기능을 잠금 하시겠습니까?" → 확인 → lưu khóa + log LOCK
+Nút **Khóa / Mở khóa** nằm trên title (thanh tiêu đề "Menu chính" và màn Khóa Menu), khóa / mở **tất cả** menu cùng lúc.
 
-[Mở khóa] Popup nhập PIN 4 số ── "Quên mật khẩu / Reset PIN" → flow OTP
+```
+[Khóa]   Đã cài mật khẩu? ── N → Popup thiết lập mật khẩu ──────────────────────┐
+                         └─ Y ──────────────────────────────────────────────────┴→ Popup "Bạn có muốn khóa chức năng không?
+                                                                                     (Đặt hàng, Trả hàng, Hủy hàng, Tồn kho, Giá vốn)"
+                                                                                     Đóng / Xác nhận → khóa tất cả + log LOCK → nút đổi sang "Mở khóa"
+
+[Popup thiết lập mật khẩu]
+   (2) Yêu cầu mã xác thực → popup "Mã cửa hàng / Tên cửa hàng / SĐT chủ cửa hàng (010-****-8110)
+                               Bạn có muốn yêu cầu xác thực OTP không?" Hủy / Xác nhận → gửi OTP
+   (3) Nhập OTP 6 số → Xác nhận (POST /otp/verify) → mở ô nhập mật khẩu
+   (4) Nhập mật khẩu 4 số   (5) Xác nhận mật khẩu
+   Đóng / Xác nhận → lưu DB + log PIN_SET
+
+[Mở khóa] Popup: Mật khẩu [••••] [Mở khóa] — Đóng / Đặt lại mật khẩu (→ popup thiết lập mật khẩu)
                     ├─ Sai < N lần → báo lỗi + log FAILED_TRY, cho nhập lại
-                    ├─ Sai đủ N lần (mặc định 5) → khóa tạm, bắt buộc OTP để reset PIN
-                    └─ Đúng → menu UNLOCK + log UNLOCK → nút đổi sang 잠금
+                    ├─ Sai đủ N lần (mặc định 5) → khóa tạm, bắt buộc Đặt lại mật khẩu qua OTP
+                    └─ Đúng → mở tất cả menu + log UNLOCK → nút đổi sang "Khóa"
 
 [Bấm menu] check khóa ── không khóa → vào màn hình
                      ├─ BLOCK + khóa → popup + chặn
-                     └─ MASK + khóa → vào màn hình, cột nhạy cảm để trống
+                     └─ MASK + khóa → vào màn hình, cột Giá vốn / Tỷ suất lợi nhuận để trống
 ```
 
 ## 3. Thiết kế bảng (DB)
@@ -41,7 +52,7 @@ Thêm menu mới = thêm 1 row vào `common_code` (không sửa source). App And
 | id | BIGINT, PK, auto increment | N | |
 | group_code | VARCHAR | N | Nhóm mã, vd `LOCK_MENU` |
 | code | VARCHAR | N | Mã menu: `ORDER`, `RETURN`, `DISPOSAL`, `INVENTORY`, `COST` |
-| code_name | VARCHAR | N | Tên hiển thị, vd `발주 (Đặt hàng)` |
+| code_name | VARCHAR | N | Tên hiển thị, vd `Đặt hàng` |
 | attr1 | VARCHAR | Y | `BLOCK` (chặn truy cập) / `MASK` (ẩn dữ liệu nhạy cảm) |
 | sort_order | INT | N | Thứ tự hiển thị |
 | use_yn | BOOLEAN | N | `false` = ẩn menu, không cho khóa |
@@ -72,7 +83,7 @@ Thêm menu mới = thêm 1 row vào `common_code` (không sửa source). App And
 | otp_required | BOOLEAN | N | `true` khi sai ≥ `max-fail` → phải OTP + cài lại PIN |
 | updated_at | TIMESTAMP | Y | Lần cài / đổi PIN gần nhất |
 
-- Không có row = **chưa cài mật khẩu** (`비번 설정 = N`)
+- Không có row = **chưa cài mật khẩu** (đã cài mật khẩu = N)
 
 ### 3.4 `menu_lock_log` – lịch sử thao tác
 
@@ -151,22 +162,23 @@ CREATE INDEX idx_menu_lock_log_store ON menu_lock_log (store_id, log_id DESC);
 ALTER TABLE users ADD COLUMN store_id VARCHAR(50);
 
 INSERT INTO common_code (group_code, code, code_name, attr1, sort_order) VALUES
- ('LOCK_MENU', 'ORDER',     '발주 (Đặt hàng)',            'BLOCK', 1),
- ('LOCK_MENU', 'RETURN',    '반품 (Trả hàng)',            'BLOCK', 2),
- ('LOCK_MENU', 'DISPOSAL',  '폐기 (Hủy hàng)',            'BLOCK', 3),
- ('LOCK_MENU', 'INVENTORY', '재고 (Tồn kho)',             'BLOCK', 4),
- ('LOCK_MENU', 'COST',      '원가 (Giá vốn / Lợi nhuận)', 'MASK',  5);
+ ('LOCK_MENU', 'ORDER',     'Đặt hàng',  'BLOCK', 1),
+ ('LOCK_MENU', 'RETURN',    'Trả hàng',  'BLOCK', 2),
+ ('LOCK_MENU', 'DISPOSAL',  'Hủy hàng',  'BLOCK', 3),
+ ('LOCK_MENU', 'INVENTORY', 'Tồn kho',   'BLOCK', 4),
+ ('LOCK_MENU', 'COST',      'Giá vốn',   'MASK',  5);
 ```
 
 ## 4. API (`/api/menu-lock`, cần JWT)
 
 | Method | Path | Mô tả |
 |--------|------|-------|
-| GET | `/status` | `pinSet`, `otpRequired`, danh sách menu + trạng thái khóa |
+| GET | `/status` | `storeName`, `ownerPhone` (đã che), `pinSet`, `otpRequired`, danh sách menu + trạng thái khóa |
 | GET | `/access/{menuCode}` | `allowed`, `masked`, `message` |
 | POST | `/lock` | `{ "menuCodes": ["ORDER"] }` → 409 `PIN_NOT_SET` nếu chưa cài PIN |
-| POST | `/unlock` | `{ "menuCode", "pin" }` → 401 `PIN_WRONG` (+`remainingAttempts`), 423 `OTP_REQUIRED` |
+| POST | `/unlock` | `{ "menuCode", "pin" }` – bỏ `menuCode` = mở tất cả → 401 `PIN_WRONG` (+`remainingAttempts`), 423 `OTP_REQUIRED` |
 | POST | `/otp/request` | Gửi OTP (demo: in ra log, luôn là `123456`) |
+| POST | `/otp/verify` | `{ "otp" }` – kiểm tra OTP (chưa tiêu thụ) trước khi cho nhập mật khẩu mới |
 | POST | `/pin` | `{ "otp", "newPin", "confirmPin" }` – cài lần đầu / reset PIN |
 | GET | `/logs` | 50 log gần nhất của cửa hàng |
 

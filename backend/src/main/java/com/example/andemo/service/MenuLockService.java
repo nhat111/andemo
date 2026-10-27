@@ -45,7 +45,7 @@ public class MenuLockService {
     public static final String ACTION_FAILED_TRY = "FAILED_TRY";
     public static final String ACTION_PIN_SET = "PIN_SET";
 
-    public static final String LOCKED_MESSAGE = "Menu này đã bị khóa. Vui lòng liên hệ 경영주";
+    public static final String LOCKED_MESSAGE = "Menu này đã bị khóa. Vui lòng liên hệ chủ cửa hàng";
 
     private final CommonCodeRepository commonCodeRepository;
     private final MenuLockRepository menuLockRepository;
@@ -54,6 +54,7 @@ public class MenuLockService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final OtpService otpService;
+    private final StoreInfoService storeInfoService;
 
     @Value("${app.menu-lock.max-fail:5}")
     private int maxFail;
@@ -71,6 +72,8 @@ public class MenuLockService {
         StorePin pin = storePinRepository.findById(storeId).orElse(null);
         return new MenuLockStatusResponse(
                 storeId,
+                storeInfoService.storeName(storeId),
+                storeInfoService.maskedOwnerPhone(storeId),
                 pin != null,
                 pin != null && pin.isOtpRequired(),
                 getMenus(storeId)
@@ -116,7 +119,7 @@ public class MenuLockService {
         return new MenuAccessResponse(menuCode, false, false, LOCKED_MESSAGE);
     }
 
-    /** Dùng ở các API nghiệp vụ (발주/반품/폐기/재고) để chặn ở backend, không chỉ ở UI */
+    /** Dùng ở các API nghiệp vụ (đặt hàng / trả hàng / hủy hàng / tồn kho) để chặn ở backend, không chỉ ở UI */
     public void assertAccessible(String storeId, String menuCode) {
         MenuAccessResponse access = checkAccess(storeId, menuCode);
         if (!access.isAllowed()) {
@@ -150,13 +153,15 @@ public class MenuLockService {
     // ===================== Mở khóa =====================
 
     /**
-     * Flow "Mở khóa (해제)": check PIN với DB.
+     * Flow "Mở khóa": check PIN với DB. menuCode null → mở tất cả menu đang khóa.
      * Sai < N lần → báo lỗi + log FAILED_TRY. Sai đủ N lần → bắt buộc OTP.
      * Không rollback khi ném MenuLockException để vẫn lưu failCount + log.
      */
     @Transactional(noRollbackFor = MenuLockException.class)
     public List<MenuStatusDto> unlock(String storeId, String menuCode, String pin, String actor, String ip) {
-        getMenuOrThrow(menuCode);
+        boolean unlockAll = menuCode == null || menuCode.isBlank();
+        if (unlockAll) menuCode = null;
+        else getMenuOrThrow(menuCode);
 
         StorePin storePin = storePinRepository.findById(storeId)
                 .orElseThrow(() -> new MenuLockException(HttpStatus.CONFLICT, MenuLockException.PIN_NOT_SET,
@@ -186,9 +191,13 @@ public class MenuLockService {
         storePin.setFailCount(0);
         storePinRepository.save(storePin);
 
-        if (isLocked(storeId, menuCode)) {
-            saveLockState(storeId, menuCode, false, actor);
-            writeLog(storeId, menuCode, ACTION_UNLOCK, actor, ip);
+        List<String> targets = unlockAll
+                ? getMenus(storeId).stream().map(MenuStatusDto::getMenuCode).collect(Collectors.toList())
+                : List.of(menuCode);
+        for (String code : targets) {
+            if (!isLocked(storeId, code)) continue;
+            saveLockState(storeId, code, false, actor);
+            writeLog(storeId, code, ACTION_UNLOCK, actor, ip);
         }
         return getMenus(storeId);
     }
@@ -197,6 +206,14 @@ public class MenuLockService {
 
     public void requestOtp(String storeId) {
         otpService.issue(storeId);
+    }
+
+    /** Bước ③: xác thực OTP trước khi cho nhập mật khẩu mới (chưa tiêu thụ OTP) */
+    public void verifyOtp(String storeId, String otp) {
+        if (!otpService.check(storeId, otp)) {
+            throw new MenuLockException(HttpStatus.BAD_REQUEST, MenuLockException.OTP_INVALID,
+                    "Mã OTP không đúng hoặc đã hết hạn");
+        }
     }
 
     /** Thiết lập lần đầu hoặc reset PIN (Quên mật khẩu): OTP + PIN mới + xác nhận */
