@@ -17,7 +17,7 @@ Thêm menu mới = thêm 1 row vào `common_code` (không sửa source). App And
 ## 2. Luồng
 
 ```
-[Khóa]   비번 설정 ? ── N → Màn hình OTP + PIN mới + Xác nhận → lưu DB ─┐
+[Khóa]   비번 설정 ? ── N → Popup OTP + PIN mới + Xác nhận → lưu DB ───┐
                     └─ Y ───────────────────────────────────────────────┴→ Popup "기능을 잠금 하시겠습니까?" → 확인 → lưu khóa + log LOCK
 
 [Mở khóa] Popup nhập PIN 4 số ── "Quên mật khẩu / Reset PIN" → flow OTP

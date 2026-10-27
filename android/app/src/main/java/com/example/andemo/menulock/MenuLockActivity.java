@@ -14,8 +14,6 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.activity.result.ActivityResultLauncher;
-import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
@@ -40,7 +38,7 @@ import retrofit2.Response;
 /**
  * Danh sách menu có thể khóa (lấy động từ COMMON_CODE).
  * - Bấm tên menu → kiểm tra khóa → vào màn hình / popup chặn
- * - Nút 잠금 → (chưa có PIN thì thiết lập PIN qua OTP) → popup xác nhận → khóa
+ * - Nút 잠금 → (chưa có PIN thì popup thiết lập PIN qua OTP) → popup xác nhận → khóa
  * - Nút 해제 → nhập PIN 4 số → mở khóa (sai quá N lần → bắt OTP)
  */
 public class MenuLockActivity extends AppCompatActivity {
@@ -55,21 +53,6 @@ public class MenuLockActivity extends AppCompatActivity {
     // Menu đang chờ khóa trong lúc user đi thiết lập PIN
     private List<String> pendingLockCodes;
 
-    private final ActivityResultLauncher<Intent> pinSetupLauncher =
-            registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
-                if (result.getResultCode() != RESULT_OK) {
-                    pendingLockCodes = null;
-                    return;
-                }
-                Toast.makeText(this, "Đã lưu mật khẩu", Toast.LENGTH_SHORT).show();
-                List<String> codes = pendingLockCodes;
-                pendingLockCodes = null;
-                loadStatus(() -> {
-                    // Lưu PIN xong → chuyển tiếp sang popup xác nhận khóa
-                    if (codes != null) confirmLock(codes);
-                });
-            });
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -79,6 +62,9 @@ public class MenuLockActivity extends AppCompatActivity {
         tvStatus = findViewById(R.id.tvStatus);
         progressBar = findViewById(R.id.progressBar);
         menuContainer = findViewById(R.id.menuContainer);
+
+        getSupportFragmentManager().setFragmentResultListener(PinSetupDialog.REQUEST_KEY, this,
+                (key, result) -> onPinSetupResult(result.getBoolean(PinSetupDialog.RESULT_SAVED)));
 
         findViewById(R.id.btnLockAll).setOnClickListener(v -> {
             if (status == null) return;
@@ -345,10 +331,21 @@ public class MenuLockActivity extends AppCompatActivity {
     }
 
     private void openPinSetup(List<String> codesToLockAfter) {
+        if (getSupportFragmentManager().findFragmentByTag(PinSetupDialog.TAG) != null) return;
         pendingLockCodes = codesToLockAfter;
-        Intent intent = new Intent(this, PinSetupActivity.class);
-        intent.putExtra(PinSetupActivity.EXTRA_IS_RESET, status != null && status.isPinSet());
-        pinSetupLauncher.launch(intent);
+        PinSetupDialog.newInstance(status != null && status.isPinSet())
+                .show(getSupportFragmentManager(), PinSetupDialog.TAG);
+    }
+
+    private void onPinSetupResult(boolean saved) {
+        List<String> codes = pendingLockCodes;
+        pendingLockCodes = null;
+        if (!saved) return;
+        Toast.makeText(this, "Đã lưu mật khẩu", Toast.LENGTH_SHORT).show();
+        loadStatus(() -> {
+            // Lưu PIN xong → chuyển tiếp sang popup xác nhận khóa
+            if (codes != null) confirmLock(codes);
+        });
     }
 
     private void showError(String message) {

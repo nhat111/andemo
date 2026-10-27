@@ -65,10 +65,6 @@
             android:exported="false" />
 
         <activity
-            android:name=".menulock.PinSetupActivity"
-            android:exported="false" />
-
-        <activity
             android:name=".menulock.MenuScreenActivity"
             android:exported="false" />
 
