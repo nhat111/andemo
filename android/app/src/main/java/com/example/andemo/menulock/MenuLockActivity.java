@@ -78,7 +78,7 @@ public class MenuLockActivity extends AppCompatActivity {
             }
             startLock(codes);
         });
-        findViewById(R.id.btnResetPin).setOnClickListener(v -> openPinSetup(null));
+        findViewById(R.id.btnPinSetting).setOnClickListener(v -> showPinSettingDialog());
         findViewById(R.id.btnBack).setOnClickListener(v -> finish());
 
         loadStatus(null);
@@ -320,6 +320,32 @@ public class MenuLockActivity extends AppCompatActivity {
     }
 
     // ===================== helper =====================
+
+    /** Nút trên title → popup xác nhận đã cài mật khẩu 4 số chưa */
+    private void showPinSettingDialog() {
+        if (status == null) {
+            Toast.makeText(this, "Đang tải trạng thái, vui lòng thử lại", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        if (!status.isPinSet()) {
+            new AlertDialog.Builder(this)
+                    .setTitle("비밀번호 설정")
+                    .setMessage("Cửa hàng chưa cài mật khẩu 4 số.\nBạn có muốn cài đặt ngay không?")
+                    .setPositiveButton("설정 (Cài đặt)", (d, w) -> openPinSetup(null))
+                    .setNegativeButton("취소", null)
+                    .show();
+            return;
+        }
+        String message = "Cửa hàng đã cài mật khẩu 4 số.";
+        if (status.isOtpRequired()) message += "\nĐang bị khóa tạm do nhập sai nhiều lần – cần xác thực OTP.";
+        message += "\nBạn có muốn đổi mật khẩu (xác thực OTP) không?";
+        new AlertDialog.Builder(this)
+                .setTitle("비밀번호 설정")
+                .setMessage(message)
+                .setPositiveButton("변경 (Đổi mật khẩu)", (d, w) -> openPinSetup(null))
+                .setNegativeButton("취소", null)
+                .show();
+    }
 
     private void askOtpReset(String message) {
         new AlertDialog.Builder(this)

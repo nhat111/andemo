@@ -5,13 +5,29 @@
     android:orientation="vertical"
     android:padding="24dp">
 
-    <TextView
-        android:layout_width="wrap_content"
+    <LinearLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Khóa Menu (메뉴 잠금)"
-        android:textSize="22sp"
-        android:textStyle="bold"
-        android:layout_marginBottom="8dp" />
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginBottom="8dp">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Khóa Menu (메뉴 잠금)"
+            android:textSize="22sp"
+            android:textStyle="bold" />
+
+        <!-- Nút trên title: mở popup kiểm tra đã cài mật khẩu 4 số chưa -->
+        <Button
+            android:id="@+id/btnPinSetting"
+            style="?attr/materialButtonOutlinedStyle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="🔑 Mật khẩu" />
+    </LinearLayout>
 
     <TextView
         android:id="@+id/tvStatus"
@@ -47,12 +63,6 @@
         android:layout_height="wrap_content"
         android:text="Khóa tất cả (전체 잠금)"
         android:layout_marginTop="12dp" />
-
-    <Button
-        android:id="@+id/btnResetPin"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Cài đặt / Đổi mật khẩu 4 số" />
 
     <Button
         android:id="@+id/btnBack"
