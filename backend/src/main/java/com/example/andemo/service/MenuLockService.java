@@ -210,10 +210,7 @@ public class MenuLockService {
 
     /** Bước ③: xác thực OTP trước khi cho nhập mật khẩu mới (chưa tiêu thụ OTP) */
     public void verifyOtp(String storeId, String otp) {
-        if (!otpService.check(storeId, otp)) {
-            throw new MenuLockException(HttpStatus.BAD_REQUEST, MenuLockException.OTP_INVALID,
-                    "Mã OTP không đúng hoặc đã hết hạn");
-        }
+        otpService.check(storeId, otp);
     }
 
     /** Thiết lập lần đầu hoặc reset PIN (Quên mật khẩu): OTP + PIN mới + xác nhận */
@@ -227,10 +224,7 @@ public class MenuLockService {
             throw new MenuLockException(HttpStatus.BAD_REQUEST, MenuLockException.PIN_MISMATCH,
                     "Mật khẩu xác nhận không khớp");
         }
-        if (!otpService.verify(storeId, otp)) {
-            throw new MenuLockException(HttpStatus.BAD_REQUEST, MenuLockException.OTP_INVALID,
-                    "Mã OTP không đúng hoặc đã hết hạn");
-        }
+        otpService.verify(storeId, otp);
 
         StorePin storePin = storePinRepository.findById(storeId).orElseGet(StorePin::new);
         storePin.setStoreId(storeId);

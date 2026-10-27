@@ -10,6 +10,8 @@ public class ApiError {
     public static final String PIN_NOT_SET = "PIN_NOT_SET";
     public static final String PIN_WRONG = "PIN_WRONG";
     public static final String OTP_REQUIRED = "OTP_REQUIRED";
+    public static final String OTP_EXPIRED = "OTP_EXPIRED";
+    public static final String OTP_ATTEMPTS_EXCEEDED = "OTP_ATTEMPTS_EXCEEDED";
 
     private String code;
     private String message;

@@ -17,7 +17,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@SpringBootTest
+// Tắt thời gian chờ gửi lại OTP để test gọi setupPin nhiều lần (thời gian chờ test ở OtpLimitTest)
+@SpringBootTest(properties = "app.otp.resend-seconds=0")
 @AutoConfigureMockMvc
 @DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
 class MenuLockFlowTest {
@@ -75,6 +76,10 @@ class MenuLockFlowTest {
         mvc.perform(auth(post("/api/menu-lock/pin"))
                         .content("{\"otp\":\"123456\",\"newPin\":\"1234\",\"confirmPin\":\"4321\"}"))
                 .andExpect(jsonPath("$.code").value("PIN_MISMATCH"));
+        mvc.perform(auth(post("/api/menu-lock/pin"))
+                        .content("{\"otp\":\"000000\",\"newPin\":\"1234\",\"confirmPin\":\"1234\"}"))
+                .andExpect(jsonPath("$.code").value("OTP_EXPIRED"));
+        mvc.perform(auth(post("/api/menu-lock/otp/request"))).andExpect(status().isOk());
         mvc.perform(auth(post("/api/menu-lock/pin"))
                         .content("{\"otp\":\"000000\",\"newPin\":\"1234\",\"confirmPin\":\"1234\"}"))
                 .andExpect(jsonPath("$.code").value("OTP_INVALID"));

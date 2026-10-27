@@ -177,8 +177,8 @@ INSERT INTO common_code (group_code, code, code_name, attr1, sort_order) VALUES
 | GET | `/access/{menuCode}` | `allowed`, `masked`, `message` |
 | POST | `/lock` | `{ "menuCodes": ["ORDER"] }` → 409 `PIN_NOT_SET` nếu chưa cài PIN |
 | POST | `/unlock` | `{ "menuCode", "pin" }` – bỏ `menuCode` = mở tất cả → 401 `PIN_WRONG` (+`remainingAttempts`), 423 `OTP_REQUIRED` |
-| POST | `/otp/request` | Gửi OTP (demo: in ra log, luôn là `123456`) |
-| POST | `/otp/verify` | `{ "otp" }` – kiểm tra OTP (chưa tiêu thụ) trước khi cho nhập mật khẩu mới |
+| POST | `/otp/request` | Gửi OTP (demo: in ra log, luôn là `123456`) → 429 `OTP_TOO_FREQUENT` nếu yêu cầu lại trong 60 giây |
+| POST | `/otp/verify` | `{ "otp" }` – kiểm tra OTP (chưa tiêu thụ) trước khi cho nhập mật khẩu mới → 400 `OTP_INVALID` (+`remainingAttempts`), `OTP_ATTEMPTS_EXCEEDED`, `OTP_EXPIRED` |
 | POST | `/pin` | `{ "otp", "newPin", "confirmPin" }` – cài lần đầu / reset PIN |
 | GET | `/logs` | 50 log gần nhất của cửa hàng |
 
@@ -191,9 +191,12 @@ Màn hình nghiệp vụ (mock): `GET /api/store-menus/{menuCode}/data` → 423 
 - **PIN** lưu BCrypt (`store_pin.pin_hash`), áp dụng theo cửa hàng (`users.store_id`).
 - **Đếm sai PIN**: `@Transactional(noRollbackFor = MenuLockException.class)` để vẫn lưu `failCount` + log FAILED_TRY khi trả lỗi.
 - **Log table** `menu_lock_log`: `log_id, store_id, menu_code, action_type (LOCK/UNLOCK/FAILED_TRY/PIN_SET), actor_id, created_at, ip_address` (IP lấy từ `X-Forwarded-For` khi chạy sau proxy Render).
-- Cấu hình: `app.menu-lock.max-fail=5`, `app.otp.demo-mode=true`, `app.otp.ttl-seconds=180`.
+- **OTP**: lưu trong RAM theo cửa hàng, hiệu lực 180 giây, dùng 1 lần (bị xóa khi đặt PIN thành công). Phải yêu cầu mã trước khi nhập (không có mã → `OTP_EXPIRED`).
+  - Nhập sai (ở `/otp/verify` hoặc `/pin`, cộng dồn) đủ 5 lần → hủy mã (`OTP_ATTEMPTS_EXCEEDED`), phải yêu cầu mã mới.
+  - Yêu cầu mã cách nhau tối thiểu 60 giây (`OTP_TOO_FREQUENT`) → chặn dò mã bằng cách xin mã mới liên tục.
+- Cấu hình: `app.menu-lock.max-fail=5`, `app.otp.demo-mode=true`, `app.otp.ttl-seconds=180`, `app.otp.max-attempts=5`, `app.otp.resend-seconds=60`.
 - TODO production: tích hợp SMS thật cho OTP, tắt `demo-mode`, lưu OTP vào DB/Redis thay vì in-memory.
 
 ## 6. Test
 
-`backend/src/test/java/com/example/andemo/MenuLockFlowTest.java` – chạy `mvn test`.
+`backend/src/test/java/com/example/andemo/MenuLockFlowTest.java`, `OtpLimitTest.java` – chạy `mvn test`.

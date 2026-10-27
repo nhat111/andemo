@@ -15,6 +15,9 @@ public class MenuLockException extends RuntimeException {
     public static final String PIN_WRONG = "PIN_WRONG";
     public static final String OTP_REQUIRED = "OTP_REQUIRED";
     public static final String OTP_INVALID = "OTP_INVALID";
+    public static final String OTP_EXPIRED = "OTP_EXPIRED";
+    public static final String OTP_ATTEMPTS_EXCEEDED = "OTP_ATTEMPTS_EXCEEDED";
+    public static final String OTP_TOO_FREQUENT = "OTP_TOO_FREQUENT";
 
     private final HttpStatus status;
     private final String code;

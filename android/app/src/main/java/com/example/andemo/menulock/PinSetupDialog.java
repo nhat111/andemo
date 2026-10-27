@@ -164,7 +164,9 @@ public class PinSetupDialog extends DialogFragment {
                     onOtpVerified();
                 } else {
                     btnVerifyOtp.setEnabled(true);
-                    showError(ApiError.from(response.errorBody(), response.code()).getMessage());
+                    ApiError error = ApiError.from(response.errorBody(), response.code());
+                    if (isOtpCancelled(error)) etOtp.setText("");
+                    showError(error.getMessage());
                 }
             }
 
@@ -186,6 +188,22 @@ public class PinSetupDialog extends DialogFragment {
         etNewPin.setEnabled(true);
         etConfirmPin.setEnabled(true);
         etNewPin.requestFocus();
+    }
+
+    /** Hết hạn / nhập sai quá số lần → mã bị hủy, phải yêu cầu mã mới */
+    private boolean isOtpCancelled(ApiError error) {
+        return ApiError.OTP_EXPIRED.equals(error.getCode())
+                || ApiError.OTP_ATTEMPTS_EXCEEDED.equals(error.getCode());
+    }
+
+    private void resetOtp() {
+        otpVerified = false;
+        etOtp.setText("");
+        etOtp.setEnabled(true);
+        btnVerifyOtp.setEnabled(true);
+        tvOtpVerified.setVisibility(View.GONE);
+        etNewPin.setEnabled(false);
+        etConfirmPin.setEnabled(false);
     }
 
     // ===================== (4)(5) Lưu mật khẩu =====================
@@ -220,9 +238,12 @@ public class PinSetupDialog extends DialogFragment {
                 if (response.isSuccessful()) {
                     sendResult(true);
                     dismiss();
-                } else {
-                    showError(ApiError.from(response.errorBody(), response.code()).getMessage());
+                    return;
                 }
+                ApiError error = ApiError.from(response.errorBody(), response.code());
+                // Mã hết hạn / bị hủy giữa chừng → quay lại bước (2)(3)
+                if (isOtpCancelled(error)) resetOtp();
+                showError(error.getMessage());
             }
 
             @Override
